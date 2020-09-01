@@ -18,7 +18,9 @@ export class App extends React.Component {
     return (
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
         <h1>Hello World</h1>
-        <div></div>
+        <div>
+          Book Carousel...
+        </div>
         <div style={{ display: 'flex', minWidth: '200px', width: '25%', flexDirection: 'column', justifyContent: 'center' }}>
         <Sidebar info={info}/>
         </div>
