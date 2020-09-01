@@ -13,7 +13,7 @@ const router = new Router();
   // Deno.readTextFile
 // })
 
-// router.get("/", handlePage);
+router.get("/", handlePage);
 
 declare global {
   namespace JSX {
