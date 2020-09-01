@@ -1,5 +1,6 @@
 import { React } from '../deps.ts';
 import Sidebar from './Components/Sidebar.jsx';
+import BookNavBar from './Components/BookNavBar.jsx';
 
 export class App extends React.Component {
 
@@ -18,13 +19,20 @@ export class App extends React.Component {
     return (
       <div>
         <h1 style={{ textAlign: 'center' }}>Burak's Book Bonanza</h1>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <div>
-            Book Carousel...
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div style={{ height: '500px', width: '75%' }}>
+              Book Carousel...
+            </div>
+
+            <div style={{ display: 'flex', minWidth: '200px', width: '25%', flexDirection: 'column', justifyContent: 'center' }}>
+              <Sidebar info={info}/>
+            </div>
           </div>
-          
-          <div style={{ display: 'flex', minWidth: '200px', width: '25%', flexDirection: 'column', justifyContent: 'center' }}>
-          <Sidebar info={info}/>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <BookNavBar />
+            <div style={{ marginRight: '5%' }}>Shopping Cart</div>
           </div>
         </div>
       </div>
