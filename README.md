@@ -1,8 +1,8 @@
 ![Obsidian](./assets/logoSilver.jpg)
 
-<div style="text-align:center;">GraphQL, built for Deno.</div>
+<div align="center">GraphQL, built for Deno.</div>
 
-<div style="text-align:center;">
+<div align="center">
 
 <h1>Obsidian</h1>
 
@@ -19,7 +19,7 @@ from <em>Lascaux</em>
 
 ## Installation
 
-<div style="text-align:center;color:red;">PLACEHOLDER INSTALLATION INSTRUCTIONS</div>
+<div align="center"><strong>PLACEHOLDER INSTALLATION INSTRUCTIONS</strong></div>
 
 To use Obsidian in your Deno React app, import obsidian and wrap your React app like so:
 
