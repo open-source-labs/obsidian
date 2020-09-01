@@ -16,13 +16,16 @@ export class App extends React.Component {
     }
 
     return (
-      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <h1>Hello World</h1>
-        <div>
-          Book Carousel...
-        </div>
-        <div style={{ display: 'flex', minWidth: '200px', width: '25%', flexDirection: 'column', justifyContent: 'center' }}>
-        <Sidebar info={info}/>
+      <div>
+        <h1 style={{ textAlign: 'center' }}>Burak's Book Bonanza</h1>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <div>
+            Book Carousel...
+          </div>
+          
+          <div style={{ display: 'flex', minWidth: '200px', width: '25%', flexDirection: 'column', justifyContent: 'center' }}>
+          <Sidebar info={info}/>
+          </div>
         </div>
       </div>
     )
