@@ -1,6 +1,7 @@
 import { React } from '../../deps.ts';
 const { useState, useEffect } = React;
 
+
 function useObsidian(query) {
   const [loading, setLoading] = useState(true);
 
@@ -18,12 +19,12 @@ function useObsidian(query) {
           setLoading(true);
         });
     };
-  }, []);
+  });
   return loading;
 }
 
 const TestComponent = () => {
-  useObsidian('123');
+  const loading = useObsidian('123');
   return <div></div>;
 };
 
@@ -38,5 +39,4 @@ class Cache extends React.Component {
   }
 }
 
-const cache = new Cache();
-console.log(cache);
+ 
