@@ -44,7 +44,7 @@ class Wrapper extends React.Component {
 
 To spin up the demo app, run:
 
-	deno run --allow-net --allow-read --unstable server.tsx -c tsconfig.json
+	deno run --allow-net --allow-read --unstable demo/server.tsx -c tsconfig.json
 
 ## Authors
 
