@@ -76,7 +76,7 @@ const App = () => {
               borderRadius: '4px',
             }}
           >
-            <Carousel books={books} />
+            <Carousel books={books} setInfo={setInfo}/>
             {/* <button onClick={() => setInfo(books[0])}>Book 1</button>
             <button onClick={() => setInfo(books[1])}>Book 2</button> */}
           </div>
