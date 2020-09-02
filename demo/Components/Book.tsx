@@ -24,8 +24,8 @@ const Book = (props: any) => {
       }}
     >
       {/* <img src={props.image}></img> */}
-      Title: {props.name}
-      Author: {props.id}
+      Title: {props.title}
+      Author: {props.author}
     </div>
   );
 };

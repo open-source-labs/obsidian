@@ -37,23 +37,63 @@ const book2 = {
 const App = () => {
   const [info, setInfo] = (React as any).useState(book1);
   const [books, setBooks] = (React as any).useState([]);
+  const [page, setPage] = (React as any).useState(1);
 
   (React as any).useEffect(() => {
-    fetch('https://rickandmortyapi.com/graphql', {
+    fetch('/graphql', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
       body: JSON.stringify({
-        query: `{ characters { results { id name species image } }}`,
+        query: `{
+          getEightBooks(id: 1) {
+            id
+            title
+            author
+          }
+        }`,
       }),
     })
       .then((resp) => resp.json())
       .then((resp) => {
-        setBooks([...resp.data.characters.results]);
+        console.log(resp.data.getEightBooks);
+        setBooks([...resp.data.getEightBooks]);
+        // console.log(books)
       });
   }, []);
+
+  const pageTurn = (id: any) => {
+    fetch('/graphql', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({
+        query: `{
+          getEightBooks(id: ${id}) {
+            id
+            title
+            author
+          }
+        }`,
+      }),
+    })
+      .then((resp) => resp.json())
+      .then((resp) => {
+        console.log(resp.data.getEightBooks);
+        setBooks([...resp.data.getEightBooks]);
+        let curPage = id;
+        console.log('id is ', id)
+        if (curPage !== 1) curPage = ((id - 1) / 8) + 1;
+        // console.log(curPage)
+        console.log('this is page ', curPage)
+        setPage(curPage);
+        console.log(books)
+      });
+  }
 
   return (
     <div>
@@ -95,7 +135,7 @@ const App = () => {
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <BookNavBar />
+          <BookNavBar pageTurn={pageTurn} page={page}/>
           <div style={{ marginRight: '10%' }}>
             <button type='button' className='btn btn-outline-primary'>
               <svg

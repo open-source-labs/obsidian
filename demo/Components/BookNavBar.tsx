@@ -11,20 +11,28 @@ declare global {
 
 const BookNavBar = (props: any) => {
 
+  const { pageTurn, page } = props;
 
   
   return (
     <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', width: '75%' }}>
       <nav aria-label="Page navigation example">
         <ul className="pagination justify-content-center">
-          <li className="page-item disabled">
-            <a className="page-link" href="#" tabIndex="-1">Previous</a>
-          </li>
-          <li className="page-item"><a className="page-link" href="#">1</a></li>
-          <li className="page-item"><a className="page-link" href="#">2</a></li>
-          <li className="page-item"><a className="page-link" href="#">3</a></li>
           <li className="page-item">
-            <a className="page-link" href="#">Next</a>
+            <a className="page-link" href="#" tabIndex="-1" onClick={() => {
+              console.log('show me ', page)
+              if (page > 1) {
+                pageTurn((page * 8) - 15 )
+              }
+              }}>Previous</a>
+          </li>
+          <li className="page-item"><a className="page-link" href="#" onClick={() => {pageTurn(1)}}>1</a></li>
+          <li className="page-item"><a className="page-link" href="#" onClick={() => {pageTurn(9)}}>2</a></li>
+          <li className="page-item"><a className="page-link" href="#" onClick={() => {pageTurn(17)}}>3</a></li>
+          <li className="page-item">
+            <a className="page-link" href="#" onClick={() => {
+              console.log('show me ', page)
+              pageTurn((page * 8) + 1)}}>Next</a>
           </li>
         </ul>
       </nav>
