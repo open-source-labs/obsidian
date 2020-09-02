@@ -39,15 +39,7 @@ const Sidebar = (props: any) => {
   } = props.info;
 
   return (
-    <div
-      className='sidebar-wrapper'
-      style={{
-        border: '4px solid gray',
-        borderRadius: '4px',
-        padding: '10px',
-        margin: '5px',
-      }}
-    >
+    <div className='sidebar-wrapper' style={props.style}>
       <h2 style={{ textAlign: 'center' }}>{title}</h2>
       <h5 style={{ textAlign: 'center' }}>- {author} -</h5>
 

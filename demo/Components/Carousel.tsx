@@ -14,21 +14,12 @@ const Carousel = (props: any) => {
   const books = props.books.map(
     (book: { id: string; title: string; author: string }) => {
       return (
-        <Book key={book.id} id={book.id} title={book.title} author={book.author} />
+        <Book key={book.id} id={book.id} title={book.title} author={book.author} setInfo={props.setInfo}/>
       );
     }
   );
 
-  return (
-    <div
-      style={{
-        display: 'flex',
-        flexWrap: 'wrap',
-      }}
-    >
-      {books}
-    </div>
-  );
+  return <div style={props.style}>{books}</div>;
 };
 
 export default Carousel;
