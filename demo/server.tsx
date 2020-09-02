@@ -1,5 +1,6 @@
 import { Application, Router, RouterContext } from "https://deno.land/x/oak@v6.0.1/mod.ts";
 import { applyGraphQL, gql, GQLError } from "https://deno.land/x/oak_graphql/mod.ts";
+import client from "./sqlclient.ts";
 
 import React from "https://dev.jspm.io/react@16.13.1";
 import ReactDomServer from "https://dev.jspm.io/react-dom@16.13.1/server";
@@ -29,44 +30,6 @@ const initialState = {};
 const router = new Router();
 router.get("/", handlePage);
 
-/*
-
-let todos: Map<number, any> = new Map();
-
-function init() {
-  todos.set(todos.size + 1, { id: Date.now(), task: "build an ssr deno app" });
-  todos.set(todos.size + 1, {
-    id: Date.now(),
-    task: "write blogs on deno ssr",
-  });
-}
-init();
-router
-  .get("/todos", (context) => {
-    context.response.body = Array.from(todos.values());
-  })
-  .get("/todos/:id", (context) => {
-    if (
-      context.params &&
-      context.params.id &&
-      todos.has(Number(context.params.id))
-    ) {
-      context.response.body = todos.get(Number(context.params.id));
-    } else {
-      context.response.status = 404;
-    }
-  })
-  .post("/todos", async (context) => {
-    const body = context.request.body();
-    if (body.type === "json") {
-      const todo = await body.value;
-      todos.set(Date.now(), todo);
-    }
-    context.response.body = { status: "OK" };
-  });
-
-  */
-
 // Bundle the client-side code
 const [_, clientJS] = await Deno.bundle("./client.tsx");
 
@@ -80,12 +43,12 @@ serverrouter.get("/static/client.js", (context) => {
 // Implement the routes on the server
 app.use(router.routes());
 app.use(serverrouter.routes());
-
 app.use(router.allowedMethods());
 
 // GraphQL types
 const types = (gql as any)`
 type Book {
+  id: ID
   title: String
   author: String
   description: String
@@ -99,19 +62,31 @@ type ResolveType {
 }
 
 type Query {
-  getBook(id: String): Book
+  getBook(id: ID): Book
 }
 `;
 
 // GraphQL Resolvers (For now just the basic getBooks query)
 const resolvers = {
   Query: {
-    getBook: (parent: any, { id }: any, context: any, info: any) => {
+    getBook: async (parent: any, { id }: any, context: any, info: any) => {
       console.log("id", id, context);
-      return {
-        title: "Let's Go!",
-        author: "Jeho",
-      };
+      const data = await client.query(`
+        SELECT *
+        FROM books
+        WHERE id = $1
+      `, id);
+      console.log("Returned rows:");
+      console.log(data.rows);
+      const book = {
+        title: data.rows[0][1],
+        author: data.rows[0][2],
+        description: data.rows[0][3],
+        coverPrice: data.rows[0][4],
+        publicationDate: data.rows[0][5],
+        publisher: data.rows[0][6]
+      }
+      return book;
     },
   },
 };
@@ -136,7 +111,7 @@ await app.listen({ port: 8000 });
 
 function handlePage(ctx: any) {
   try {
-    const body = ReactDomServer.renderToString(
+    const body = (ReactDomServer as any).renderToString(
       <App state={initialState}/> // Pass state as props here
     );
     ctx.response.body = `<!DOCTYPE html>
