@@ -19,16 +19,7 @@ const Carousel = (props: any) => {
     }
   );
 
-  return (
-    <div
-      style={{
-        display: 'flex',
-        flexWrap: 'wrap',
-      }}
-    >
-      {books}
-    </div>
-  );
+  return <div style={props.style}>{books}</div>;
 };
 
 export default Carousel;
