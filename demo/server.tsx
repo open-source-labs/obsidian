@@ -52,9 +52,9 @@ type Book {
   title: String
   author: String
   description: String
-  coverPrice: Int
   publicationDate: String
   publisher: String
+  coverPrice: Float
 }
 
 type ResolveType {
@@ -63,6 +63,7 @@ type ResolveType {
 
 type Query {
   getBook(id: ID): Book
+  getEightBooks(id: ID): [Book]
 }
 `;
 
@@ -79,14 +80,38 @@ const resolvers = {
       console.log("Returned rows:");
       console.log(data.rows);
       const book = {
+        id: data.rows[0][0],
         title: data.rows[0][1],
         author: data.rows[0][2],
         description: data.rows[0][3],
-        coverPrice: data.rows[0][4],
-        publicationDate: data.rows[0][5],
-        publisher: data.rows[0][6]
+        publicationDate: data.rows[0][4],
+        publisher: data.rows[0][5],
+        coverPrice: data.rows[0][6]
       }
       return book;
+    },
+    getEightBooks: async (parent: any, { id }: any, context: any, info: any) => {
+      console.log("id", id, context);
+      const data = await client.query(`
+        SELECT *
+        FROM books
+        WHERE id
+        BETWEEN $1 AND $2
+      `, id, id + 8);
+      console.log("Returned rows:");
+      console.log(data.rows);
+      const books = data.rows.map(cv => {
+        return {
+          id: cv[0],
+          title: cv[1],
+          author: cv[2],
+          description: cv[3],
+          publicationDate: cv[4],
+          publisher: cv[5],
+          coverPrice: cv[6]
+        }
+      });
+      return books;
     },
   },
 };
