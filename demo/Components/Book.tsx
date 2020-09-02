@@ -25,7 +25,6 @@ const Book = (props: any) => {
         margin: '0',
       }}
     >
-      {/* <img src={props.image}></img> */}
       <h5>Title: {props.title}</h5>
       <h5>Author: {props.author}</h5>
       <button

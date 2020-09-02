@@ -90,26 +90,32 @@ const resolvers = {
       }
       return book;
     },
-    getEightBooks: async (parent: any, { id }: any, context: any, info: any) => {
-      console.log("id", id);
-      const data = await client.query(`
-        SELECT *
+    getEightBooks: async (
+      parent: any,
+      { id }: any,
+      context: any,
+      info: any
+    ) => {
+      console.log('id', id, context);
+      console.log(id + 7);
+      const data = await client.query(
+        `
+        SELECT books.title, books.author, books.id
         FROM books
         WHERE id
         BETWEEN $1 AND $2
-      `, id, id + 8);
-      console.log("Returned rows:");
+      `,
+        id,
+        Number(id) + 7
+      );
+      console.log('Returned rows:');
       console.log(data.rows);
       const books = data.rows.map(cv => {
         return {
-          id: cv[0],
-          title: cv[1],
-          author: cv[2],
-          description: cv[3],
-          publicationDate: cv[4],
-          publisher: cv[5],
-          coverPrice: cv[6]
-        }
+          title: cv[0],
+          author: cv[1],
+          id: cv[2]
+        };
       });
       return books;
     },
