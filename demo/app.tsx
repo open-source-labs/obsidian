@@ -2,7 +2,6 @@ import React from 'https://dev.jspm.io/react@16.13.1';
 import Sidebar from './Components/Sidebar.tsx';
 import BookNavBar from './Components/BookNavBar.tsx';
 import Carousel from './Components/Carousel.tsx';
-// import './style.css';
 
 declare global {
   namespace JSX {
@@ -47,7 +46,7 @@ const App = () => {
         Accept: 'application/json',
       },
       body: JSON.stringify({
-        query: '{ characters { results { id name species image } }}',
+        query: `{ characters { results { id name species image } }}`,
       }),
     })
       .then((resp) => resp.json())

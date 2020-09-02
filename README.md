@@ -12,14 +12,15 @@ from <em>Lascaux</em>
 
 ## Features
 
-- Client-side GraphQL query abstraction and caching in React, improving the performance of your app
+- GraphQL query abstraction and caching in SSR React projects, improving the performance of your app
 - Normalized caching, optimizing memory management to keep your site lightweight and fast
 - Intuitive component subscriptions, enabling the power of reactive caching with minimal boilerplate
-- Fullstack integration with obsidian-server, leveraging server-side caching to streamline your caching strategy
+- Fullstack integration, leveraging client-side and server-side caching to streamline your caching strategy
 
 ## Installation
 
 <div align="center"><strong>PLACEHOLDER INSTALLATION INSTRUCTIONS</strong></div>
+<br>
 
 To use Obsidian in your Deno React app, import obsidian and wrap your React app like so:
 
@@ -43,7 +44,7 @@ class Wrapper extends React.Component {
 
 To spin up the demo app, run:
 
-	deno run --allow-net demo/server/server.tsx
+	deno run --allow-net --allow-read --unstable server.tsx -c tsconfig.json
 
 ## Authors
 
