@@ -1,77 +1,101 @@
-/*
-import {
-  Application,
-  Router,
-  send,
-} from 'https://deno.land/x/oak@v6.0.1/mod.ts';
-import { applyGraphQL, gql } from 'https://deno.land/x/oak_graphql/mod.ts';
+import { Application, Router } from 'https://deno.land/x/oak@v6.0.1/mod.ts';
 
+import React from 'https://dev.jspm.io/react@16.13.1';
+import ReactDomServer from 'https://dev.jspm.io/react-dom@16.13.1/server';
+import App from './app.tsx';
+
+// Create a new server
 const app = new Application();
-const port = 8080;
 
+// Initial state
+const initialState = {};
+
+// Router for base path
 const router = new Router();
+router.get('/', handlePage);
 
-// router.get('/', (ctx) => {
-//   // const htmlDoc = Deno.openSync('../client/assets/index.html', { read: true });
-//   ctx.response.body = Deno.readFileSync(
-//     `${Deno.cwd()}/../client/assets/index.html`
-//   );
-//   // Deno.close(htmlDoc.rid);
-// });
+/*
 
-app.use(async (context) => {
-  await send(context, context.request.url.pathname, {
-    root: `${Deno.cwd()}/client/assets`,
-    index: 'index.html',
+let todos: Map<number, any> = new Map();
+
+function init() {
+  todos.set(todos.size + 1, { id: Date.now(), task: "build an ssr deno app" });
+  todos.set(todos.size + 1, {
+    id: Date.now(),
+    task: "write blogs on deno ssr",
   });
+}
+init();
+router
+  .get("/todos", (context) => {
+    context.response.body = Array.from(todos.values());
+  })
+  .get("/todos/:id", (context) => {
+    if (
+      context.params &&
+      context.params.id &&
+      todos.has(Number(context.params.id))
+    ) {
+      context.response.body = todos.get(Number(context.params.id));
+    } else {
+      context.response.status = 404;
+    }
+  })
+  .post("/todos", async (context) => {
+    const body = context.request.body();
+    if (body.type === "json") {
+      const todo = await body.value;
+      todos.set(Date.now(), todo);
+    }
+    context.response.body = { status: "OK" };
+  });
+
+  */
+
+// Bundle the client-side code
+const [_, clientJS] = await Deno.bundle('./client.tsx');
+
+// Router for bundle
+const serverrouter = new Router();
+serverrouter.get('/static/client.js', (context) => {
+  context.response.headers.set('Content-Type', 'text/html');
+  context.response.body = clientJS;
 });
 
-// const GraphQLService = await applyGraphQL({
-//   Router,
-//   typeDefs: (gql as any)`
-//   type Book {
-//     title: String!
-//     author: String!
-//     description: String
-//     coverPrice: Int!
-//     publicationDate: String
-//     publisher: String
-//     id: Int!
-//   }
-
-//   type Query {
-//     books: [Book]
-//     book (id: Int): Book
-//   }
-//   `, // need
-//   resolvers: {
-//     // Query: {
-//     //   book
-//     // }
-//   }, // need
-// });
-
-// app.use(GraphQLService.routes(), GraphQLService.allowedMethods());
+// Implement the routes on the server
 app.use(router.routes());
+app.use(serverrouter.routes());
+
 app.use(router.allowedMethods());
 
+// Spin up the server
+console.log('server is running on http://localhost:8000/');
+await app.listen({ port: 8000 });
 
-console.log('server is running on http://localhost:8080/');
-await app.listen({ port: port });
+// SSR of React App (invoked at line 12)
 
-*/
-
-import { opine, serveStatic } from 'https://deno.land/x/opine@0.21.3/mod.ts';
-import { dirname, join } from 'https://deno.land/std/path/mod.ts';
-const app = opine();
-const clientDir = join(dirname(import.meta.url), './client');
-console.log(clientDir);
-app.use(serveStatic(clientDir));
-app.get('/', (req, res) => res.sendFile(join(clientDir, 'index.html')));
-
-// app.use((req, res) => {
-//   res.send('Hello World');
-// });
-
-app.listen(8080);
-console.log('Opine started on port 8080');
+function handlePage(ctx: any) {
+  try {
+    const body = ReactDomServer.renderToString(
+      <App state={initialState} /> // Pass state as props here
+    );
+    ctx.response.body = `<!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <title>Document</title>
+    <script>
+      window.__INITIAL_STATE__ = ${JSON.stringify(initialState)};
+    </script>
+  </head>
+  <body >
+    <div id="root">${body}</div>
+    <script  src="http://localhost:8000/static/client.js" defer></script>
+  </body>
+  </html>`;
+  } catch (error) {
+    console.error(error);
+  }
+}
