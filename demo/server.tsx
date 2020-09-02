@@ -1,4 +1,5 @@
-import { Application, Router } from "https://deno.land/x/oak@v6.0.1/mod.ts";
+import { Application, Router, RouterContext } from "https://deno.land/x/oak@v6.0.1/mod.ts";
+import { applyGraphQL, gql, GQLError } from "https://deno.land/x/oak_graphql/mod.ts";
 
 import React from "https://dev.jspm.io/react@16.13.1";
 import ReactDomServer from "https://dev.jspm.io/react-dom@16.13.1/server";
@@ -6,6 +7,20 @@ import App from "./app.tsx";
 
 // Create a new server
 const app = new Application();
+
+// Track response time in headers of responses
+app.use(async (ctx, next) => {
+  await next();
+  const rt = ctx.response.headers.get("X-Response-Time");
+  console.log(`${ctx.request.method} ${ctx.request.url} - ${rt}`);
+});
+
+app.use(async (ctx, next) => {
+  const start = Date.now();
+  await next();
+  const ms = Date.now() - start;
+  ctx.response.headers.set("X-Response-Time", `${ms}ms`);
+});
 
 // Initial state
 const initialState = {};
@@ -67,6 +82,51 @@ app.use(router.routes());
 app.use(serverrouter.routes());
 
 app.use(router.allowedMethods());
+
+// GraphQL types
+const types = (gql as any)`
+type Book {
+  title: String
+  author: String
+  description: String
+  coverPrice: Int
+  publicationDate: String
+  publisher: String
+}
+
+type ResolveType {
+  done: Boolean
+}
+
+type Query {
+  getBook(id: String): Book
+}
+`;
+
+// GraphQL Resolvers (For now just the basic getBooks query)
+const resolvers = {
+  Query: {
+    getBook: (parent: any, { id }: any, context: any, info: any) => {
+      console.log("id", id, context);
+      return {
+        title: "Let's Go!",
+        author: "Jeho",
+      };
+    },
+  },
+};
+
+// Setup GraphQL Router
+const GraphQLService = await applyGraphQL<Router>({
+  Router,
+  typeDefs: types,
+  resolvers: resolvers,
+  context: (ctx: RouterContext) => {
+    return { user: "Aaron" };
+  }
+});
+app.use(GraphQLService.routes(), GraphQLService.allowedMethods());
+
 
 // Spin up the server
 console.log("server is running on http://localhost:8000/");
