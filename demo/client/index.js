@@ -1,4 +1,4 @@
-import { React, ReactDOM } from '../deps.ts';
+import { React, ReactDOM } from './deps.ts';
 import { App } from '../App.jsx';
 
 ReactDOM.render(

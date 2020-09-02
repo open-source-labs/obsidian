@@ -1,4 +1,4 @@
-import { React } from '../deps.ts';
+import { React } from './deps.ts';
 import Sidebar from './Components/Sidebar.jsx';
 import BookNavBar from './Components/BookNavBar.jsx';
 // import Cache from './Cache/cache.jsx';
