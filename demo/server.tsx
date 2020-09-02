@@ -120,10 +120,7 @@ const resolvers = {
 const GraphQLService = await applyGraphQL<Router>({
   Router,
   typeDefs: types,
-  resolvers: resolvers,
-  context: (ctx: RouterContext) => {
-    return { user: "Aaron" };
-  }
+  resolvers: resolvers
 });
 app.use(GraphQLService.routes(), GraphQLService.allowedMethods());
 
