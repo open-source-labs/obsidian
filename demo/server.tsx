@@ -1,4 +1,6 @@
-import { Application, Router } from "https://deno.land/x/oak@v6.0.1/mod.ts";
+import { Application, Router, RouterContext } from "https://deno.land/x/oak@v6.0.1/mod.ts";
+import { applyGraphQL, gql, GQLError } from "https://deno.land/x/oak_graphql/mod.ts";
+import client from "./sqlclient.ts";
 
 import React from "https://dev.jspm.io/react@16.13.1";
 import ReactDomServer from "https://dev.jspm.io/react-dom@16.13.1/server";
@@ -7,50 +9,26 @@ import App from "./app.tsx";
 // Create a new server
 const app = new Application();
 
+// Track response time in headers of responses
+app.use(async (ctx, next) => {
+  await next();
+  const rt = ctx.response.headers.get("X-Response-Time");
+  console.log(`${ctx.request.method} ${ctx.request.url} - ${rt}`);
+});
+
+app.use(async (ctx, next) => {
+  const start = Date.now();
+  await next();
+  const ms = Date.now() - start;
+  ctx.response.headers.set("X-Response-Time", `${ms}ms`);
+});
+
 // Initial state
 const initialState = {};
 
 // Router for base path
 const router = new Router();
 router.get("/", handlePage);
-
-/*
-
-let todos: Map<number, any> = new Map();
-
-function init() {
-  todos.set(todos.size + 1, { id: Date.now(), task: "build an ssr deno app" });
-  todos.set(todos.size + 1, {
-    id: Date.now(),
-    task: "write blogs on deno ssr",
-  });
-}
-init();
-router
-  .get("/todos", (context) => {
-    context.response.body = Array.from(todos.values());
-  })
-  .get("/todos/:id", (context) => {
-    if (
-      context.params &&
-      context.params.id &&
-      todos.has(Number(context.params.id))
-    ) {
-      context.response.body = todos.get(Number(context.params.id));
-    } else {
-      context.response.status = 404;
-    }
-  })
-  .post("/todos", async (context) => {
-    const body = context.request.body();
-    if (body.type === "json") {
-      const todo = await body.value;
-      todos.set(Date.now(), todo);
-    }
-    context.response.body = { status: "OK" };
-  });
-
-  */
 
 // Bundle the client-side code
 const [_, clientJS] = await Deno.bundle("./client.tsx");
@@ -65,8 +43,65 @@ serverrouter.get("/static/client.js", (context) => {
 // Implement the routes on the server
 app.use(router.routes());
 app.use(serverrouter.routes());
-
 app.use(router.allowedMethods());
+
+// GraphQL types
+const types = (gql as any)`
+type Book {
+  id: ID
+  title: String
+  author: String
+  description: String
+  coverPrice: Int
+  publicationDate: String
+  publisher: String
+}
+
+type ResolveType {
+  done: Boolean
+}
+
+type Query {
+  getBook(id: ID): Book
+}
+`;
+
+// GraphQL Resolvers (For now just the basic getBooks query)
+const resolvers = {
+  Query: {
+    getBook: async (parent: any, { id }: any, context: any, info: any) => {
+      console.log("id", id, context);
+      const data = await client.query(`
+        SELECT *
+        FROM books
+        WHERE id = $1
+      `, id);
+      console.log("Returned rows:");
+      console.log(data.rows);
+      const book = {
+        title: data.rows[0][1],
+        author: data.rows[0][2],
+        description: data.rows[0][3],
+        coverPrice: data.rows[0][4],
+        publicationDate: data.rows[0][5],
+        publisher: data.rows[0][6]
+      }
+      return book;
+    },
+  },
+};
+
+// Setup GraphQL Router
+const GraphQLService = await applyGraphQL<Router>({
+  Router,
+  typeDefs: types,
+  resolvers: resolvers,
+  context: (ctx: RouterContext) => {
+    return { user: "Aaron" };
+  }
+});
+app.use(GraphQLService.routes(), GraphQLService.allowedMethods());
+
 
 // Spin up the server
 console.log("server is running on http://localhost:8000/");
@@ -76,7 +111,7 @@ await app.listen({ port: 8000 });
 
 function handlePage(ctx: any) {
   try {
-    const body = ReactDomServer.renderToString(
+    const body = (ReactDomServer as any).renderToString(
       <App state={initialState}/> // Pass state as props here
     );
     ctx.response.body = `<!DOCTYPE html>
