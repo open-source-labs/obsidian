@@ -14,7 +14,7 @@ const Carousel = (props: any) => {
   const books = props.books.map(
     (book: { id: string; name: string; image: string }) => {
       return (
-        <Book key={book.id} id={book.id} name={book.name} image={book.image} />
+        <Book key={book.id} id={book.id} name={book.name} image={book.image} setInfo={props.setInfo}/>
       );
     }
   );

@@ -70,7 +70,7 @@ const App = () => {
       <h1 style={headerStyle}>Burak's Book Bonanza</h1>
       <div style={appContainerStyle}>
         <div style={carouselAndSidebarStyle}>
-          <Carousel style={carouselStyle} books={books} />
+          <Carousel style={carouselStyle} books={books} setInfo={setInfo}/>
           <Sidebar style={sideBarStyle} info={info} />
         </div>
 
