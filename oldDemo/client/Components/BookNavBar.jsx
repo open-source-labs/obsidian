@@ -1,4 +1,4 @@
-import { React } from '../../deps.ts';
+import { React } from '../deps.ts';
 
 
 const BookNavBar = (props) => {

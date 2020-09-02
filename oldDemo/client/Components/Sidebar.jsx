@@ -1,4 +1,4 @@
-import { React } from '../../deps.ts';
+import { React } from '../deps.ts';
 
 const Sidebar = (props) => {
   const { title, author, description, coverPrice, publicationDate, publisher } = props.info;

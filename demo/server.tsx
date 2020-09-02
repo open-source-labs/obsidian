@@ -1,10 +1,18 @@
-import { Application, Router, RouterContext } from "https://deno.land/x/oak@v6.0.1/mod.ts";
-import { applyGraphQL, gql, GQLError } from "https://deno.land/x/oak_graphql/mod.ts";
-import client from "./sqlclient.ts";
+import {
+  Application,
+  Router,
+  RouterContext,
+} from 'https://deno.land/x/oak@v6.0.1/mod.ts';
+import {
+  applyGraphQL,
+  gql,
+  GQLError,
+} from 'https://deno.land/x/oak_graphql/mod.ts';
+import client from './sqlclient.ts';
 
-import React from "https://dev.jspm.io/react@16.13.1";
-import ReactDomServer from "https://dev.jspm.io/react-dom@16.13.1/server";
-import App from "./app.tsx";
+import React from 'https://dev.jspm.io/react@16.13.1';
+import ReactDomServer from 'https://dev.jspm.io/react-dom@16.13.1/server';
+import App from './app.tsx';
 
 // Create a new server
 const app = new Application();
@@ -12,7 +20,7 @@ const app = new Application();
 // Track response time in headers of responses
 app.use(async (ctx, next) => {
   await next();
-  const rt = ctx.response.headers.get("X-Response-Time");
+  const rt = ctx.response.headers.get('X-Response-Time');
   console.log(`${ctx.request.method} ${ctx.request.url} - ${rt}`);
 });
 
@@ -20,7 +28,7 @@ app.use(async (ctx, next) => {
   const start = Date.now();
   await next();
   const ms = Date.now() - start;
-  ctx.response.headers.set("X-Response-Time", `${ms}ms`);
+  ctx.response.headers.set('X-Response-Time', `${ms}ms`);
 });
 
 // Initial state
@@ -28,15 +36,15 @@ const initialState = {};
 
 // Router for base path
 const router = new Router();
-router.get("/", handlePage);
+router.get('/', handlePage);
 
 // Bundle the client-side code
-const [_, clientJS] = await Deno.bundle("./client.tsx");
+const [_, clientJS] = await Deno.bundle('./client.tsx');
 
 // Router for bundle
 const serverrouter = new Router();
-serverrouter.get("/static/client.js", (context) => {
-  context.response.headers.set("Content-Type", "text/html");
+serverrouter.get('/static/client.js', (context) => {
+  context.response.headers.set('Content-Type', 'text/html');
   context.response.body = clientJS;
 });
 
@@ -71,13 +79,16 @@ type Query {
 const resolvers = {
   Query: {
     getBook: async (parent: any, { id }: any, context: any, info: any) => {
-      console.log("id", id, context);
-      const data = await client.query(`
+      console.log('id', id, context);
+      const data = await client.query(
+        `
         SELECT *
         FROM books
         WHERE id = $1
-      `, id);
-      console.log("Returned rows:");
+      `,
+        id
+      );
+      console.log('Returned rows:');
       console.log(data.rows);
       const book = {
         id: data.rows[0][0],
@@ -86,21 +97,30 @@ const resolvers = {
         description: data.rows[0][3],
         publicationDate: data.rows[0][4],
         publisher: data.rows[0][5],
-        coverPrice: data.rows[0][6]
-      }
+        coverPrice: data.rows[0][6],
+      };
       return book;
     },
-    getEightBooks: async (parent: any, { id }: any, context: any, info: any) => {
-      console.log("id", id, context);
-      const data = await client.query(`
+    getEightBooks: async (
+      parent: any,
+      { id }: any,
+      context: any,
+      info: any
+    ) => {
+      console.log('id', id, context);
+      const data = await client.query(
+        `
         SELECT *
         FROM books
         WHERE id
         BETWEEN $1 AND $2
-      `, id, id + 8);
-      console.log("Returned rows:");
+      `,
+        id,
+        id + 8
+      );
+      console.log('Returned rows:');
       console.log(data.rows);
-      const books = data.rows.map(cv => {
+      const books = data.rows.map((cv) => {
         return {
           id: cv[0],
           title: cv[1],
@@ -108,8 +128,8 @@ const resolvers = {
           description: cv[3],
           publicationDate: cv[4],
           publisher: cv[5],
-          coverPrice: cv[6]
-        }
+          coverPrice: cv[6],
+        };
       });
       return books;
     },
@@ -120,13 +140,12 @@ const resolvers = {
 const GraphQLService = await applyGraphQL<Router>({
   Router,
   typeDefs: types,
-  resolvers: resolvers
+  resolvers: resolvers,
 });
 app.use(GraphQLService.routes(), GraphQLService.allowedMethods());
 
-
 // Spin up the server
-console.log("server is running on http://localhost:8000/");
+console.log('server is running on http://localhost:8000/');
 await app.listen({ port: 8000 });
 
 // SSR of React App (invoked at line 12)
@@ -134,7 +153,7 @@ await app.listen({ port: 8000 });
 function handlePage(ctx: any) {
   try {
     const body = (ReactDomServer as any).renderToString(
-      <App state={initialState}/> // Pass state as props here
+      <App state={initialState} /> // Pass state as props here
     );
     ctx.response.body = `<!DOCTYPE html>
   <html lang="en">
