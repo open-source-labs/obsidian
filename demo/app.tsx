@@ -25,27 +25,8 @@ declare global {
   }
 }
 
-const book1 = {
-  title: 'Home on the Strange',
-  author: 'George R.R. Martin',
-  description:
-    'A cow freak show gets zapped into another dimension. Horror, mayhem, ozone. You never know what will happen next!',
-  coverPrice: 26.99,
-  publicationDate: 'June 15, 2025',
-  publisher: 'Liz Lotto Publishing',
-};
-
-const book2 = {
-  title: "Let's Go!",
-  author: 'Jeho',
-  description: 'There has never been a motivator like this motivator.',
-  coverPrice: 4.99,
-  publicationDate: 'December 4, 1990',
-  publisher: 'Liz Lotto Publishing',
-};
-
 const App = () => {
-  const [info, setInfo] = (React as any).useState(book1);
+  const [info, setInfo] = (React as any).useState({});
   const [books, setBooks] = (React as any).useState([]);
   const [page, setPage] = (React as any).useState(1);
 
@@ -95,22 +76,22 @@ const App = () => {
         console.log(resp.data.getEightBooks);
         setBooks([...resp.data.getEightBooks]);
         let curPage = id;
-        if (curPage !== 1) curPage = ((id - 1) / 8) + 1;
+        if (curPage !== 1) curPage = (id - 1) / 8 + 1;
         setPage(curPage);
       });
-  }
+  };
 
   return (
     <div style={mainContainerStyle}>
       <h1 style={headerStyle}>Burak's Book Bonanza</h1>
       <div style={appContainerStyle}>
         <div style={carouselAndSidebarStyle}>
-          <Carousel style={carouselStyle} books={books} setInfo={setInfo}/>
+          <Carousel style={carouselStyle} books={books} setInfo={setInfo} />
           <Sidebar style={sideBarStyle} info={info} />
         </div>
 
         <div style={navContainerStyle}>
-          <BookNavBar pageTurn={pageTurn} page={page}/>
+          <BookNavBar pageTurn={pageTurn} page={page} />
           <CartBtn />
         </div>
       </div>
