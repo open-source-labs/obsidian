@@ -1,4 +1,5 @@
 import React from 'https://dev.jspm.io/react@16.13.1';
+import { cardStyle } from '../style.ts';
 
 declare global {
   namespace JSX {
@@ -13,20 +14,12 @@ declare global {
 
 const Book = (props: any) => {
   return (
-    <div
-      className='book-list'
-      style={{
-        display: 'flex',
-        flexWrap: 'wrap',
-        width: '150px',
-        height: '150px',
-        padding: '10px',
-        border: '1px solid gray',
-        margin: '0',
-      }}
-    >
-      <h5>Title: {props.title}</h5>
-      <h5>Author: {props.author}</h5>
+    <div className='book-list' style={cardStyle}>
+      <div>
+        <h5>Title: {props.title}</h5>
+        <h5>Author: {props.author}</h5>
+      </div>
+
       <button
         onClick={() => {
           fetch('/graphql', {
@@ -54,7 +47,9 @@ const Book = (props: any) => {
               props.setInfo(resp.data.getBook);
             });
         }}
-      >Get more info</button>
+      >
+        Get more info
+      </button>
     </div>
   );
 };

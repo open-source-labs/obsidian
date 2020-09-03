@@ -15,16 +15,7 @@ declare global {
 const Sidebar = (props: any) => {
   if (!Object.values(props.info).length)
     return (
-      <div
-        className='sidebar-wrapper'
-        style={{
-          border: '4px solid gray',
-          borderRadius: '4px',
-          padding: '10px',
-          margin: '5px',
-          height: '300px',
-        }}
-      >
+      <div className='sidebar-wrapper' style={props.style}>
         Choose a book!
       </div>
     );
