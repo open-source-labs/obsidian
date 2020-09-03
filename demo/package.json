@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "deno run --allow-net --allow-read --unstable server.tsx -c tsconfig.json",
+    "start": "redis-server & deno run --allow-net --allow-read --unstable server.tsx -c tsconfig.json",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
