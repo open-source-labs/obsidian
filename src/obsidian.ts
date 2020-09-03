@@ -47,7 +47,7 @@ export async function ObsidianRouter<T>({
         const body = await request.body().value;
 
         // Check the cache here
-        const storedResult = checkCache(body.query);
+        const storedResult = await checkCache(body.query);
         if (storedResult) {
           console.log('Grabbed something from the cache');
 
