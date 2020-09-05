@@ -42,7 +42,7 @@ export async function ObsidianRouter<T>({
   const schema = makeExecutableSchema({ typeDefs, resolvers });
   const returnTypes = getReturnTypes(typeDefs);
   // console.log(returnTypes)
-  
+
 
   await router.post(path, async (ctx: any) => {
     const { response, request } = ctx;
@@ -52,7 +52,7 @@ export async function ObsidianRouter<T>({
         const body = await request.body().value;
 
         // Check the cache here
-        const storedResult = await checkCache(body.query);
+        const storedResult = undefined //await checkCache(body.query);
         if (storedResult) {
           console.log('Grabbed something from the cache');
 
@@ -74,9 +74,9 @@ export async function ObsidianRouter<T>({
 
           // Store the new results
           normalizeResult(body.query, result, returnTypes);
-          storeCache(body.query, result);
-          console.log('query', body);
-          console.log('result', result)
+          // storeCache(body.query, result);
+          // console.log('query', body);
+          // console.log('result', result)
           return;
         }
       } catch (error) {
