@@ -1,4 +1,5 @@
 import specificQueryParser from './specificQueryParser.js'
+import checkAndInsert from './dbOps.js';
 
 
 export default function normalizeResult(query, result, returnTypes) {
@@ -49,7 +50,25 @@ function hashAndStoreFields(queryType, fields, returnTypes) {
 }
 
 function hashAndStoreFieldsOfObject(typeSchemaName, fields) {
+  const properties = Object.keys(fields);
+  const id = (fields.id || fields.ID || fields._id || fields._ID || fields.Id || fields._Id);
 
+  const hashes = properties.reduce((acc, property) => {
+
+    if (!property.toLowerCase().match(/_?id/)) {
+      const hash = hashGenerator(typeSchemaName, id, property);
+      const value = fields[property];
+
+      // store hash key and value in redis database
+      checkAndInsert(hash, value);
+
+      acc.push(hash);
+    }
+    return acc;
+  }, [])
+
+  console.log('hashes array ', hashes)
+  return hashes;
 }
 
 function hashGenerator(typeSchemaName, id, property) {

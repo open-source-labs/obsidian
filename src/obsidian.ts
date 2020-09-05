@@ -1,7 +1,6 @@
 import { graphql } from 'https://deno.land/x/oak_graphql@0.6.1/deps.ts';
 import { renderPlaygroundPage } from 'https://deno.land/x/oak_graphql@0.6.1/graphql-playground-html/render-playground-html.ts';
 import { makeExecutableSchema } from 'https://deno.land/x/oak_graphql@0.6.1/graphql-tools/schema/makeExecutableSchema.ts';
-import { checkCache, storeCache } from './cache.js';
 import getReturnTypes from './getReturnTypes.js';
 import normalizeResult from './normalize.js';
 
