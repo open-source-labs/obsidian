@@ -7,6 +7,7 @@ const redis = await connect({ hostname: "127.0.0.1", port: 6379 });
 const BAO = {};
 
 export const checkCache = async query => {
+
   console.log('QUERYYY', query)
   const response = await redis.get(query);
   console.log('RESPONSE', response);

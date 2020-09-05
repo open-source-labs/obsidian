@@ -2,6 +2,8 @@ import { graphql } from 'https://deno.land/x/oak_graphql@0.6.1/deps.ts';
 import { renderPlaygroundPage } from 'https://deno.land/x/oak_graphql@0.6.1/graphql-playground-html/render-playground-html.ts';
 import { makeExecutableSchema } from 'https://deno.land/x/oak_graphql@0.6.1/graphql-tools/schema/makeExecutableSchema.ts';
 import { checkCache, storeCache } from './cache.js';
+import getReturnTypes from './getReturnTypes.js';
+import normalizeResult from './normalize.js';
 
 interface Constructable<T> {
   new (...args: any): T & OakRouter;
@@ -38,6 +40,9 @@ export async function ObsidianRouter<T>({
   const router = new Router();
 
   const schema = makeExecutableSchema({ typeDefs, resolvers });
+  const returnTypes = getReturnTypes(typeDefs);
+  // console.log(returnTypes)
+  
 
   await router.post(path, async (ctx: any) => {
     const { response, request } = ctx;
@@ -68,7 +73,10 @@ export async function ObsidianRouter<T>({
           response.body = result;
 
           // Store the new results
+          normalizeResult(body.query, result, returnTypes);
           storeCache(body.query, result);
+          console.log('query', body);
+          console.log('result', result)
           return;
         }
       } catch (error) {

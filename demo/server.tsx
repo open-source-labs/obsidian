@@ -74,7 +74,7 @@ type ResolveType {
 }
 
 type Query {
-  getBook(id: ID): Book
+  getBook(id: ID): Book!
   getEightBooks(id: ID): [Book]
 }
 `;
