@@ -38,6 +38,11 @@ const Book = (props: any) => {
                   publicationDate
                   publisher
                   coverPrice
+                  whereToBuy {
+                    id
+                    name
+                    address
+                  }
                 }
               }`,
             }),

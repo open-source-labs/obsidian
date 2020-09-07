@@ -1,8 +1,11 @@
 
-export default function getReturnTypes(typeDefs) {
+export default function getObsidianSchema(typeDefs) {
+  // console.log(typeDefs.definitions)
+  const obsidianTypeSchema = getTypeSchema(typeDefs)
 
   // Grabs just the query schema from the typedefs object
   const querySchema = typeDefs.definitions.filter((el) => el.name.value === 'Query')[0].fields;
+  
 
   // Build the object to return
   const querySchemaReturnTypes = {};
@@ -14,7 +17,10 @@ export default function getReturnTypes(typeDefs) {
 
   console.log('object of Return Types',querySchemaReturnTypes);
 
-  return querySchemaReturnTypes;
+  return {
+    returnTypes: querySchemaReturnTypes,
+    obsidianTypeSchema
+  }
 }
 
 function findType(schema) {
@@ -39,4 +45,30 @@ function findType(schema) {
   }
 
   return typeObj;
+}
+
+function getTypeSchema(typeDefs) {
+  const types = typeDefs.definitions.filter(el => el.name.value !== 'Query' && el.name.value !== 'Mutation');
+  // console.log('types w/out queries', types)
+
+  const typeSchemaForObsidian = {};
+
+  types.forEach(type => {
+    // console.log('individual field',type.fields[0]);
+    const fieldObj = type.fields.reduce((acc, field) => {
+      const type = findType(field).type;
+      const scalar = type === 'ID' || type === 'String' || type === 'Boolean' || type === 'Int' || type === 'Float' ? true: false;
+      acc[field.name.value] = {
+        type,
+        scalar
+      };
+      return acc;
+    }, {});
+
+    typeSchemaForObsidian[type.name.value] = fieldObj;
+  })
+
+  console.log('full schema', typeSchemaForObsidian);
+
+  return typeSchemaForObsidian
 }
