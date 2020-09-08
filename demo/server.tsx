@@ -175,11 +175,11 @@ await app.listen({ port: 8000 });
 
 // SSR of React App (invoked at line 12)
 
-function handlePage(ctx: any) {
+function handlePage(ctx: any) { // <ObsidianWrapper> needed
   try {
     const body = (ReactDomServer as any).renderToString(
       <ObsidianWrapper>
-        <App state={initialState} /> // Pass state as props here
+        <App state={initialState} />
       </ObsidianWrapper>
     );
     ctx.response.body = `<!DOCTYPE html>

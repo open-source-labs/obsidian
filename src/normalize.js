@@ -33,6 +33,7 @@ function hashSpecificQuery(queryType, fields, returnTypes, query, obsidianTypeSc
 
   // Create array of hashes of all key:value pairs (will check and store in cache inside)
   const arrayOfHashes = hashAndStoreFields(queryType, fields, returnTypes, obsidianTypeSchema);
+  
 
   return {
     hash: hash,
