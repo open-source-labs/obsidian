@@ -1,7 +1,9 @@
 import { graphql } from 'https://deno.land/x/oak_graphql@0.6.1/deps.ts';
 import { renderPlaygroundPage } from 'https://deno.land/x/oak_graphql@0.6.1/graphql-playground-html/render-playground-html.ts';
 import { makeExecutableSchema } from 'https://deno.land/x/oak_graphql@0.6.1/graphql-tools/schema/makeExecutableSchema.ts';
-import { checkCache, storeCache } from './cache.js';
+import getObsidianSchema from './getReturnTypes.js';
+import normalizeResult from './normalize.js';
+import destructureQueries from './destructureQueries.js';
 
 interface Constructable<T> {
   new (...args: any): T & OakRouter;
@@ -38,6 +40,9 @@ export async function ObsidianRouter<T>({
   const router = new Router();
 
   const schema = makeExecutableSchema({ typeDefs, resolvers });
+  const obsidianSchema = getObsidianSchema(typeDefs);
+  console.log('FULL schema', obsidianSchema)
+
 
   await router.post(path, async (ctx: any) => {
     const { response, request } = ctx;
@@ -46,8 +51,10 @@ export async function ObsidianRouter<T>({
         const contextResult = context ? await context(ctx) : undefined;
         const body = await request.body().value;
 
+        destructureQueries(body.query, obsidianSchema);
+
         // Check the cache here
-        const storedResult = await checkCache(body.query);
+        const storedResult = undefined //await checkCache(body.query);
         if (storedResult) {
           console.log('Grabbed something from the cache');
 
@@ -68,7 +75,10 @@ export async function ObsidianRouter<T>({
           response.body = result;
 
           // Store the new results
-          storeCache(body.query, result);
+          normalizeResult(body.query, result, obsidianSchema);
+          // storeCache(body.query, result);
+          // console.log('query', body);
+          // console.log('result', result)
           return;
         }
       } catch (error) {
