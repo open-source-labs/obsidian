@@ -1,5 +1,6 @@
 import React from 'https://dev.jspm.io/react@16.13.1';
 import { cardStyle } from '../style.ts';
+import { useObsidian } from '../../ObsidianWrapper/ObsidianWrapper.jsx';
 
 declare global {
   namespace JSX {
@@ -13,6 +14,8 @@ declare global {
 }
 
 const Book = (props: any) => {
+  const { fetcher } = useObsidian();
+
   return (
     <div className='book-list' style={cardStyle}>
       <div>
@@ -22,35 +25,13 @@ const Book = (props: any) => {
 
       <button
         onClick={() => {
-          fetch('/graphql', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Accept: 'application/json',
-            },
-            body: JSON.stringify({
-              query: `{
-                getBook(id: ${props.id}) {
-                  id
-                  title
-                  author
-                  description
-                  publicationDate
-                  publisher
-                  coverPrice
-                  whereToBuy {
-                    id
-                    name
-                    address
-                  }
-                }
-              }`,
-            }),
-          })
-            .then((resp) => resp.json())
-            .then((resp) => {
-              props.setInfo(resp.data.getBook);
-            });
+          fetcher(
+            ` query { getBook(id: ${props.id}) { id  title  author  description  publicationDate  publisher  coverPrice whereToBuy {
+              id
+              name
+              address
+            }}}`
+          ).then((resp: any) => props.setInfo(resp.getBook));
         }}
       >
         Get more info
