@@ -28,12 +28,8 @@ function hashSpecificQuery(queryType, fields, returnTypes, query, obsidianTypeSc
   const startIdx = query.indexOf(queryType);
 
   // Create the hash of the specific query
-<<<<<<< HEAD
   const hash = specificQueryParser(startIdx, query).output;
   console.log('hash', hash);
-=======
-  const hash = specificQueryParser(startIdx, query);
->>>>>>> cba75d969ae16ab49cc5b7bac8479e9ff0cf4b8a
 
   // Create array of hashes of all key:value pairs (will check and store in cache inside)
   const arrayOfHashes = hashAndStoreFields(queryType, fields, returnTypes, obsidianTypeSchema);
