@@ -11,6 +11,7 @@ import {
 
 // OBSIDIAN ROUTER
 import { ObsidianRouter } from '../src/obsidian.ts';
+import { ObsidianWrapper } from '../ObsidianWrapper/ObsidianWrapper.jsx';
 
 import client from './sqlclient.ts';
 
@@ -154,7 +155,9 @@ await app.listen({ port: 8000 });
 function handlePage(ctx: any) {
   try {
     const body = (ReactDomServer as any).renderToString(
-      <App state={initialState} /> // Pass state as props here
+      <ObsidianWrapper>
+        <App state={initialState} /> // Pass state as props here
+      </ObsidianWrapper>
     );
     ctx.response.body = `<!DOCTYPE html>
   <html lang="en">
