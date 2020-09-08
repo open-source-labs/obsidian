@@ -1,7 +1,7 @@
 import redis from './cache.js';
 
 
-export default async function checkAndInsert(hash, value, expiration = 20) {
+async function checkAndInsert(hash, value, expiration = 20) {
   let ifCached;
   if (typeof value === 'object') {
     ifCached = await redis.lrange(hash, 0, -1);
@@ -17,4 +17,14 @@ export default async function checkAndInsert(hash, value, expiration = 20) {
       console.log(await redis.setex(hash, expiration, value));
     }
   }
+}
+
+async function checkAndRetrieveQuery(hash) {
+  const ifCached = await redis.lrange(hash, 0, -1);
+  return ifCached;
+}
+
+export {
+  checkAndInsert,
+  checkAndRetrieveQuery
 }

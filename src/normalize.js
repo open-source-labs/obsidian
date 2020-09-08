@@ -1,5 +1,5 @@
 import specificQueryParser from './specificQueryParser.js'
-import checkAndInsert from './dbOps.js';
+import { checkAndInsert } from './dbOps.js';
 
 
 export default function normalizeResult(query, result, obsidianSchema) {
@@ -27,7 +27,7 @@ function hashSpecificQuery(queryType, fields, returnTypes, query, obsidianTypeSc
   const startIdx = query.indexOf(queryType);
 
   // Create the hash of the specific query
-  const hash = specificQueryParser(startIdx, query);
+  const hash = specificQueryParser(startIdx, query).output;
   console.log('hash', hash);
 
   // Create array of hashes of all key:value pairs (will check and store in cache inside)

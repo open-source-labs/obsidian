@@ -3,6 +3,7 @@ import { renderPlaygroundPage } from 'https://deno.land/x/oak_graphql@0.6.1/grap
 import { makeExecutableSchema } from 'https://deno.land/x/oak_graphql@0.6.1/graphql-tools/schema/makeExecutableSchema.ts';
 import getObsidianSchema from './getReturnTypes.js';
 import normalizeResult from './normalize.js';
+import destructureQueries from './destructureQueries.js';
 
 interface Constructable<T> {
   new (...args: any): T & OakRouter;
@@ -49,6 +50,8 @@ export async function ObsidianRouter<T>({
       try {
         const contextResult = context ? await context(ctx) : undefined;
         const body = await request.body().value;
+
+        destructureQueries(body.query, obsidianSchema);
 
         // Check the cache here
         const storedResult = undefined //await checkCache(body.query);

@@ -57,5 +57,5 @@ export default function specificQueryParser(startIdx, query) {
     }
   }
 
-  return output;
+  return { output, endIdx: i };
 }
