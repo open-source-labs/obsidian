@@ -8,12 +8,15 @@ function ObsidianWrapper(props) {
   const [cache, setCache] = React.useState(CACHE);
 
   function updateCache(query, response) {
-    setCache({ ...cache, [query]: response });
+    // setCache({ ...cache, [query]: response });
+    sessionStorage.setItem(query, JSON.stringify(response));
   }
   async function fetcher(query, endpoint = '/graphql') {
-    if (cache[query]) {
+    if (sessionStorage.getItem(query)) {
       console.log('checking cache');
-      return new Promise((resolve, reject) => resolve(cache[query]));
+      return new Promise((resolve, reject) =>
+        resolve(JSON.parse(sessionStorage.getItem(query)))
+      );
     } else {
       console.log('fetching data');
       try {
@@ -37,6 +40,7 @@ function ObsidianWrapper(props) {
   React.useEffect(() => {
     console.log('CACHE:', cache);
   }, [cache]);
+
   const todoData = { cache, fetcher };
 
   return <TodoContext.Provider value={todoData} {...props} />;

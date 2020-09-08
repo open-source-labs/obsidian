@@ -156,7 +156,7 @@ function handlePage(ctx: any) {
   try {
     const body = (ReactDomServer as any).renderToString(
       <ObsidianWrapper>
-        <App state={initialState} /> // Pass state as props here
+        <App state={initialState} />
       </ObsidianWrapper>
     );
     ctx.response.body = `<!DOCTYPE html>
