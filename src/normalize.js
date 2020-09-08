@@ -5,7 +5,7 @@ import checkAndInsert from './dbOps.js';
 export default function normalizeResult(query, result, obsidianSchema) {
   console.log('query', query);
   console.log('result', result);
-  
+
   const { returnTypes, obsidianTypeSchema } = obsidianSchema;
   console.log('returnTypes', returnTypes);
 
@@ -14,6 +14,7 @@ export default function normalizeResult(query, result, obsidianSchema) {
 
   for (let i = 0; i < specificQueryArray.length; i++) {
     const hashedQuery = hashSpecificQuery(specificQueryArray[i], result.data[specificQueryArray[i]], returnTypes, query, obsidianTypeSchema);
+    checkAndInsert(hashedQuery.hash, hashedQuery.value);
   }
 
 }
@@ -28,7 +29,6 @@ function hashSpecificQuery(queryType, fields, returnTypes, query, obsidianTypeSc
 
   // Create the hash of the specific query
   const hash = specificQueryParser(startIdx, query);
-  console.log('hash', hash);
 
   // Create array of hashes of all key:value pairs (will check and store in cache inside)
   const arrayOfHashes = hashAndStoreFields(queryType, fields, returnTypes, obsidianTypeSchema);
@@ -43,7 +43,6 @@ function hashAndStoreFields(queryType, fields, returnTypes, obsidianTypeSchema, 
   if (!typeSchemaName) {
     typeSchemaName = returnTypes[queryType].type;
   }
-  console.log('46', typeSchemaName)
   if (Array.isArray(fields)) {
     let output = [];
     fields.forEach(el => {
@@ -57,24 +56,51 @@ function hashAndStoreFields(queryType, fields, returnTypes, obsidianTypeSchema, 
 function hashAndStoreFieldsOfObject(typeSchemaName, fields, obsidianTypeSchema, queryType, returnTypes) {
   const properties = Object.keys(fields);
   const id = (fields.id || fields.ID || fields._id || fields._ID || fields.Id || fields._Id);
-  console.log('60 properties', properties);
 
   const hashes = properties.reduce((acc, property) => {
 
     if (!property.toLowerCase().match(/_?id/)) {
       const hash = hashGenerator(typeSchemaName, id, property);
-      console.log('66 hash', hash)
       let value;
 
+      // Check if the property is not scalar
       if (!obsidianTypeSchema[typeSchemaName][property].scalar) {
         const nestedSchemaName = obsidianTypeSchema[typeSchemaName][property].type;
-        console.log('non-scalar field', nestedSchemaName)
-        value = hashAndStoreFields(queryType, fields[property], returnTypes, obsidianTypeSchema, nestedSchemaName);
-        console.log('73 value', value)
+
+        hashAndStoreFields(queryType, fields[property], returnTypes, obsidianTypeSchema, nestedSchemaName);
+
+        if (Array.isArray(fields[property])) {
+
+          value = [];
+
+          for (let i = 0; i < fields[property].length; i++) {
+            const newId = (fields[property][i].id || fields[property][i].ID || fields[property][i]._id || fields[property][i]._ID || fields[property][i].Id || fields[property][i]._Id);
+            if (!newId) {
+              const nullResult = [fields[property][i].id, fields[property][i].ID, fields[property][i]._id, fields[property][i]._ID, fields[property][i].Id, fields[property][i]._Id].some(el => el === null);
+              if (nullResult) {
+                value = null;
+              } else {
+                throw new Error('Must return id field with each NamedType in your query');
+              }
+
+            } else {
+              value.push(nestedSchemaName + newId);
+            }
+
+          }
+
+        } else {
+
+          const newId = (fields[property].id || fields[property].ID || fields[property]._id || fields[property]._ID || fields[property].Id || fields[property]._Id);
+          value = nestedSchemaName + newId;
+
+        }
       } else {
+
+        // Property is scalar
         value = fields[property];
       }
-      console.log('76 value', value)
+
 
       // store hash key and value in redis database
       checkAndInsert(hash, value);
@@ -84,7 +110,6 @@ function hashAndStoreFieldsOfObject(typeSchemaName, fields, obsidianTypeSchema, 
     return acc;
   }, [])
 
-  console.log('hashes array ', hashes)
   return hashes;
 }
 

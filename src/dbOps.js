@@ -3,18 +3,19 @@ import redis from './cache.js';
 
 export default async function checkAndInsert(hash, value, expiration = 20) {
   let ifCached;
-  if (typeof value === 'object') {
+  if (Array.isArray(value)) {
     ifCached = await redis.lrange(hash, 0, -1);
-    console.log('ifCached obj', ifCached);
+    console.log('ifCached', hash, ':', ifCached);
     if (ifCached.length === 0) {
       await redis.rpush(hash, ...value);
       redis.expire(hash, expiration);
     }
   } else {
     ifCached = await redis.get(hash);
-    console.log('ifCached', ifCached)
+    console.log('ifCached', hash, ':', ifCached)
     if (!ifCached) {
-      console.log(await redis.setex(hash, expiration, value));
+      if (!value) value = JSON.stringify(value);
+      redis.setex(hash, expiration, value);
     }
   }
 }
