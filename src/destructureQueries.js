@@ -22,11 +22,11 @@ async function findSpecificQueries(query, obsidianSchema) {
 
   console.log('queryHashes', queryHashes);
 
-  const redisResults = await queryHashes.map(async (hash) => {
-    const result = await checkAndRetrieveQuery(hash);
-    console.log('resultOFREDIS', result)
-    return result;
-  });
+  const redisResults = [];
+
+  for (let i = 0; i < queryHashes.length; i++) {
+    redisResults.push(await checkAndRetrieveQuery(queryHashes[i]));
+  }
 
   console.log('redisResults', redisResults);
 
