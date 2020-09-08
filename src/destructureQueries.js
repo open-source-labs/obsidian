@@ -1,37 +1,85 @@
 import specificQueryParser from './specificQueryParser.js';
-import { checkAndRetrieveQuery } from './dbOps.js';
+import { checkAndRetrieveQuery, retrieveScalar } from './dbOps.js';
 
-export default function destructureQueries(query, obsidianSchema) {
+export default async function destructureQueries(query, obsidianSchema) {
   query = JSON.stringify(query)
-  const queryHashes = findSpecificQueries(query, obsidianSchema);
+  const queryHashes = await findSpecificQueries(query, obsidianSchema);
+
+  // Result object that we will build
+  const result = {
+    data: {}
+  };
+
+  // Loop through queryHashes and reconstruct results
+  for (let queryName in queryHashes) {
+    console.log('queryName', queryName);
+    console.log('hashes', queryHashes[queryName]);
+
+    // Haven't stored in the database
+    if (!queryHashes[queryName]) continue;
+
+    let queryResult = {};
+
+    const hashes = Object.keys(queryHashes[queryName])
+
+    for (let j = 0; j < hashes.length; j++) {
+      const typeSchemaName = findTypeSchemaName(hashes[j]);
+      const id = hashes[j].match(/(?<=~).*(?=~)/)[0];
+      const property = findProp(hashes[j]);
+      if (obsidianSchema.obsidianTypeSchema[typeSchemaName][property].scalar) {
+        if (!queryResult[id]) {
+          queryResult[id] = {
+            id
+          }
+        }
+        queryResult[id][property] = await retrieveScalar(hashes[j]);
+      } else {
+        
+      }
+    }
+
+    const ids = Object.keys(queryResult);
+
+    if (ids.length === 1) {
+      queryResult = queryResult[ids[0]];
+    } else {
+      queryResult = Object.values(queryResult);
+    }
+
+    result.data[queryName] = queryResult;
+  };
+
+
+
+  console.log(result);
 }
 
 async function findSpecificQueries(query, obsidianSchema) {
   console.log('obsidianSchema',obsidianSchema);
-  
-  const queryHashes = [];
+
+  const queryHashes = {};
 
   let nameOfQuery = findQueryName(query);
 
   while (nameOfQuery) {
     const startIndexOfName = query.indexOf(nameOfQuery);
     const next = specificQueryParser(startIndexOfName, query);
-    queryHashes.push(next.output)
+    queryHashes[nameOfQuery] = next.output;
     nameOfQuery = findQueryName(query, next.endIdx);
   }
 
   console.log('queryHashes', queryHashes);
 
-  const redisResults = [];
+  const redisResults = {};
 
-  for (let i = 0; i < queryHashes.length; i++) {
-    redisResults.push(await checkAndRetrieveQuery(queryHashes[i]));
+  // Loop through all specific queries and find their values in redis
+  for (let queryHash in queryHashes) {
+    redisResults[queryHash] = await checkAndRetrieveQuery(queryHashes[queryHash]);
   }
 
   console.log('redisResults', redisResults);
 
-
-
+  return redisResults;
 }
 
 function findQueryName(query, startIdx = 2) {
@@ -59,4 +107,22 @@ function findQueryName(query, startIdx = 2) {
   }
 
   return;
+}
+
+const findTypeSchemaName = hash => {
+  let i = 0;
+  while (hash[i] !== '~') {
+    i++;
+  }
+  return hash.slice(0, i);
+}
+
+const findProp = hash => {
+  let i = hash.length - 1;
+
+  while (hash[i] !== '~') {
+    i--;
+  }
+
+  return hash.slice(i + 1);
 }
