@@ -24,7 +24,8 @@ const storeCache = (query, result) => {
 
 
   console.log('-----PRE-----')
-  redis.set(query, JSON.stringify(result))
+  //set expiration 
+  redis.setex(query, 15, JSON.stringify(result))
   // BAO[query] = JSON.stringify(result);
   console.log('-----POST-----')
 
