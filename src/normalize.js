@@ -86,7 +86,7 @@ function hashAndStoreFieldsOfObject(typeSchemaName, fields, obsidianTypeSchema, 
               }
 
             } else {
-              value[nestedSchemaName + newId] = true;
+              value[nestedSchemaName + '~' + newId] = true;
             }
 
           }
@@ -94,7 +94,7 @@ function hashAndStoreFieldsOfObject(typeSchemaName, fields, obsidianTypeSchema, 
         } else {
 
           const newId = (fields[property].id || fields[property].ID || fields[property]._id || fields[property]._ID || fields[property].Id || fields[property]._Id);
-          value = nestedSchemaName + newId;
+          value = nestedSchemaName + '~' + newId;
 
         }
       } else {

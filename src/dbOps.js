@@ -41,8 +41,13 @@ async function retrieveScalar(hash) {
   return await redis.get(hash);
 }
 
+async function retrieveComplex(hash) {
+  return JSON.parse(await redis.get(hash))
+}
+
 export {
   checkAndInsert,
   checkAndRetrieveQuery,
-  retrieveScalar
+  retrieveScalar,
+  retrieveComplex
 }

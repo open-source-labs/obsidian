@@ -76,5 +76,10 @@ function getTypeSchema(typeDefs) {
 }
 
 const findArgs = schema => {
-  console.log(schema.arguments);
+  console.log('arguments',schema.arguments);
+
+  return schema.arguments.reduce((acc, arg) => {
+    acc[arg.name.value] = findType(arg).type;
+    return acc;
+  }, {})
 }
