@@ -41,7 +41,7 @@ export async function ObsidianRouter<T>({
 
   const schema = makeExecutableSchema({ typeDefs, resolvers });
   const obsidianSchema = getObsidianSchema(typeDefs);
-  console.log('FULL schema', obsidianSchema)
+  console.log('obsidianSchema', obsidianSchema)
 
 
   await router.post(path, async (ctx: any) => {

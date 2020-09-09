@@ -16,7 +16,7 @@ export default function getObsidianSchema(typeDefs) {
     querySchemaArgTypes[schema.name.value] = findArgs(schema);
   })
 
-  console.log('object of Return Types',querySchemaReturnTypes);
+  // console.log('object of Return Types',querySchemaReturnTypes);
 
   return {
     returnTypes: querySchemaReturnTypes,
@@ -70,13 +70,13 @@ function getTypeSchema(typeDefs) {
     typeSchemaForObsidian[type.name.value] = fieldObj;
   })
 
-  console.log('full schema', typeSchemaForObsidian);
+  // console.log('full schema', typeSchemaForObsidian);
 
   return typeSchemaForObsidian
 }
 
 const findArgs = schema => {
-  console.log('arguments',schema.arguments);
+  // console.log('arguments',schema.arguments);
 
   return schema.arguments.reduce((acc, arg) => {
     acc[arg.name.value] = findType(arg).type;

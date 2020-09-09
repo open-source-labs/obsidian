@@ -5,7 +5,7 @@ import createQueryObj from './createQueryObj.js';
 export default async function destructureQueries(query, obsidianSchema) {
   query = JSON.stringify(query)
   const queryHashes = await findSpecificQueries(query, obsidianSchema);
-  
+
 
   // Result object that we will build
   const result = {
@@ -39,7 +39,7 @@ export default async function destructureQueries(query, obsidianSchema) {
     //     if (Array.isArray(partialHashes)) {
     //       partialHashes.
     //     } else {
-          
+
     //     }
     //   }
     // }
@@ -59,7 +59,7 @@ export default async function destructureQueries(query, obsidianSchema) {
 
   console.log('RESULT?????? ',result);
   if (result.data.getBook) console.log(result.data.getBook.whereToBuy)
-  
+
 }
 
 async function buildResultsObject(hashes, obsidianSchema, queryObj) {
@@ -163,7 +163,6 @@ function findQueryName(query, startIdx = 2) {
       }
       output += query[i];
       i++;
-      console.log('output', output);
     }
   }
 
