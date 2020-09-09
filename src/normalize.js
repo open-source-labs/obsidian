@@ -32,12 +32,12 @@ function hashSpecificQuery(queryType, fields, returnTypes, query, obsidianTypeSc
   console.log('hash', hash);
 
   // Create array of hashes of all key:value pairs (will check and store in cache inside)
-  const arrayOfHashes = hashAndStoreFields(queryType, fields, returnTypes, obsidianTypeSchema);
-  
+  const objOfHashes = hashAndStoreFields(queryType, fields, returnTypes, obsidianTypeSchema);
+
 
   return {
     hash: hash,
-    value: arrayOfHashes
+    value: objOfHashes
   };
 }
 
@@ -46,9 +46,9 @@ function hashAndStoreFields(queryType, fields, returnTypes, obsidianTypeSchema, 
     typeSchemaName = returnTypes[queryType].type;
   }
   if (Array.isArray(fields)) {
-    let output = [];
+    let output = {};
     fields.forEach(el => {
-      output = output.concat(hashAndStoreFieldsOfObject(typeSchemaName, el, obsidianTypeSchema, queryType, returnTypes));
+      output = Object.assign(output, hashAndStoreFieldsOfObject(typeSchemaName, el, obsidianTypeSchema, queryType, returnTypes));
     })
     return output;
   }
@@ -73,7 +73,7 @@ function hashAndStoreFieldsOfObject(typeSchemaName, fields, obsidianTypeSchema, 
 
         if (Array.isArray(fields[property])) {
 
-          value = [];
+          value = {};
 
           for (let i = 0; i < fields[property].length; i++) {
             const newId = (fields[property][i].id || fields[property][i].ID || fields[property][i]._id || fields[property][i]._ID || fields[property][i].Id || fields[property][i]._Id);
@@ -86,7 +86,7 @@ function hashAndStoreFieldsOfObject(typeSchemaName, fields, obsidianTypeSchema, 
               }
 
             } else {
-              value.push(nestedSchemaName + newId);
+              value[nestedSchemaName + '~' + newId] = true;
             }
 
           }
@@ -94,7 +94,7 @@ function hashAndStoreFieldsOfObject(typeSchemaName, fields, obsidianTypeSchema, 
         } else {
 
           const newId = (fields[property].id || fields[property].ID || fields[property]._id || fields[property]._ID || fields[property].Id || fields[property]._Id);
-          value = nestedSchemaName + newId;
+          value = nestedSchemaName + '~' + newId;
 
         }
       } else {
@@ -107,14 +107,14 @@ function hashAndStoreFieldsOfObject(typeSchemaName, fields, obsidianTypeSchema, 
       // store hash key and value in redis database
       checkAndInsert(hash, value);
 
-      acc.push(hash);
+      acc[hash] = true;
     }
     return acc;
-  }, [])
+  }, {})
 
   return hashes;
 }
 
 function hashGenerator(typeSchemaName, id, property) {
-  return typeSchemaName + String(id) + property;
+  return typeSchemaName + '~' + String(id) + '~' + property;
 }
