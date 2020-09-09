@@ -2,6 +2,7 @@
 export default function getObsidianSchema(typeDefs) {
   // console.log(typeDefs.definitions)
   const obsidianTypeSchema = getTypeSchema(typeDefs)
+  // console.log(typeDefs);
 
   // Grabs just the query schema from the typedefs object
   const querySchema = typeDefs.definitions.filter((el) => el.name.value === 'Query')[0].fields;

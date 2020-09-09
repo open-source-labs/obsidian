@@ -3,14 +3,14 @@ import { checkAndInsert } from './dbOps.js';
 
 
 export default function normalizeResult(query, result, obsidianSchema) {
-  console.log('query', query);
-  console.log('result', result);
+  // console.log('query', query);
+  // console.log('result', result);
 
   const { returnTypes, obsidianTypeSchema } = obsidianSchema;
-  console.log('returnTypes', returnTypes);
+  // console.log('returnTypes', returnTypes);
 
   const specificQueryArray = Object.keys(result.data);
-  console.log('specificQueryArray', specificQueryArray)
+  // console.log('specificQueryArray', specificQueryArray)
 
   for (let i = 0; i < specificQueryArray.length; i++) {
     const hashedQuery = hashSpecificQuery(specificQueryArray[i], result.data[specificQueryArray[i]], returnTypes, query, obsidianTypeSchema);
@@ -29,7 +29,7 @@ function hashSpecificQuery(queryType, fields, returnTypes, query, obsidianTypeSc
 
   // Create the hash of the specific query
   const hash = specificQueryParser(startIdx, query).output;
-  console.log('hash', hash);
+  // console.log('hash', hash);
 
   // Create array of hashes of all key:value pairs (will check and store in cache inside)
   const objOfHashes = hashAndStoreFields(queryType, fields, returnTypes, obsidianTypeSchema);

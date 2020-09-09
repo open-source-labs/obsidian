@@ -1,7 +1,7 @@
 import { graphql } from 'https://deno.land/x/oak_graphql@0.6.1/deps.ts';
 import { renderPlaygroundPage } from 'https://deno.land/x/oak_graphql@0.6.1/graphql-playground-html/render-playground-html.ts';
 import { makeExecutableSchema } from 'https://deno.land/x/oak_graphql@0.6.1/graphql-tools/schema/makeExecutableSchema.ts';
-import getObsidianSchema from './getReturnTypes.js';
+import getObsidianSchema from './getObsidianSchema.js';
 import normalizeResult from './normalize.js';
 import destructureQueries from './destructureQueries.js';
 
@@ -51,15 +51,22 @@ export async function ObsidianRouter<T>({
         const contextResult = context ? await context(ctx) : undefined;
         const body = await request.body().value;
 
-        destructureQueries(body.query, obsidianSchema);
+        console.log('Incoming Query:');
+        console.log(body.query);
 
-        // Check the cache here
+        const obsidianReturn = await destructureQueries(body.query, obsidianSchema);
+
+        console.log('Obsidian Reconstructed Result:', obsidianReturn)
+
         const storedResult = undefined //await checkCache(body.query);
-        if (storedResult) {
-          console.log('Grabbed something from the cache');
+        if (obsidianReturn) {
+          // console.log('Grabbed something from the cache');
 
           response.status = 200;
-          response.body = storedResult;
+          response.body = obsidianReturn;
+
+          console.log('Reconstructed results object using cache, returning without querying db.')
+
           return;
         } else {
           const result = await (graphql as any)(
@@ -75,6 +82,9 @@ export async function ObsidianRouter<T>({
           response.body = result;
 
           // Store the new results
+          console.log('GraphQL result object');
+          console.log(result);
+          console.log('Sending results off to normalize...')
           normalizeResult(body.query, result, obsidianSchema);
           // storeCache(body.query, result);
           // console.log('query', body);
