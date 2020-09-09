@@ -5,7 +5,7 @@ import createQueryObj from './createQueryObj.js';
 export default async function destructureQueries(query, obsidianSchema) {
   query = JSON.stringify(query)
   const queryHashes = await findSpecificQueries(query, obsidianSchema);
-  
+
 
   // Result object that we will build
   const result = {
@@ -14,8 +14,8 @@ export default async function destructureQueries(query, obsidianSchema) {
 
   // Loop through queryHashes and reconstruct results
   for (let queryName in queryHashes) {
-    console.log('queryName', queryName);
-    console.log('hashes', queryHashes[queryName]);
+    // console.log('queryName', queryName);
+    // console.log('hashes', queryHashes[queryName]);
     let queryObj = createQueryObj(queryName, query, obsidianSchema);
 
     // Haven't stored in the database
@@ -23,48 +23,22 @@ export default async function destructureQueries(query, obsidianSchema) {
 
     const hashes = Object.keys(queryHashes[queryName])
 
-    // for (let j = 0; j < hashes.length; j++) {
-    //   const typeSchemaName = findTypeSchemaName(hashes[j]);
-    //   const id = hashes[j].match(/(?<=~).*(?=~)/)[0];
-    //   const property = findProp(hashes[j]);
-    //   if (!queryResult[id]) {
-    //     queryResult[id] = {
-    //       id
-    //     }
-    //   }
-    //   if (obsidianSchema.obsidianTypeSchema[typeSchemaName][property].scalar) {
-    //     queryResult[id][property] = await retrieveScalar(hashes[j]);
-    //   } else {
-    //     const partialHashes = await retrieveScalar(hashes[j]);
-    //     if (Array.isArray(partialHashes)) {
-    //       partialHashes.
-    //     } else {
-          
-    //     }
-    //   }
-    // }
-
-    // const ids = Object.keys(queryResult);
-
-    // if (ids.length === 1) {
-    //   queryResult = queryResult[ids[0]];
-    // } else {
-    //   queryResult = Object.values(queryResult);
-    // }
-
-    // result.data[queryName] = queryResult;
-
     result.data[queryName] = await buildResultsObject(hashes, obsidianSchema, queryObj);
   };
 
-  console.log('RESULT?????? ',result);
-  if (result.data.getBook) console.log(result.data.getBook.whereToBuy)
-  
+  // console.log('Obsidian Reconstructed Result',result);
+
+  if (Object.keys(result.data).length === 0) {
+    return undefined;
+  }
+
+  return result;
+
 }
 
 async function buildResultsObject(hashes, obsidianSchema, queryObj) {
   let queryResult = {};
-  console.log('Hashes in biuild', hashes)
+  // console.log('Hashes in biuild', hashes)
   for (let j = 0; j < hashes.length; j++) {
     const typeSchemaName = findTypeSchemaName(hashes[j]);
     const id = hashes[j].match(/(?<=~).*(?=~)/)[0];
@@ -85,12 +59,6 @@ async function buildResultsObject(hashes, obsidianSchema, queryObj) {
         for (let k = 0; k < loophash.length; k++) {
           queryResult[id][property].push(await buildResultsObject(batchHash(Object.keys(queryObj.properties[property]), loophash[k]), obsidianSchema, queryObj));
         }
-        // queryResult[id][property] = await Object.keys(partialHashes).reduce(async (acc, hash) => {
-        //   console.log('accumulator', acc)
-        //   return acc.concat([await buildResultsObject(batchHash(Object.keys(queryObj.properties[property]), hash), obsidianSchema, queryObj)]);
-        //   // acc.push(variable);
-        //   // return acc;
-        // }, []);
       } else {
         queryResult[id][property] = await buildResultsObject(batchHash(Object.keys(queryObj.properties[property]), partialHashes), obsidianSchema, queryObj);
       }
@@ -109,9 +77,7 @@ async function buildResultsObject(hashes, obsidianSchema, queryObj) {
 }
 
 async function findSpecificQueries(query, obsidianSchema) {
-  console.log('obsidianSchema',obsidianSchema);
-
-
+  // console.log('obsidianSchema',obsidianSchema);
 
   const queryHashes = {};
 
@@ -124,7 +90,7 @@ async function findSpecificQueries(query, obsidianSchema) {
     nameOfQuery = findQueryName(query, next.endIdx);
   }
 
-  console.log('queryHashes', queryHashes);
+  // console.log('queryHashes', queryHashes);
 
   const redisResults = {};
 
@@ -133,7 +99,7 @@ async function findSpecificQueries(query, obsidianSchema) {
     redisResults[queryHash] = await checkAndRetrieveQuery(queryHashes[queryHash]);
   }
 
-  console.log('redisResults', redisResults);
+  // console.log('redisResults', redisResults);
 
   return redisResults;
 }
@@ -163,7 +129,6 @@ function findQueryName(query, startIdx = 2) {
       }
       output += query[i];
       i++;
-      console.log('output', output);
     }
   }
 
