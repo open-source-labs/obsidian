@@ -10,7 +10,6 @@ function ObsidianWrapper(props) {
   function updateCache(query, response) {
     console.log('BEFORE: ', cache);
     const newObj = Object.assign(cache, { [query]: response });
-    const jehoSux = { ...cache, [query]: response };
     setCache(newObj);
     console.log('AFTER: ', newObj);
     console.log('CACHEEE: ', cache);
