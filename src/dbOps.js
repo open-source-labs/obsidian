@@ -19,7 +19,7 @@ async function checkAndInsert(hash, value, expiration = 20) {
     ifCached = await redis.get(hash);
     // console.log('found this in the cache:', hash, ':', ifCached)
     if (!ifCached) {
-      if (!value) value = JSON.stringify(value);
+      if (!value || typeof value === 'boolean') value = JSON.stringify(value);
       redis.setex(hash, expiration, value);
     }
   }
@@ -56,7 +56,7 @@ async function retrieveScalar(hash) {
 }
 
 async function retrieveComplex(hash) {
-  return JSON.parse(await redis.get(hash))
+  return JSON.parse(await redis.get(hash));
 }
 
 export {

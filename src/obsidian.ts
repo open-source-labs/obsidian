@@ -40,6 +40,8 @@ export async function ObsidianRouter<T>({
   const router = new Router();
 
   const schema = makeExecutableSchema({ typeDefs, resolvers });
+
+  // create easy-to-use schema from typeDefs once when server boots up
   const obsidianSchema = getObsidianSchema(typeDefs);
   console.log('obsidianSchema', obsidianSchema)
 
@@ -54,6 +56,7 @@ export async function ObsidianRouter<T>({
         console.log('Incoming Query:');
         console.log(body.query);
 
+        // Send query off to be destructured and found in Redis if possible //
         const obsidianReturn = await destructureQueries(body.query, obsidianSchema);
 
         console.log('Obsidian Reconstructed Result:', obsidianReturn)

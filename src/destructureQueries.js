@@ -1,88 +1,112 @@
 import specificQueryParser from './specificQueryParser.js';
 import { checkAndRetrieveQuery, retrieveScalar, retrieveComplex } from './dbOps.js';
 import createQueryObj from './createQueryObj.js';
+import { findTypeSchemaName, findProp } from './hashOps.js';
 
+// Attempt to rebuild results object if all hashes are found in Redis //
 export default async function destructureQueries(query, obsidianSchema) {
+  // Stringify to expose newline characters //
   query = JSON.stringify(query)
+
+  // Destructure query into array of minified sub-queries //
   const queryHashes = await findSpecificQueries(query, obsidianSchema);
 
-
-  // Result object that we will build
   const result = {
     data: {}
   };
 
-  // Loop through queryHashes and reconstruct results
+  // Loop through queryHashes and reconstruct results based on stored property hashes //
   for (let queryName in queryHashes) {
-    // console.log('queryName', queryName);
-    // console.log('hashes', queryHashes[queryName]);
-    let queryObj = createQueryObj(queryName, query, obsidianSchema);
+    // Create object representation of query //
+    const queryObj = createQueryObj(queryName, query, obsidianSchema);
 
-    // Haven't stored in the database
+    // If hasn't been stored in the database //  HEY THIS IS WHERE WE NEED TO FIX NULL OKAYYYY
     if (!queryHashes[queryName]) continue;
 
     const hashes = Object.keys(queryHashes[queryName])
 
+    // Attempt to build result object from cache //
     result.data[queryName] = await buildResultsObject(hashes, obsidianSchema, queryObj);
   };
-
-  // console.log('Obsidian Reconstructed Result',result);
-
-  if (Object.keys(result.data).length === 0) {
-    return undefined;
-  }
+  // If can't reconstruct //
+  if (Object.keys(result.data).length === 0) return;
 
   return result;
-
 }
 
 async function buildResultsObject(hashes, obsidianSchema, queryObj) {
   let queryResult = {};
-  // console.log('Hashes in biuild', hashes)
+
+  // For each property hash, add to result object //
+  // NOTE: queryResult built as object and turned into an array at end in order to preserve constant look up time during build. Keys are ids. //
   for (let j = 0; j < hashes.length; j++) {
     const typeSchemaName = findTypeSchemaName(hashes[j]);
     const id = hashes[j].match(/(?<=~).*(?=~)/)[0];
     const property = findProp(hashes[j]);
+
+    // If have not created an object at this id, make one //
     if (!queryResult[id]) {
       queryResult[id] = {
         id
       }
     }
+    // Prevent overriding of id //
     if (property.toLowerCase() === 'id' || property.toLowerCase() === '_id') continue;
+
+    // If this field is scalar //
     if (obsidianSchema.obsidianTypeSchema[typeSchemaName][property].scalar) {
-      queryResult[id][property] = await retrieveScalar(hashes[j]);
+      // Retrieve hash and parse based on expected type //
+      const propType = obsidianSchema.obsidianTypeSchema[typeSchemaName][property].type;
+      let propVal;
+      if (propType === 'Int' || propType === 'Float') {
+        propVal = Number(await retrieveScalar(hashes[j]));
+      } else if (propType === 'Boolean') {
+        propVal = JSON.parse(await retrieveScalar(hashes[j]));
+      } else {
+        propVal = await retrieveScalar(hashes[j]);
+        if (propVal.slice(1, 5) === 'null') propVal = null;
+      }
+      queryResult[id][property] = propVal;
+      // If this field is complex, recursive call to build nested property object //
     } else {
       const partialHashes = await retrieveComplex(hashes[j]);
+      // Field is ListType //
       if (typeof partialHashes === 'object') {
-        const loophash = Object.keys(partialHashes);
+        const partialHashesArray = Object.keys(partialHashes);
         queryResult[id][property] = [];
-        for (let k = 0; k < loophash.length; k++) {
-          queryResult[id][property].push(await buildResultsObject(batchHash(Object.keys(queryObj.properties[property]), loophash[k]), obsidianSchema, queryObj));
+        for (let k = 0; k < partialHashesArray.length; k++) {
+          // Recursive call //
+          queryResult[id][property].push(await buildResultsObject(batchHash(Object.keys(queryObj.properties[property]), partialHashesArray[k]), obsidianSchema, queryObj));
         }
+        // Field is NamedType //
       } else {
+        // Recursive call //
         queryResult[id][property] = await buildResultsObject(batchHash(Object.keys(queryObj.properties[property]), partialHashes), obsidianSchema, queryObj);
       }
     }
   }
 
-  const ids = Object.keys(queryResult);
+  // Converts object into array //
+  const resultObjects = Object.values(queryResult);
 
-  if (ids.length === 1) {
-    queryResult = queryResult[ids[0]];
+  // If only one, it should not be in an array //
+  if (resultObjects.length === 1) {
+    queryResult = resultObjects[0];
   } else {
-    queryResult = Object.values(queryResult);
+    queryResult = resultObjects;
   }
 
   return queryResult;
 }
 
+// Returns obj with minified queries and associated hashes //
 async function findSpecificQueries(query, obsidianSchema) {
-  // console.log('obsidianSchema',obsidianSchema);
-
   const queryHashes = {};
 
+  // Finds first query name //
   let nameOfQuery = findQueryName(query);
 
+  // Iterates until all sub-queries are added to queryHashes object //
   while (nameOfQuery) {
     const startIndexOfName = query.indexOf(nameOfQuery);
     const next = specificQueryParser(startIndexOfName, query);
@@ -90,20 +114,17 @@ async function findSpecificQueries(query, obsidianSchema) {
     nameOfQuery = findQueryName(query, next.endIdx);
   }
 
-  // console.log('queryHashes', queryHashes);
-
   const redisResults = {};
 
-  // Loop through all specific queries and find their values in redis
+  // Loop through all sub-queries and find their values in redis
   for (let queryHash in queryHashes) {
     redisResults[queryHash] = await checkAndRetrieveQuery(queryHashes[queryHash]);
   }
 
-  // console.log('redisResults', redisResults);
-
   return redisResults;
 }
 
+// Returns query name //
 function findQueryName(query, startIdx = 2) {
   let i = startIdx;
   let output = '';
@@ -111,56 +132,37 @@ function findQueryName(query, startIdx = 2) {
   while (i < query.length) {
     // Eat whitespace
     if (query[i] === ' ') {
-      i++;
-    // Came to the start of the requested fields, break out of loop
+    // Eat new line characters
     } else if (query[i] === '\\') {
       if (query[i+1] === 'n') {
-        i += 2;
+        i++;
       } else {
         output += query[i];
-        i++;
       }
+      // Found start of parameters/properties, break out of loop //
     } else if (query[i] === '(' || query[i] === '{') {
       return output;
     } else {
+      // Edge case for query string beginning with redundant 'query' //
       if (query[i] === 'q' && query.slice(i,i+5) === 'query') {
         i = query.indexOf('{') + 1;
         continue;
       }
       output += query[i];
-      i++;
     }
+    i++;
   }
-
   return;
 }
 
-const findTypeSchemaName = hash => {
-  let i = 0;
-  while (hash[i] !== '~') {
-    i++;
-  }
-  return hash.slice(0, i);
-}
-
-const findProp = hash => {
-  let i = hash.length - 1;
-
-  while (hash[i] !== '~') {
-    i--;
-  }
-
-  return hash.slice(i + 1);
-}
-
-
-function partialQueryConstructor(partialHash, property) {
+function nestedPropertyHashConstructor(partialHash, property) {
   return partialHash + '~' + property;
 }
 
+// Constructs hashes based on hash prefix and requested properties //
 function batchHash(propertySchema, hashPrefix) {
   return propertySchema.reduce((acc, prop) => {
-    const fullQuery = partialQueryConstructor(hashPrefix, prop);
+    const fullQuery = nestedPropertyHashConstructor(hashPrefix, prop);
     acc.push(fullQuery);
     return acc;
   }, [])

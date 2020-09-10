@@ -1,11 +1,11 @@
+
+// Create representation of query as an object //
 export default function(queryName, query, obsidianSchema) {
-  // Make an object
   const queryObj = {
     queryName,
     parameters: {}
   };
 
-  // Some variables
   const brackets = [];
   let i = query.indexOf(queryName) + queryName.length;
   let parameterName = '';
@@ -13,6 +13,7 @@ export default function(queryName, query, obsidianSchema) {
   let onName = false;
   let onValue = false;
 
+  // Rebuilds and stores parameters //
   while (brackets.length === 0) {
     if (query[i] === ' ') {
       // Skipping everything else for whitespace
@@ -38,7 +39,6 @@ export default function(queryName, query, obsidianSchema) {
     i++;
   }
 
-
   queryObj.properties = buildPropertyObject(query, i).propsObj;
 
   console.log('Obsidian Query Object:')
@@ -47,6 +47,8 @@ export default function(queryName, query, obsidianSchema) {
   return queryObj;
 }
 
+// Creates object representation of properties requested //
+// Returns ending index and props object //
 function buildPropertyObject(query, startIdx) {
   const propsObj = {};
   let i = startIdx;
@@ -67,13 +69,17 @@ function buildPropertyObject(query, startIdx) {
       property = '';
       i++;
     } else if (query[i] === '{' && property) {
+      // Recursively call for nested properties //
       response = buildPropertyObject(query, i+1);
       propsObj[property] = response.propsObj;
       property = '';
+      // Jump ahead past nested properties //
       i = response.index;
     } else if (query[i] === '{') {
+      // Recursively call for nested properties //
       response = buildPropertyObject(query, i+1);
       propsObj[lastStoredProp] = response.propsObj;
+      // Jump ahead past nested properties //
       i = response.index;
     } else if (query[i] === '}') {
       return {

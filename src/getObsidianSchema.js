@@ -1,8 +1,8 @@
 
 export default function getObsidianSchema(typeDefs) {
-  // console.log(typeDefs.definitions)
-  const obsidianTypeSchema = getTypeSchema(typeDefs)
-  // console.log(typeDefs);
+
+  // Builds schema of Types
+  const obsidianTypeSchema = getTypeSchema(typeDefs);
 
   // Grabs just the query schema from the typedefs object
   const querySchema = typeDefs.definitions.filter((el) => el.name.value === 'Query')[0].fields;
@@ -17,8 +17,6 @@ export default function getObsidianSchema(typeDefs) {
     querySchemaArgTypes[schema.name.value] = findArgs(schema);
   })
 
-  // console.log('object of Return Types',querySchemaReturnTypes);
-
   return {
     returnTypes: querySchemaReturnTypes,
     argTypes: querySchemaArgTypes,
@@ -26,6 +24,7 @@ export default function getObsidianSchema(typeDefs) {
   }
 }
 
+// Recursively finds if ListType or NamedType //
 function findType(schema) {
   // Build the output
   const typeObj = {};
@@ -50,14 +49,14 @@ function findType(schema) {
   return typeObj;
 }
 
+// Builds schema with for each Type //
 function getTypeSchema(typeDefs) {
   const types = typeDefs.definitions.filter(el => el.name.value !== 'Query' && el.name.value !== 'Mutation');
-  // console.log('types w/out queries', types)
 
   const typeSchemaForObsidian = {};
 
+  // Finds type for properties and checks if they're scalar for each Schema Type //
   types.forEach(type => {
-    // console.log('individual field',type.fields[0]);
     const fieldObj = type.fields.reduce((acc, field) => {
       const type = findType(field).type;
       const scalar = type === 'ID' || type === 'String' || type === 'Boolean' || type === 'Int' || type === 'Float' ? true: false;
@@ -71,14 +70,11 @@ function getTypeSchema(typeDefs) {
     typeSchemaForObsidian[type.name.value] = fieldObj;
   })
 
-  // console.log('full schema', typeSchemaForObsidian);
-
   return typeSchemaForObsidian
 }
 
+// Builds arguments schema for each Query Schema //
 const findArgs = schema => {
-  // console.log('arguments',schema.arguments);
-
   return schema.arguments.reduce((acc, arg) => {
     acc[arg.name.value] = findType(arg).type;
     return acc;
