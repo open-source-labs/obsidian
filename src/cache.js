@@ -2,9 +2,7 @@ import { connect } from "https://denopkg.com/keroxp/deno-redis/mod.ts";
 
 export default await connect({ hostname: "127.0.0.1", port: 6379 });
 
-
-
-
+/*
 
 const checkCache = async query => {
 
@@ -17,13 +15,12 @@ const checkCache = async query => {
 
 const storeCache = (query, result) => {
 
-
-
   console.log('-----PRE-STORAGE-----')
-  //set expiration 
+  //set expiration
   redis.setex(query, 15, JSON.stringify(result))
   // BAO[query] = JSON.stringify(result);
   console.log('-----POST-STORAGE-----')
 
-
 }
+
+*/

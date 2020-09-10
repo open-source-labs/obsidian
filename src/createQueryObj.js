@@ -41,7 +41,8 @@ export default function(queryName, query, obsidianSchema) {
 
   queryObj.properties = buildPropertyObject(query, i).propsObj;
 
-  console.log('queryObject props ', queryObj);
+  console.log('Obsidian Query Object:')
+  console.log(queryObj);
 
   return queryObj;
 }
