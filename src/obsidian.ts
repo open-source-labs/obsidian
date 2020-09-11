@@ -1,7 +1,9 @@
 import { graphql } from 'https://deno.land/x/oak_graphql@0.6.1/deps.ts';
 import { renderPlaygroundPage } from 'https://deno.land/x/oak_graphql@0.6.1/graphql-playground-html/render-playground-html.ts';
 import { makeExecutableSchema } from 'https://deno.land/x/oak_graphql@0.6.1/graphql-tools/schema/makeExecutableSchema.ts';
-import { checkCache, storeCache } from './cache.js';
+import getObsidianSchema from './getObsidianSchema.js';
+import normalizeResult from './normalize.js';
+import destructureQueries from './destructureQueries.js';
 
 interface Constructable<T> {
   new (...args: any): T & OakRouter;
@@ -39,6 +41,11 @@ export async function ObsidianRouter<T>({
 
   const schema = makeExecutableSchema({ typeDefs, resolvers });
 
+  // create easy-to-use schema from typeDefs once when server boots up
+  const obsidianSchema = getObsidianSchema(typeDefs);
+  console.log('obsidianSchema', obsidianSchema)
+
+
   await router.post(path, async (ctx: any) => {
     const { response, request } = ctx;
     if (request.hasBody) {
@@ -46,15 +53,23 @@ export async function ObsidianRouter<T>({
         const contextResult = context ? await context(ctx) : undefined;
         const body = await request.body().value;
 
-        // Check the cache here
-        const storedResult = await checkCache(body.query);
-        if (storedResult) {
-          console.log('Grabbed something from the cache');
+        console.log('Incoming Query:');
+        console.log(body.query);
 
-          response.status = 200;
-          response.body = storedResult;
-          return;
-        } else {
+        // Send query off to be destructured and found in Redis if possible //
+        const obsidianReturn = await destructureQueries(body.query, obsidianSchema);
+
+        console.log('Obsidian Reconstructed Result:', obsidianReturn)
+        /* COMMENT OUT THESE LINES FOR WRAPPER CACHE */
+        // if (obsidianReturn) {
+        //   response.status = 200;
+        //   response.body = obsidianReturn;
+        //
+        //   console.log('Reconstructed results object using cache, returning without querying db.')
+        //
+        //   return;
+        // } else {
+        /* COMMENT OUT THESE LINES FOR WRAPPER CACHE */
           const result = await (graphql as any)(
             schema,
             body.query,
@@ -68,9 +83,17 @@ export async function ObsidianRouter<T>({
           response.body = result;
 
           // Store the new results
-          storeCache(body.query, result);
+          console.log('GraphQL result object');
+          console.log(result);
+          console.log('Sending results off to normalize...')
+          /* COMMENT OUT THESE LINES FOR WRAPPER CACHE */
+          // normalizeResult(body.query, result, obsidianSchema);
+          /* COMMENT OUT THESE LINES FOR WRAPPER CACHE */
+
           return;
-        }
+        /* COMMENT OUT THESE LINES FOR WRAPPER CACHE */
+        // }
+        /* COMMENT OUT THESE LINES FOR WRAPPER CACHE */
       } catch (error) {
         response.status = 200;
         response.body = {

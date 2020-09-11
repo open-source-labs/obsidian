@@ -26,7 +26,11 @@ const Book = (props: any) => {
       <button
         onClick={() => {
           fetcher(
-            ` query { getBook(id: ${props.id}) { id  title  author  description  publicationDate  publisher  coverPrice }}`
+            ` query { getBook(id: ${props.id}) { id  title  author  description  publicationDate  publisher  coverPrice whereToBuy {
+              id
+              name
+              address
+            }}}`
           ).then((resp: any) => props.setInfo(resp.getBook));
         }}
       >
