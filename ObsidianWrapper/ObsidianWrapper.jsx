@@ -10,20 +10,26 @@ function ObsidianWrapper(props) {
   async function fetcher(query, options = {}) {
     // Desctructuring of optional parameters, default values are defined and may be over written
     const { endpoint = '/graphql', pollInterval = null } = options;
-    // Conditional to check if query is stored in global cache
-    if (cache[query]) {
-      console.log('--------------');
-      console.log('Found it in the cache!!');
-      console.log('--------------');
-      // Returning cached response as a promise
-      return new Promise(
-        (resolve, reject) => resolve(cache[query])
-        // This can be uncommeted to store cache in session storage
-        // resolve(JSON.parse(sessionStorage.getItem(query)))
-      );
-    }
-    // If not found in cache, query is excecuted
-    else {
+
+    /* COMMENT OUT THESE LINES FOR SERVER CACHE */
+
+    // // Conditional to check if query is stored in global cache
+    // if (cache[query]) {
+    //   console.log('--------------');
+    //   console.log('Found it in the cache!!');
+    //   console.log('--------------');
+    //   // Returning cached response as a promise
+    //   return new Promise(
+    //     (resolve, reject) => resolve(cache[query])
+    //     // This can be uncommeted to store cache in session storage
+    //     // resolve(JSON.parse(sessionStorage.getItem(query)))
+    //   );
+    // }
+    // // If not found in cache, query is excecuted
+    // else {
+
+      /* COMMENT OUT THESE LINES FOR SERVER CACHE */
+
       // Conditional check, if poll interval has been defined
       if (pollInterval) {
         console.log(
@@ -42,7 +48,9 @@ function ObsidianWrapper(props) {
       console.log('Fetching Data');
       // Excection of fetch
       return await fetchData(query, endpoint);
-    }
+    /* COMMENT OUT THESE LINES FOR SERVER CACHE */
+    // }
+    /* COMMENT OUT THESE LINES FOR SERVER CACHE */
   }
   // Function to update the global cache with new response data
   function updateCache(query, response) {
@@ -69,7 +77,11 @@ function ObsidianWrapper(props) {
       });
       const resp = await respJSON.json();
       // Excecute function to update the cache with new response
-      updateCache(query, resp.data);
+
+      /* COMMENT OUT THESE LINES FOR SERVER CACHE */
+      // updateCache(query, resp.data);
+      /* COMMENT OUT THESE LINES FOR SERVER CACHE */
+
       return resp.data;
     } catch (e) {
       console.log(e);
@@ -80,7 +92,8 @@ function ObsidianWrapper(props) {
 }
 // Declaration of custom hook to allow access to provider
 function useObsidian() {
-  return React.useContext(TodoContext);
+  // React useContext hook to access the global provider by any of the consumed components
+  return React.useContext(cacheContext);
 }
 // Exporting of Custom wrapper and hook to access wrapper cache
 export { ObsidianWrapper, useObsidian };
