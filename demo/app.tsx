@@ -18,11 +18,8 @@ import {
 declare global {
   namespace JSX {
     interface IntrinsicElements {
-      [key: string]: any;
-      button: any;
-      div: any;
       h1: any;
-      p: any;
+      div: any;
     }
   }
 }
@@ -34,9 +31,9 @@ const App = () => {
   const { fetcher } = useObsidian();
 
   (React as any).useEffect(() => {
-    fetcher(`{ getEightBooks(id: 1) { id title author } }`).then((resp: any) =>
-      setBooks([...resp.getEightBooks])
-    );
+    fetcher(`{ getEightBooks(id: 1) { id title author } }`, {
+      pollInterval: 8000,
+    }).then((resp: any) => setBooks([...resp.getEightBooks]));
   }, []);
 
   const pageTurn = (id: any) => {

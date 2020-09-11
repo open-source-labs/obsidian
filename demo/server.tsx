@@ -1,16 +1,10 @@
-import {
-  Application,
-  Router,
-  RouterContext,
-} from 'https://deno.land/x/oak@v6.0.1/mod.ts';
-import {
-  applyGraphQL,
-  gql,
-  GQLError,
-} from 'https://deno.land/x/oak_graphql/mod.ts';
+import { Application, Router } from 'https://deno.land/x/oak@v6.0.1/mod.ts';
+import { gql } from 'https://deno.land/x/oak_graphql/mod.ts';
 
-// OBSIDIAN ROUTER
+// Importing Obsidian Router for server
 import { ObsidianRouter } from '../src/obsidian.ts';
+
+// Importing Obsidian Wrapper for client-side application
 import { ObsidianWrapper } from '../ObsidianWrapper/ObsidianWrapper.jsx';
 
 import client from './sqlclient.ts';
@@ -156,7 +150,7 @@ function handlePage(ctx: any) {
   try {
     const body = (ReactDomServer as any).renderToString(
       <ObsidianWrapper>
-        <App state={initialState} /> // Pass state as props here
+        <App state={initialState} />
       </ObsidianWrapper>
     );
     ctx.response.body = `<!DOCTYPE html>
