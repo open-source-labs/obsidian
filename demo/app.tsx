@@ -3,6 +3,8 @@ import Sidebar from './Components/Sidebar.tsx';
 import BookNavBar from './Components/BookNavBar.tsx';
 import Carousel from './Components/Carousel.tsx';
 import CartBtn from './Components/CartBtn.tsx';
+import { useObsidian } from '../ObsidianWrapper/ObsidianWrapper.jsx';
+
 import {
   mainContainerStyle,
   headerStyle,
@@ -16,11 +18,8 @@ import {
 declare global {
   namespace JSX {
     interface IntrinsicElements {
-      [key: string]: any;
-      button: any;
-      div: any;
       h1: any;
-      p: any;
+      div: any;
     }
   }
 }
@@ -29,56 +28,23 @@ const App = () => {
   const [info, setInfo] = (React as any).useState({});
   const [books, setBooks] = (React as any).useState([]);
   const [page, setPage] = (React as any).useState(1);
+  const { fetcher } = useObsidian();
 
   (React as any).useEffect(() => {
-    fetch('/graphql', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-      body: JSON.stringify({
-        query: `{
-          getEightBooks(id: 1) {
-            id
-            title
-            author
-          }
-        }`,
-      }),
-    })
-      .then((resp) => resp.json())
-      .then((resp) => {
-        console.log(resp.data.getEightBooks);
-        setBooks([...resp.data.getEightBooks]);
-      });
+    fetcher(`{ getEightBooks(id: 1) { id title author } }`, {
+      pollInterval: 8000,
+    }).then((resp: any) => setBooks([...resp.getEightBooks]));
   }, []);
 
   const pageTurn = (id: any) => {
-    fetch('/graphql', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-      body: JSON.stringify({
-        query: `{
-          getEightBooks(id: ${id}) {
-            id
-            title
-            author
-          }
-        }`,
-      }),
-    })
-      .then((resp) => resp.json())
-      .then((resp) => {
-        console.log(resp.data.getEightBooks);
-        setBooks([...resp.data.getEightBooks]);
+    fetcher(` query{ getEightBooks(id: ${id}) { id title  author } } `).then(
+      (resp: any) => {
+        setBooks([...resp.getEightBooks]);
         let curPage = id;
         if (curPage !== 1) curPage = (id - 1) / 8 + 1;
         setPage(curPage);
-      });
+      }
+    );
   };
 
   return (
