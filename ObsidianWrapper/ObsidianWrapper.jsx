@@ -11,10 +11,12 @@ function ObsidianWrapper(props) {
     setCache({ ...cache, [query]: response });
   }
   async function fetcher(query, endpoint = '/graphql') {
+    /* COMMENT OUT THESE LINES FOR SERVER CACHE */
     // if (cache[query]) {
     //   console.log('checking cache');
     //   return new Promise((resolve, reject) => resolve(cache[query]));
     // } else {
+    /* COMMENT OUT THESE LINES FOR SERVER CACHE */
       console.log('fetching data');
       try {
         const respJSON = await fetch(endpoint, {
@@ -26,13 +28,17 @@ function ObsidianWrapper(props) {
           body: JSON.stringify({ query }),
         });
         const resp = await respJSON.json();
-        updateCache(query, resp.data);
+        /* COMMENT OUT THESE LINES FOR SERVER CACHE */
+        // updateCache(query, resp.data);
+        /* COMMENT OUT THESE LINES FOR SERVER CACHE */
 
         return resp.data;
       } catch (e) {
         console.log(e);
       }
+    /* COMMENT OUT THESE LINES FOR SERVER CACHE */
     // }
+    /* COMMENT OUT THESE LINES FOR SERVER CACHE */
   }
   React.useEffect(() => {
     console.log('CACHE:', cache);
