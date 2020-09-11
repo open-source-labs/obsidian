@@ -12,6 +12,8 @@ import * as Colors from 'https://deno.land/std/fmt/colors.ts';
 
 // OBSIDIAN ROUTER
 import { ObsidianRouter } from '../src/obsidian.ts';
+
+// Importing Obsidian Wrapper for client-side application
 import { ObsidianWrapper } from '../ObsidianWrapper/ObsidianWrapper.jsx';
 
 import client from './sqlclient.ts';
