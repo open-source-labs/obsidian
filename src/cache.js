@@ -1,6 +1,14 @@
 import { connect } from "https://denopkg.com/keroxp/deno-redis/mod.ts";
 
-export default await connect({ hostname: "127.0.0.1", port: 6379 });
+const connectToRedis = async (browser) => {
+  if (!browser) {
+    return await connect({ hostname: "127.0.0.1", port: 6379 });
+  }
+}
+
+export default async function(browser) {
+  return await connectToRedis(browser);
+}
 
 /*
 

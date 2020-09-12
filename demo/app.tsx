@@ -31,9 +31,8 @@ const App = () => {
   const { fetcher } = useObsidian();
 
   (React as any).useEffect(() => {
-    fetcher(`{ getEightBooks(id: 1) { id title author } }`, {
-      pollInterval: 8000,
-    }).then((resp: any) => setBooks([...resp.getEightBooks]));
+    fetcher(`{ getEightBooks(id: 1) { id title author } }`)
+    .then((resp: any) => setBooks([...resp.getEightBooks]));
   }, []);
 
   const pageTurn = (id: any) => {

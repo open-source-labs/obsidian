@@ -43,7 +43,11 @@ app.use(async (ctx, next) => {
 });
 
 // Initial state
-const initialState = {};
+interface initialState {
+  obsidianSchema?: any;
+}
+
+const initialState: initialState = {};
 
 // Router for base path
 const router = new Router();
@@ -167,13 +171,19 @@ const resolvers = {
   },
 };
 
+interface ObsRouter extends Router {
+  obsidianSchema?: any;
+}
+
 // Setup GraphQL Router
-const GraphQLService = await ObsidianRouter<Router>({
+const GraphQLRouter = await ObsidianRouter<ObsRouter>({
   Router,
   typeDefs: types,
   resolvers: resolvers,
 });
-app.use(GraphQLService.routes(), GraphQLService.allowedMethods());
+app.use(GraphQLRouter.routes(), GraphQLRouter.allowedMethods());
+
+initialState.obsidianSchema = GraphQLRouter.obsidianSchema;
 
 // Spin up the server
 console.log('server is running on http://localhost:8000/');
