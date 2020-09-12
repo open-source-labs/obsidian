@@ -12,9 +12,10 @@ interface Constructable<T> {
 interface OakRouter {
   post: any;
   get: any;
+  obsidianSchema?: any;
 }
 
-export interface ApplyGraphQLOptions<T> {
+export interface ObsidianRouterOptions<T> {
   Router: Constructable<T>;
   path?: string;
   typeDefs: any;
@@ -36,14 +37,16 @@ export async function ObsidianRouter<T>({
   resolvers,
   context,
   usePlayground = true,
-}: ApplyGraphQLOptions<T>): Promise<T> {
+}: ObsidianRouterOptions<T>): Promise<T> {
   const router = new Router();
 
   const schema = makeExecutableSchema({ typeDefs, resolvers });
 
   // create easy-to-use schema from typeDefs once when server boots up
   const obsidianSchema = getObsidianSchema(typeDefs);
-  console.log('obsidianSchema', obsidianSchema)
+  console.log('obsidianSchema', obsidianSchema);
+
+  router.obsidianSchema = obsidianSchema;
 
 
   await router.post(path, async (ctx: any) => {
@@ -61,14 +64,14 @@ export async function ObsidianRouter<T>({
 
         console.log('Obsidian Reconstructed Result:', obsidianReturn)
         /* COMMENT OUT THESE LINES FOR WRAPPER CACHE */
-        // if (obsidianReturn) {
-        //   response.status = 200;
-        //   response.body = obsidianReturn;
-        //
-        //   console.log('Reconstructed results object using cache, returning without querying db.')
-        //
-        //   return;
-        // } else {
+        if (obsidianReturn) {
+          response.status = 200;
+          response.body = obsidianReturn;
+
+          console.log('Reconstructed results object using cache, returning without querying db.')
+
+          return;
+        } else {
         /* COMMENT OUT THESE LINES FOR WRAPPER CACHE */
           const result = await (graphql as any)(
             schema,
@@ -87,12 +90,12 @@ export async function ObsidianRouter<T>({
           console.log(result);
           console.log('Sending results off to normalize...')
           /* COMMENT OUT THESE LINES FOR WRAPPER CACHE */
-          // normalizeResult(body.query, result, obsidianSchema);
+          normalizeResult(body.query, result, obsidianSchema);
           /* COMMENT OUT THESE LINES FOR WRAPPER CACHE */
 
           return;
         /* COMMENT OUT THESE LINES FOR WRAPPER CACHE */
-        // }
+        }
         /* COMMENT OUT THESE LINES FOR WRAPPER CACHE */
       } catch (error) {
         response.status = 200;
