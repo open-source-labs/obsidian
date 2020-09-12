@@ -1,3 +1,2 @@
-# Ignore Mac system files
-.DS_store
-
+demo/dump.rdb
+.DS_Store
