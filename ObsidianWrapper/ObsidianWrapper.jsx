@@ -5,6 +5,7 @@ import clientStorage from './clientStorage.js';
 import normalizeResult from '../src/normalize.js';
 import destructureQueries from '../src/destructureQueries.js';
 
+
 // Context will be used to create a custom provider for the application
 export const cacheContext = React.createContext();
 
@@ -15,20 +16,21 @@ function ObsidianWrapper(props) {
 
   // Primary function, provides access to fetching and caching capabilities
   async function fetcher(query, options = {}) {
-
+    console.log('initial state', window.__INITIAL_STATE__.obsidianSchema)
+    const obsidianSchema = window.__INITIAL_STATE__.obsidianSchema;
     // Desctructuring of optional parameters, default values are defined and may be over written
     const { endpoint = '/graphql', pollInterval = null } = options;
 
     /* COMMENT OUT THESE LINES FOR SERVER CACHE */
-
+    const obsidianReturn = await destructureQueries(query, obsidianSchema);
     // // Conditional to check if query is stored in global cache
-    if (cache[query]) {
+    if (obsidianReturn) {
       console.log('--------------');
       console.log('Found it in the cache!!');
       console.log('--------------');
       // Returning cached response as a promise
       return new Promise(
-        (resolve, reject) => resolve(cache[query])
+        (resolve, reject) => resolve(obsidianReturn)
         // This can be uncommeted to store cache in session storage
         // resolve(JSON.parse(sessionStorage.getItem(query)))
       );
@@ -74,6 +76,7 @@ function ObsidianWrapper(props) {
   }
   // Excecutes graphql fetch request
   async function fetchData(query, endpoint) {
+    const obsidianSchema = window.__INITIAL_STATE__.obsidianSchema;
     try {
       const respJSON = await fetch(endpoint, {
         method: 'POST',
@@ -87,10 +90,10 @@ function ObsidianWrapper(props) {
       // Excecute function to update the cache with new response
 
       /* COMMENT OUT THESE LINES FOR SERVER CACHE */
-      updateCache(query, resp.data);
+      normalizeResult(query, resp, obsidianSchema);
       /* COMMENT OUT THESE LINES FOR SERVER CACHE */
 
-      return resp.data;
+      return resp;
     } catch (e) {
       console.log(e);
     }
