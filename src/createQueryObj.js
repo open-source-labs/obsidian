@@ -15,6 +15,7 @@ export default function(queryName, query, obsidianSchema) {
 
   // Rebuilds and stores parameters //
   while (brackets.length === 0) {
+    console.log('parameter name', parameterName)
     if (query[i] === ' ') {
       // Skipping everything else for whitespace
     } else if (query[i] === '{') {
@@ -22,7 +23,12 @@ export default function(queryName, query, obsidianSchema) {
     } else if (query[i] === '(') {
       onName = true;
     } else if (query[i] === ')' || query[i] === ',') {
-      if (obsidianSchema.argTypes[queryName][parameterName] !== 'ID') throw new Error('We do not support non-ID parameters.');
+      console.log('PARAMETERS', obsidianSchema.argTypes[queryName][parameterName]);
+      if (obsidianSchema.argTypes[queryName][parameterName] !== 'ID') {
+      //   // console.log()
+      //   return { error: { message: 'We do not support non-ID parameters.', status: 400}};
+      // }
+        throw new Error('We do not support non-ID parameters.')};
       queryObj.parameters[parameterName] = parameterValue;
       onValue = false;
       onName = true;

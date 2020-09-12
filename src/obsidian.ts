@@ -62,6 +62,9 @@ export async function ObsidianRouter<T>({
         console.log('Obsidian Reconstructed Result:', obsidianReturn)
 
         const storedResult = undefined //await checkCache(body.query);
+
+        // console.log('obsidianReturn', obsidianReturn);
+        
         if (obsidianReturn) {
           // console.log('Grabbed something from the cache');
 
@@ -96,6 +99,7 @@ export async function ObsidianRouter<T>({
         }
       } catch (error) {
         response.status = 200;
+        console.log('error message', error.message);
         response.body = {
           data: null,
           errors: [

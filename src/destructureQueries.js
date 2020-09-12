@@ -19,6 +19,8 @@ export default async function destructureQueries(query, obsidianSchema) {
   for (let queryName in queryHashes) {
     // Create object representation of query //
     const queryObj = createQueryObj(queryName, query, obsidianSchema);
+    // console.log('error?? ', queryObj)
+    // if (queryObj.hasOwnProperty(error) || queryObj instanceof Error) return queryObj;
 
     // If hasn't been stored in the database //  HEY THIS IS WHERE WE NEED TO FIX NULL OKAYYYY
     if (!queryHashes[queryName]) continue;
@@ -110,6 +112,7 @@ async function findSpecificQueries(query, obsidianSchema) {
   while (nameOfQuery) {
     const startIndexOfName = query.indexOf(nameOfQuery);
     const next = specificQueryParser(startIndexOfName, query);
+    console.log('next', next);
     queryHashes[nameOfQuery] = next.output;
     nameOfQuery = findQueryName(query, next.endIdx);
   }
@@ -120,12 +123,14 @@ async function findSpecificQueries(query, obsidianSchema) {
   for (let queryHash in queryHashes) {
     redisResults[queryHash] = await checkAndRetrieveQuery(queryHashes[queryHash]);
   }
-
+  console.log('redisResults', redisResults)
   return redisResults;
 }
 
 // Returns query name //
-function findQueryName(query, startIdx = 2) {
+function findQueryName(query, startIdx = query.indexOf('{') + 1) {
+  console.log('query in findQueryName', query)
+  console.log(startIdx)
   let i = startIdx;
   let output = '';
 
