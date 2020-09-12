@@ -1,4 +1,3 @@
-
 // Create representation of query as an object //
 export default function(queryName, query, obsidianSchema) {
   const queryObj = {
@@ -15,6 +14,7 @@ export default function(queryName, query, obsidianSchema) {
 
   // Rebuilds and stores parameters //
   while (brackets.length === 0) {
+    console.log('parameter name', parameterName)
     if (query[i] === ' ') {
       // Skipping everything else for whitespace
     } else if (query[i] === '{') {

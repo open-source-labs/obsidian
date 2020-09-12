@@ -99,6 +99,7 @@ export async function ObsidianRouter<T>({
         /* COMMENT OUT THESE LINES FOR WRAPPER CACHE */
       } catch (error) {
         response.status = 200;
+        console.log('error message', error.message);
         response.body = {
           data: null,
           errors: [

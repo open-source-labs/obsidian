@@ -22,6 +22,8 @@ import React from 'https://dev.jspm.io/react@16.13.1';
 import ReactDomServer from 'https://dev.jspm.io/react-dom@16.13.1/server';
 import App from './app.tsx';
 
+const PORT = 8000;
+
 // Create a new server
 const app = new Application();
 
@@ -67,6 +69,9 @@ serverrouter.get('/static/client.js', (context) => {
 app.use(router.routes());
 app.use(serverrouter.routes());
 app.use(router.allowedMethods());
+
+
+
 
 // GraphQL types
 const types = (gql as any)`
@@ -185,9 +190,22 @@ app.use(GraphQLRouter.routes(), GraphQLRouter.allowedMethods());
 
 initialState.obsidianSchema = GraphQLRouter.obsidianSchema;
 
+
 // Spin up the server
-console.log('server is running on http://localhost:8000/');
-await app.listen({ port: 8000 });
+// console.log('server is running on http://localhost:8000/');
+// await app.listen({ port: 8000 });
+
+
+app.addEventListener('listen', () => {
+  console.log(`Listening at http://localhost:${PORT}`);
+});
+
+if (import.meta.main) {
+  await app.listen({ port: PORT });
+}
+
+export { app };
+
 
 // SSR of React App (invoked at line 12)
 
@@ -219,3 +237,6 @@ function handlePage(ctx: any) { // <ObsidianWrapper> needed
     console.error(error);
   }
 }
+
+// import { superoak } from "https://deno.land/x/superoak@2.1.0/mod.ts";
+
