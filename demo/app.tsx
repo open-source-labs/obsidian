@@ -32,13 +32,13 @@ const App = () => {
 
   (React as any).useEffect(() => {
     fetcher(`{ getEightBooks(id: 1) { id title author } }`)
-    .then((resp: any) => setBooks([...resp.getEightBooks]));
+    .then((resp: any) => setBooks([...resp.data.getEightBooks]));
   }, []);
 
   const pageTurn = (id: any) => {
     fetcher(` query{ getEightBooks(id: ${id}) { id title  author } } `).then(
       (resp: any) => {
-        setBooks([...resp.getEightBooks]);
+        setBooks([...resp.data.getEightBooks]);
         let curPage = id;
         if (curPage !== 1) curPage = (id - 1) / 8 + 1;
         setPage(curPage);

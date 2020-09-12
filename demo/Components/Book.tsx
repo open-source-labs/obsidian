@@ -31,7 +31,7 @@ const Book = (props: any) => {
               name
               address
             }}}`
-          ).then((resp: any) => props.setInfo(resp.getBook));
+          ).then((resp: any) => props.setInfo(resp.data.getBook));
         }}
       >
         Get more info
