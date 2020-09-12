@@ -1,32 +1,40 @@
 import React from 'https://dev.jspm.io/react@16.13.1';
+
+import clientStorage from './clientStorage.js';
+
+import normalizeResult from '../src/normalize.js';
+import destructureQueries from '../src/destructureQueries.js';
+
 // Context will be used to create a custom provider for the application
 export const cacheContext = React.createContext();
-// Initial global cache object, empty by default
-const CACHE = {};
+
 // Declaration of custom Obsidian Wrapper
 function ObsidianWrapper(props) {
-  const [cache, setCache] = React.useState(CACHE);
+
+  const [cache, setCache] = React.useState(clientStorage);
+
   // Primary function, provides access to fetching and caching capabilities
   async function fetcher(query, options = {}) {
+
     // Desctructuring of optional parameters, default values are defined and may be over written
     const { endpoint = '/graphql', pollInterval = null } = options;
 
     /* COMMENT OUT THESE LINES FOR SERVER CACHE */
 
     // // Conditional to check if query is stored in global cache
-    // if (cache[query]) {
-    //   console.log('--------------');
-    //   console.log('Found it in the cache!!');
-    //   console.log('--------------');
-    //   // Returning cached response as a promise
-    //   return new Promise(
-    //     (resolve, reject) => resolve(cache[query])
-    //     // This can be uncommeted to store cache in session storage
-    //     // resolve(JSON.parse(sessionStorage.getItem(query)))
-    //   );
-    // }
-    // // If not found in cache, query is excecuted
-    // else {
+    if (cache[query]) {
+      console.log('--------------');
+      console.log('Found it in the cache!!');
+      console.log('--------------');
+      // Returning cached response as a promise
+      return new Promise(
+        (resolve, reject) => resolve(cache[query])
+        // This can be uncommeted to store cache in session storage
+        // resolve(JSON.parse(sessionStorage.getItem(query)))
+      );
+    }
+    // If not found in cache, query is excecuted
+    else {
 
       /* COMMENT OUT THESE LINES FOR SERVER CACHE */
 
@@ -49,7 +57,7 @@ function ObsidianWrapper(props) {
       // Excection of fetch
       return await fetchData(query, endpoint);
     /* COMMENT OUT THESE LINES FOR SERVER CACHE */
-    // }
+    }
     /* COMMENT OUT THESE LINES FOR SERVER CACHE */
   }
   // Function to update the global cache with new response data
@@ -79,7 +87,7 @@ function ObsidianWrapper(props) {
       // Excecute function to update the cache with new response
 
       /* COMMENT OUT THESE LINES FOR SERVER CACHE */
-      // updateCache(query, resp.data);
+      updateCache(query, resp.data);
       /* COMMENT OUT THESE LINES FOR SERVER CACHE */
 
       return resp.data;
