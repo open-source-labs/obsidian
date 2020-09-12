@@ -125,7 +125,9 @@ async function findSpecificQueries(query, obsidianSchema) {
 }
 
 // Returns query name //
-function findQueryName(query, startIdx = 2) {
+function findQueryName(query, startIdx = query.indexOf('{') + 1) {
+  console.log('query in findQueryName', query)
+  console.log(startIdx)
   let i = startIdx;
   let output = '';
 
@@ -154,6 +156,7 @@ function findQueryName(query, startIdx = 2) {
   }
   return;
 }
+
 
 function nestedPropertyHashConstructor(partialHash, property) {
   return partialHash + '~' + property;
