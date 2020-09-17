@@ -22,21 +22,21 @@ function ObsidianWrapper(props) {
     const { endpoint = '/graphql', pollInterval = null } = options;
 
     /* COMMENT OUT THESE LINES FOR SERVER CACHE */
-    // const obsidianReturn = await destructureQueries(query, obsidianSchema);
-    // // // Conditional to check if query is stored in global cache
-    // if (obsidianReturn) {
-    //   console.log('--------------');
-    //   console.log('Found it in the cache!!');
-    //   console.log('--------------');
-    //   // Returning cached response as a promise
-    //   return new Promise(
-    //     (resolve, reject) => resolve(obsidianReturn)
-    //     // This can be uncommeted to store cache in session storage
-    //     // resolve(JSON.parse(sessionStorage.getItem(query)))
-    //   );
-    // }
-    // // If not found in cache, query is excecuted
-    // else {
+    const obsidianReturn = await destructureQueries(query, obsidianSchema);
+    // // Conditional to check if query is stored in global cache
+    if (obsidianReturn) {
+      console.log('--------------');
+      console.log('Found it in the cache!!');
+      console.log('--------------');
+      // Returning cached response as a promise
+      return new Promise(
+        (resolve, reject) => resolve(obsidianReturn)
+        // This can be uncommeted to store cache in session storage
+        // resolve(JSON.parse(sessionStorage.getItem(query)))
+      );
+    }
+    // If not found in cache, query is excecuted
+    else {
 
       /* COMMENT OUT THESE LINES FOR SERVER CACHE */
 
@@ -59,7 +59,7 @@ function ObsidianWrapper(props) {
       // Excection of fetch
       return await fetchData(query, endpoint);
     /* COMMENT OUT THESE LINES FOR SERVER CACHE */
-    // }
+    }
     /* COMMENT OUT THESE LINES FOR SERVER CACHE */
   }
   // Function to update the global cache with new response data
@@ -90,7 +90,7 @@ function ObsidianWrapper(props) {
       // Excecute function to update the cache with new response
 
       /* COMMENT OUT THESE LINES FOR SERVER CACHE */
-      // normalizeResult(query, resp, obsidianSchema);
+      normalizeResult(query, resp, obsidianSchema);
       /* COMMENT OUT THESE LINES FOR SERVER CACHE */
 
       return resp;
