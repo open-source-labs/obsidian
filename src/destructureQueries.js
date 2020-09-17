@@ -69,7 +69,8 @@ async function buildResultsObject(hashes, obsidianSchema, queryObj) {
       queryResult[id][property] = propVal;
       // If this field is complex, recursive call to build nested property object //
     } else {
-      const partialHashes = await retrieveComplex(hashes[j]);
+      let partialHashes = await retrieveComplex(hashes[j]);
+      if (partialHashes[0] === '"') partialHashes = JSON.parse(partialHashes) // Added for odd edge case of double stringified complex types
       // Field is ListType //
       if (typeof partialHashes === 'object') {
         const partialHashesArray = Object.keys(partialHashes);

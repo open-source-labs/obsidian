@@ -13,6 +13,7 @@ export default function normalizeResult(query, result, obsidianSchema) {
     const hashedQuery = hashSpecificQuery(specificQueryArray[i], result.data[specificQueryArray[i]], returnTypes, query, obsidianTypeSchema);
     checkAndInsert(hashedQuery.hash, hashedQuery.value);
   }
+
 }
 
 // Builds hash-value pair for each sub-query //
