@@ -99,6 +99,7 @@ function ObsidianWrapper(props) {
               updateCache(hash, updatedCache[key][hash]);
             }
           }
+          return resp;
         });
         /* COMMENT OUT THESE LINES FOR SERVER CACHE */
       } else {
