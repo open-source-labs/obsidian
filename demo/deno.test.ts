@@ -18,12 +18,11 @@ describe('GET request to root url', () => {
 })
 
 describe('GraphQL query response testing', () => {
-  it('getBook query succeeds', async (done) => {
+  it('getBook query succeeds', async (done:any) => {
     (await superoak(app))
       .post('/graphql')
       .send({query: '{getBook(id:1){ id title author }}'})
-      .end((err, res) => {
-        console.log()
+      .end((err:any, res:any) => {
         console.log(res);
         expect(res.status).toEqual(200);
         expect(res.body.data.getBook.id).toEqual('1');

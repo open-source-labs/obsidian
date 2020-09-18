@@ -227,6 +227,10 @@ function handlePage(ctx: any) { // <ObsidianWrapper> needed
     <script>
       window.__INITIAL_STATE__ = ${JSON.stringify(initialState)};
     </script>
+    <style>
+      h1   {background-color: black;}
+      
+    </style>
   </head>
   <body >
     <div id="root">${body}</div>
