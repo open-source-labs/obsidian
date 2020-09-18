@@ -10,8 +10,6 @@ function ObsidianWrapper(props) {
   // Primary function, provides access to fetching and caching capabilities
   async function fetcher(query, options = {}) {
 
-    console.log(cache);
-
     // Desctructuring of optional parameters, default values are defined and may be over written
     const {
       endpoint = '/graphql',
@@ -56,11 +54,13 @@ function ObsidianWrapper(props) {
       setInterval(() => {
         console.log('--------------');
         console.log('Fetching query with poll interval');
+        console.log('--------------');
         fetchData(query, endpoint);
       }, pollInterval);
     }
     console.log('--------------');
     console.log('Fetching Data');
+    console.log('--------------');
     // Excection of fetch
     return await fetchData(query, endpoint, destructure);
     /* COMMENT OUT THESE LINES FOR SERVER CACHE */
