@@ -4,12 +4,12 @@ import createQueryObj from './createQueryObj.js';
 import { findTypeSchemaName, findProp } from './hashOps.js';
 
 // Attempt to rebuild results object if all hashes are found in Redis //
-export default async function destructureQueries(query, obsidianSchema) {
+export default async function destructureQueries(query, obsidianSchema, cache) {
   // Stringify to expose newline characters //
   query = JSON.stringify(query)
 
   // Destructure query into array of minified sub-queries //
-  const queryHashes = await findSpecificQueries(query, obsidianSchema);
+  const queryHashes = await findSpecificQueries(query, obsidianSchema, cache);
 
   const result = {
     data: {}
@@ -26,7 +26,7 @@ export default async function destructureQueries(query, obsidianSchema) {
     const hashes = Object.keys(queryHashes[queryName])
 
     // Attempt to build result object from cache //
-    result.data[queryName] = await buildResultsObject(hashes, obsidianSchema, queryObj);
+    result.data[queryName] = await buildResultsObject(hashes, obsidianSchema, queryObj, cache);
   };
   // If can't reconstruct //
   if (Object.keys(result.data).length === 0) return;
@@ -34,7 +34,7 @@ export default async function destructureQueries(query, obsidianSchema) {
   return result;
 }
 
-async function buildResultsObject(hashes, obsidianSchema, queryObj) {
+async function buildResultsObject(hashes, obsidianSchema, queryObj, cache) {
   let queryResult = {};
 
   // For each property hash, add to result object //
@@ -59,11 +59,11 @@ async function buildResultsObject(hashes, obsidianSchema, queryObj) {
       const propType = obsidianSchema.obsidianTypeSchema[typeSchemaName][property].type;
       let propVal;
       if (propType === 'Int' || propType === 'Float') {
-        propVal = Number(await retrieveScalar(hashes[j]));
+        propVal = Number(await retrieveScalar(hashes[j], cache));
       } else if (propType === 'Boolean') {
-        propVal = JSON.parse(await retrieveScalar(hashes[j]));
+        propVal = JSON.parse(await retrieveScalar(hashes[j], cache));
       } else {
-        propVal = await retrieveScalar(hashes[j]);
+        propVal = await retrieveScalar(hashes[j], cache);
         if (propVal.slice(1, 5) === 'null') propVal = null;
       }
       queryResult[id][property] = propVal;
@@ -77,12 +77,12 @@ async function buildResultsObject(hashes, obsidianSchema, queryObj) {
         queryResult[id][property] = [];
         for (let k = 0; k < partialHashesArray.length; k++) {
           // Recursive call //
-          queryResult[id][property].push(await buildResultsObject(batchHash(Object.keys(queryObj.properties[property]), partialHashesArray[k]), obsidianSchema, queryObj));
+          queryResult[id][property].push(await buildResultsObject(batchHash(Object.keys(queryObj.properties[property]), partialHashesArray[k]), obsidianSchema, queryObj, cache));
         }
         // Field is NamedType //
       } else {
         // Recursive call //
-        queryResult[id][property] = await buildResultsObject(batchHash(Object.keys(queryObj.properties[property]), partialHashes), obsidianSchema, queryObj);
+        queryResult[id][property] = await buildResultsObject(batchHash(Object.keys(queryObj.properties[property]), partialHashes), obsidianSchema, queryObj, cache);
       }
     }
   }
@@ -101,7 +101,7 @@ async function buildResultsObject(hashes, obsidianSchema, queryObj) {
 }
 
 // Returns obj with minified queries and associated hashes //
-async function findSpecificQueries(query, obsidianSchema) {
+async function findSpecificQueries(query, obsidianSchema, cache) {
   const queryHashes = {};
 
   // Finds first query name //
@@ -119,7 +119,7 @@ async function findSpecificQueries(query, obsidianSchema) {
 
   // Loop through all sub-queries and find their values in redis
   for (let queryHash in queryHashes) {
-    redisResults[queryHash] = await checkAndRetrieveQuery(queryHashes[queryHash]);
+    redisResults[queryHash] = await checkAndRetrieveQuery(queryHashes[queryHash], cache);
   }
 
   return redisResults;
@@ -127,8 +127,6 @@ async function findSpecificQueries(query, obsidianSchema) {
 
 // Returns query name //
 function findQueryName(query, startIdx = query.indexOf('{') + 1) {
-  console.log('query in findQueryName', query)
-  console.log(startIdx)
   let i = startIdx;
   let output = '';
 

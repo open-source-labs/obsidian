@@ -1,5 +1,3 @@
-
-
 const findTypeSchemaName = hash => {
   let i = 0;
   while (hash[i] !== '~') {
@@ -10,7 +8,7 @@ const findTypeSchemaName = hash => {
 
 const findProp = hash => {
   let i = hash.length - 1;
-  
+
   while (hash[i] !== '~') {
     i--;
   }
