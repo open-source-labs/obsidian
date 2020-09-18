@@ -6,7 +6,7 @@ import { findTypeSchemaName, findProp } from './hashOps.js';
 // Attempt to rebuild results object if all hashes are found in Redis //
 export default async function destructureQueries(query, obsidianSchema, cache) {
   // Stringify to expose newline characters //
-  query = JSON.stringify(query)
+  query = JSON.stringify(query);
 
   // Destructure query into array of minified sub-queries //
   const queryHashes = await findSpecificQueries(query, obsidianSchema, cache);
@@ -69,7 +69,7 @@ async function buildResultsObject(hashes, obsidianSchema, queryObj, cache) {
       queryResult[id][property] = propVal;
       // If this field is complex, recursive call to build nested property object //
     } else {
-      let partialHashes = await retrieveComplex(hashes[j]);
+      let partialHashes = await retrieveComplex(hashes[j], cache);
       if (partialHashes[0] === '"') partialHashes = JSON.parse(partialHashes) // Added for odd edge case of double stringified complex types
       // Field is ListType //
       if (typeof partialHashes === 'object') {
