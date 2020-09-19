@@ -14,7 +14,7 @@ declare global {
 }
 
 const Book = (props: any) => {
-  const { fetcher } = useObsidian();
+  const { gather } = useObsidian();
 
   return (
     <div className='book-list' style={cardStyle}>
@@ -25,7 +25,7 @@ const Book = (props: any) => {
 
       <button
         onClick={() => {
-          fetcher(
+          gather(
             ` query { getBook(id: ${props.id}) { id  title  author  description  publicationDate  publisher  coverPrice whereToBuy {
               id
               name
