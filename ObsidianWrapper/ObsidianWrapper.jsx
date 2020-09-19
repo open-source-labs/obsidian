@@ -49,9 +49,10 @@ function ObsidianWrapper(props) {
         console.log('--------------');
         return new Promise((resolve, reject) => resolve(checkStorage));
       }
+      /* ^^^ COMMENT OUT THESE LINES FOR SERVER CACHE ^^^ */
     }
     // If not found in cache, query is excecuted
-    /* COMMENT OUT THESE LINES FOR SERVER CACHE */
+    
     // Conditional check, if poll interval has been defined
     if (pollInterval) {
       console.log(
