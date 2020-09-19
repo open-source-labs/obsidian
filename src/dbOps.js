@@ -1,5 +1,3 @@
-import clientStorage from '../ObsidianWrapper/clientStorage.js';
-
 const browser = window.Deno ? false : true;
 
 let redis;
@@ -13,14 +11,15 @@ if (!browser) {
 }
 
 
-async function checkAndInsert(hash, value, expiration = 20) {
+async function checkAndInsert(hash, value, cache, expiration = 20) {
   let ifCached;
 
   if (browser) {
-    ifCached = clientStorage[hash];
+    ifCached = cache[hash];
     if (!ifCached) {
-      clientStorage[hash] = value;
+      cache[hash] = value;
     }
+    return cache;
   } else {
     if (!redis) {
       redis = await connectFunc(browser);
@@ -61,9 +60,9 @@ async function checkAndInsert(hash, value, expiration = 20) {
   }
 }
 
-async function checkAndRetrieveQuery(hash) {
+async function checkAndRetrieveQuery(hash, cache) {
   if (browser) {
-    return clientStorage[hash];
+    return cache[hash];
   } else {
     if (!redis) {
       redis = await connectFunc(browser);
@@ -74,9 +73,9 @@ async function checkAndRetrieveQuery(hash) {
   }
 }
 
-async function retrieveScalar(hash) {
+async function retrieveScalar(hash, cache) {
   if (browser) {
-    return clientStorage[hash];
+    return cache[hash];
   } else {
     if (!redis) {
       redis = await connectFunc(browser);
@@ -89,9 +88,9 @@ async function retrieveScalar(hash) {
   }
 }
 
-async function retrieveComplex(hash) {
+async function retrieveComplex(hash, cache) {
   if (browser) {
-    return clientStorage[hash];
+    return cache[hash];
   } else {
     if (!redis) {
       redis = await connectFunc(browser);
