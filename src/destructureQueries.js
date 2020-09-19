@@ -65,8 +65,8 @@ async function buildResultsObject(hashes, obsidianSchema, queryObj, cache) {
         propVal = JSON.parse(await retrieveScalar(hashes[j], cache));
       } else {
         propVal = await retrieveScalar(hashes[j], cache);
-        if (propVal.slice(1, 5) === 'null') propVal = null;
-      }
+        if (propVal && propVal.slice(1, 5) === 'null') propVal = null;
+      } 
       queryResult[id][property] = propVal;
       // If this field is complex, recursive call to build nested property object //
     } else {
