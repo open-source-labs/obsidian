@@ -10,7 +10,7 @@ function ObsidianWrapper(props) {
   const [cache, setCache] = React.useState({});
 
   // Primary function, provides access to fetching and caching capabilities
-  async function fetcher(query, options = {}) {
+  async function gather(query, options = {}) {
     // Desctructuring of optional parameters, default values are defined and may be over written
     const {
       endpoint = '/graphql',
@@ -64,14 +64,14 @@ function ObsidianWrapper(props) {
       setInterval(() => {
         console.log('--------------');
         console.log('Fetching query with poll interval');
-        fetchData(query, endpoint, destructure, sessionStore);
+        hunt(query, endpoint, destructure, sessionStore);
       }, pollInterval);
     }
     console.log('--------------');
     console.log('Fetching Data');
     // Excection of fetch
     return new Promise((resolve, reject) =>
-      resolve(fetchData(query, endpoint, destructure, sessionStore))
+      resolve(hunt(query, endpoint, destructure, sessionStore))
     );
   }
   // Function to update the global cache with new response data
@@ -90,7 +90,7 @@ function ObsidianWrapper(props) {
   }
 
   // Excecutes graphql fetch request
-  async function fetchData(query, endpoint, destructure, sessionStore) {
+  async function hunt(query, endpoint, destructure, sessionStore) {
     try {
       const respJSON = await fetch(endpoint, {
         method: 'POST',
@@ -132,7 +132,7 @@ function ObsidianWrapper(props) {
 
   // Returning Provider React component that allows consuming components to subscribe to context changes
   return (
-    <cacheContext.Provider value={{ cache, fetcher, clearCache }} {...props} />
+    <cacheContext.Provider value={{ cache, gather, hunt, clearCache }} {...props} />
   );
 }
 // Declaration of custom hook to allow access to provider
