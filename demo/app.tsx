@@ -30,9 +30,11 @@ const App = () => {
   const [page, setPage] = (React as any).useState(1);
   const { fetcher } = useObsidian();
 
+
   (React as any).useEffect(() => {
-    fetcher(`{ getEightBooks(id: 1) { id title author } }`)
-    .then((resp: any) => setBooks([...resp.data.getEightBooks]));
+    fetcher(`{ getEightBooks(id: 1) { id title author } }`).then((resp: any) =>
+      setBooks([...resp.data.getEightBooks])
+    );
   }, []);
 
   const pageTurn = (id: any) => {
