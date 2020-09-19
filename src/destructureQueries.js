@@ -50,6 +50,7 @@ async function buildResultsObject(hashes, obsidianSchema, queryObj, cache) {
         id
       }
     }
+
     // Prevent overriding of id //
     if (property.toLowerCase() === 'id' || property.toLowerCase() === '_id') continue;
 
