@@ -66,7 +66,6 @@ export async function ObsidianRouter<T>({
         const obsidianReturn = await destructureQueries(body.query, obsidianSchema);
         console.log('Obsidian Reconstructed Result:', obsidianReturn)
 
-        /* COMMENT OUT THESE LINES FOR WRAPPER CACHE */
           if (obsidianReturn) {
             response.status = 200;
             response.body = obsidianReturn;
@@ -76,7 +75,6 @@ export async function ObsidianRouter<T>({
             return;
           } 
         }
-        /* ^^^ COMMENT OUT THESE LINES FOR WRAPPER CACHE ^^^ */
         const result = await (graphql as any)(
           schema,
           body.query,
@@ -93,13 +91,10 @@ export async function ObsidianRouter<T>({
         console.log('GraphQL result object');
         console.log(result);
         console.log('Sending results off to normalize...')
-        /* COMMENT OUT THESE LINES FOR WRAPPER CACHE */
+
         if (useCache) normalizeResult(body.query, result, obsidianSchema);
-        /* COMMENT OUT THESE LINES FOR WRAPPER CACHE */
 
         return;
-      /* COMMENT OUT THESE LINES FOR WRAPPER CACHE */
-      /* COMMENT OUT THESE LINES FOR WRAPPER CACHE */
       } catch (error) {
         response.status = 200;
         console.log('error message', error.message);
