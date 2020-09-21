@@ -159,7 +159,6 @@ function findQueryName(query, startIdx = query.indexOf('{') + 1) {
       return output;
     } else {
       if (query[i] === 'm' && query.slice(i, i+7) === 'mutation') {
-        // ????
         return 'mutation';
       }
 

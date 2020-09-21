@@ -180,7 +180,6 @@ const resolvers = {
   },
   Mutation: {
     updateAuthor: async (parent: any, { id, author }: any, context: any, info: any) => {
-      console.log('GOT IN MUTATION')
       try {
       const resp = await client.query(`
         UPDATE books
@@ -188,8 +187,7 @@ const resolvers = {
         WHERE id = $2
       `, author, id);
 
-      if (resp) console.log('Changed author! ', resp);
-      return;
+      return resp;
       } catch (err) {
         console.log('mutation error', err)
         return err;

@@ -68,8 +68,7 @@ export async function ObsidianRouter<T>({
           console.log('Obsidian Reconstructed Result:', obsidianReturn)
           
           if (obsidianReturn === 'mutation') toNormalize = false;
-          console.log('obsidianReturn', obsidianReturn)
-          
+
           if (obsidianReturn && obsidianReturn !== 'mutation') {
             response.status = 200;
             response.body = obsidianReturn;

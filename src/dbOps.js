@@ -105,8 +105,6 @@ async function clearRedis() {
     if (err) console.log('redis error ', err)
     console.log(succeeded); // will be true if successfull
   });
-  // console.log('Redis flush response ', resp);
-  // return;
 }
 
 
