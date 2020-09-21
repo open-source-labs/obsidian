@@ -99,11 +99,22 @@ async function retrieveComplex(hash, cache) {
   }
 }
 
+async function clearRedis() {
+  if (!redis) redis = await connectFunc(browser);
+  redis.flushdb(function (err, succeeded) {
+    if (err) console.log('redis error ', err)
+    console.log(succeeded); // will be true if successfull
+  });
+  // console.log('Redis flush response ', resp);
+  // return;
+}
+
 
 
 export {
   checkAndInsert,
   checkAndRetrieveQuery,
   retrieveScalar,
-  retrieveComplex
+  retrieveComplex,
+  clearRedis
 }

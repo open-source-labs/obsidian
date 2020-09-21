@@ -101,6 +101,10 @@ type Query {
   getBook(id: ID): Book!
   getEightBooks(id: ID): [Book]
 }
+
+type Mutation {
+  updateAuthor(id: ID!, author: String!): Book
+}
 `;
 
 // GraphQL Resolvers (For now just the basic getBooks query)
@@ -174,6 +178,24 @@ const resolvers = {
       return books;
     },
   },
+  Mutation: {
+    updateAuthor: async (parent: any, { id, author }: any, context: any, info: any) => {
+      console.log('GOT IN MUTATION')
+      try {
+      const resp = await client.query(`
+        UPDATE books
+        SET author = $1
+        WHERE id = $2
+      `, author, id);
+
+      if (resp) console.log('Changed author! ', resp);
+      return;
+      } catch (err) {
+        console.log('mutation error', err)
+        return err;
+      }
+    }
+  }
 };
 
 interface ObsRouter extends Router {
