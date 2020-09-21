@@ -84,9 +84,29 @@ function ObsidianWrapper(props) {
       ? sessionStorage.setItem(query, JSON.stringify(response))
       : setCache(newObj);
   }
+
   function clearCache() {
     sessionStorage.clear();
     setCache({});
+  }
+
+  async function mutate(mutation, options = {}) {
+    const { endpoint = '/graphql', clearCache = true } = options;
+    try {
+      const respJSON = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({ query: mutation }),
+      });
+      const resp = await respJSON.json();
+      if (clearCache) clearCache();
+      return resp;
+    } catch (e) {
+      console.log(e);
+    }
   }
 
   // Excecutes graphql fetch request
@@ -130,9 +150,11 @@ function ObsidianWrapper(props) {
     }
   }
 
+
+
   // Returning Provider React component that allows consuming components to subscribe to context changes
   return (
-    <cacheContext.Provider value={{ cache, gather, hunt, clearCache }} {...props} />
+    <cacheContext.Provider value={{ cache, gather, hunt, mutate, clearCache }} {...props} />
   );
 }
 // Declaration of custom hook to allow access to provider

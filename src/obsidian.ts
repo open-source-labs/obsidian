@@ -60,13 +60,16 @@ export async function ObsidianRouter<T>({
 
         console.log('Incoming Query:');
         console.log(body.query);
+        let toNormalize = true;
 
         if (useCache) {
-        // Send query off to be destructured and found in Redis if possible //
-        const obsidianReturn = await destructureQueries(body.query, obsidianSchema);
-        console.log('Obsidian Reconstructed Result:', obsidianReturn)
+          // Send query off to be destructured and found in Redis if possible //
+          const obsidianReturn = await destructureQueries(body.query, obsidianSchema);
+          console.log('Obsidian Reconstructed Result:', obsidianReturn)
+          
+          if (obsidianReturn === 'mutation') toNormalize = false;
 
-          if (obsidianReturn) {
+          if (obsidianReturn && obsidianReturn !== 'mutation') {
             response.status = 200;
             response.body = obsidianReturn;
 
@@ -92,7 +95,7 @@ export async function ObsidianRouter<T>({
         console.log(result);
         console.log('Sending results off to normalize...')
 
-        if (useCache) normalizeResult(body.query, result, obsidianSchema);
+        if (useCache && toNormalize) normalizeResult(body.query, result, obsidianSchema);
 
         return;
       } catch (error) {
