@@ -1,8 +1,11 @@
 import { connect } from "https://denopkg.com/keroxp/deno-redis/mod.ts";
 
+
 const connectToRedis = async (browser) => {
   if (!browser) {
-    return await connect({ hostname: "127.0.0.1", port: 6379 });
+    const obsidian = await import('./obsidian.ts')
+    let port = obsidian.redisPortExport;
+    return await connect({ hostname: "127.0.0.1", port });
   }
 }
 

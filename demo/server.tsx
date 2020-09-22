@@ -205,15 +205,12 @@ const GraphQLRouter = await ObsidianRouter<ObsRouter>({
   Router,
   typeDefs: types,
   resolvers: resolvers,
+  redisPort: 6379,
 });
 app.use(GraphQLRouter.routes(), GraphQLRouter.allowedMethods());
 
 initialState.obsidianSchema = GraphQLRouter.obsidianSchema;
 
-
-// Spin up the server
-// console.log('server is running on http://localhost:8000/');
-// await app.listen({ port: 8000 });
 
 
 app.addEventListener('listen', () => {
