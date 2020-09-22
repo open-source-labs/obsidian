@@ -1,13 +1,8 @@
 import {
   Application,
-  Router,
-  RouterContext,
+  Router
 } from 'https://deno.land/x/oak@v6.0.1/mod.ts';
-import {
-  applyGraphQL,
-  gql,
-  GQLError,
-} from 'https://deno.land/x/oak_graphql/mod.ts';
+import { gql } from 'https://deno.land/x/oak_graphql/mod.ts';
 import * as Colors from 'https://deno.land/std/fmt/colors.ts';
 
 // OBSIDIAN ROUTER
@@ -229,7 +224,7 @@ function handlePage(ctx: any) { // <ObsidianWrapper> needed
     </script>
     <style>
       h1   {background-color: black;}
-      
+
     </style>
   </head>
   <body >
@@ -243,4 +238,3 @@ function handlePage(ctx: any) { // <ObsidianWrapper> needed
 }
 
 // import { superoak } from "https://deno.land/x/superoak@2.1.0/mod.ts";
-
