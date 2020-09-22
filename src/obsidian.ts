@@ -23,6 +23,7 @@ export interface ObsidianRouterOptions<T> {
   context?: (ctx: any) => any;
   usePlayground?: boolean;
   useCache?: boolean;
+  redisPort?: number;
 }
 
 export interface ResolversProps {
@@ -30,6 +31,8 @@ export interface ResolversProps {
   Mutation?: any;
   [dynamicProperty: string]: any;
 }
+
+export let redisPortExport: number = 6379;
 
 export async function ObsidianRouter<T>({
   Router,
@@ -39,7 +42,9 @@ export async function ObsidianRouter<T>({
   context,
   usePlayground = true,
   useCache = true,
+  redisPort = 6379,
 }: ObsidianRouterOptions<T>): Promise<T> {
+  redisPortExport = redisPort;
   const router = new Router();
 
   const schema = makeExecutableSchema({ typeDefs, resolvers });
