@@ -28,15 +28,17 @@ const App = () => {
   const [info, setInfo] = (React as any).useState({});
   const [books, setBooks] = (React as any).useState([]);
   const [page, setPage] = (React as any).useState(1);
-  const { fetcher } = useObsidian();
+  const { gather } = useObsidian();
+
 
   (React as any).useEffect(() => {
-    fetcher(`{ getEightBooks(id: 1) { id title author } }`)
-    .then((resp: any) => setBooks([...resp.data.getEightBooks]));
+    gather(`{ getEightBooks(id: 1) { id title author } }`).then((resp: any) =>
+      setBooks([...resp.data.getEightBooks])
+    );
   }, []);
 
   const pageTurn = (id: any) => {
-    fetcher(` query{ getEightBooks(id: ${id}) { id title  author } } `).then(
+    gather(` query{ getEightBooks(id: ${id}) { id title  author } } `).then(
       (resp: any) => {
         setBooks([...resp.data.getEightBooks]);
         let curPage = id;

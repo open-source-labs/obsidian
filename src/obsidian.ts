@@ -22,6 +22,7 @@ export interface ObsidianRouterOptions<T> {
   resolvers: ResolversProps;
   context?: (ctx: any) => any;
   usePlayground?: boolean;
+  useCache?: boolean;
 }
 
 export interface ResolversProps {
@@ -37,6 +38,7 @@ export async function ObsidianRouter<T>({
   resolvers,
   context,
   usePlayground = true,
+  useCache = true,
 }: ObsidianRouterOptions<T>): Promise<T> {
   const router = new Router();
 
@@ -58,45 +60,44 @@ export async function ObsidianRouter<T>({
 
         console.log('Incoming Query:');
         console.log(body.query);
+        let toNormalize = true;
 
-        // Send query off to be destructured and found in Redis if possible //
-        const obsidianReturn = await destructureQueries(body.query, obsidianSchema);
+        if (useCache) {
+          // Send query off to be destructured and found in Redis if possible //
+          const obsidianReturn = await destructureQueries(body.query, obsidianSchema);
+          console.log('Obsidian Reconstructed Result:', obsidianReturn)
+          
+          if (obsidianReturn === 'mutation') toNormalize = false;
 
-        console.log('Obsidian Reconstructed Result:', obsidianReturn)
-        /* COMMENT OUT THESE LINES FOR WRAPPER CACHE */
-        if (obsidianReturn) {
-          response.status = 200;
-          response.body = obsidianReturn;
+          if (obsidianReturn && obsidianReturn !== 'mutation') {
+            response.status = 200;
+            response.body = obsidianReturn;
 
-          console.log('Reconstructed results object using cache, returning without querying db.')
+            console.log('Reconstructed results object using cache, returning without querying db.')
 
-          return;
-        } else {
-        /* COMMENT OUT THESE LINES FOR WRAPPER CACHE */
-          const result = await (graphql as any)(
-            schema,
-            body.query,
-            resolvers,
-            contextResult,
-            body.variables || undefined,
-            body.operationName || undefined
-          );
-
-          response.status = 200;
-          response.body = result;
-
-          // Store the new results
-          console.log('GraphQL result object');
-          console.log(result);
-          console.log('Sending results off to normalize...')
-          /* COMMENT OUT THESE LINES FOR WRAPPER CACHE */
-          normalizeResult(body.query, result, obsidianSchema);
-          /* COMMENT OUT THESE LINES FOR WRAPPER CACHE */
-
-          return;
-        /* COMMENT OUT THESE LINES FOR WRAPPER CACHE */
+            return;
+          } 
         }
-        /* COMMENT OUT THESE LINES FOR WRAPPER CACHE */
+        const result = await (graphql as any)(
+          schema,
+          body.query,
+          resolvers,
+          contextResult,
+          body.variables || undefined,
+          body.operationName || undefined
+        );
+
+        response.status = 200;
+        response.body = result;
+
+        // Store the new results
+        console.log('GraphQL result object');
+        console.log(result);
+        console.log('Sending results off to normalize...')
+
+        if (useCache && toNormalize) normalizeResult(body.query, result, obsidianSchema);
+
+        return;
       } catch (error) {
         response.status = 200;
         console.log('error message', error.message);

@@ -1,5 +1,5 @@
 import specificQueryParser from './specificQueryParser.js';
-import { checkAndRetrieveQuery, retrieveScalar, retrieveComplex } from './dbOps.js';
+import { checkAndRetrieveQuery, retrieveScalar, retrieveComplex, clearRedis } from './dbOps.js';
 import createQueryObj from './createQueryObj.js';
 import { findTypeSchemaName, findProp } from './hashOps.js';
 
@@ -10,6 +10,11 @@ export default async function destructureQueries(query, obsidianSchema, cache) {
 
   // Destructure query into array of minified sub-queries //
   const queryHashes = await findSpecificQueries(query, obsidianSchema, cache);
+  // If graphql query is a mutation, clear Redis and skip destructuring //
+  if (!queryHashes) {
+    clearRedis();
+    return 'mutation';
+  }
 
   const result = {
     data: {}
@@ -50,6 +55,7 @@ async function buildResultsObject(hashes, obsidianSchema, queryObj, cache) {
         id
       }
     }
+
     // Prevent overriding of id //
     if (property.toLowerCase() === 'id' || property.toLowerCase() === '_id') continue;
 
@@ -64,8 +70,8 @@ async function buildResultsObject(hashes, obsidianSchema, queryObj, cache) {
         propVal = JSON.parse(await retrieveScalar(hashes[j], cache));
       } else {
         propVal = await retrieveScalar(hashes[j], cache);
-        if (propVal.slice(1, 5) === 'null') propVal = null;
-      }
+        if (propVal && propVal.slice(1, 5) === 'null') propVal = null;
+      } 
       queryResult[id][property] = propVal;
       // If this field is complex, recursive call to build nested property object //
     } else {
@@ -106,6 +112,8 @@ async function findSpecificQueries(query, obsidianSchema, cache) {
 
   // Finds first query name //
   let nameOfQuery = findQueryName(query);
+  // If graphql query is a mutation //
+  if (nameOfQuery === 'mutation') return undefined;
 
   // Iterates until all sub-queries are added to queryHashes object //
   while (nameOfQuery) {
@@ -130,6 +138,12 @@ function findQueryName(query, startIdx = query.indexOf('{') + 1) {
   let i = startIdx;
   let output = '';
 
+  if (startIdx > 6) {
+    if (query.slice(0, startIdx).includes('mutation')) {
+      return 'mutation';
+    }
+  }
+
   while (i < query.length) {
     // Eat whitespace
     if (query[i] === ' ') {
@@ -144,6 +158,10 @@ function findQueryName(query, startIdx = query.indexOf('{') + 1) {
     } else if (query[i] === '(' || query[i] === '{') {
       return output;
     } else {
+      if (query[i] === 'm' && query.slice(i, i+7) === 'mutation') {
+        return 'mutation';
+      }
+
       // Edge case for query string beginning with redundant 'query' //
       if (query[i] === 'q' && query.slice(i,i+5) === 'query') {
         i = query.indexOf('{') + 1;

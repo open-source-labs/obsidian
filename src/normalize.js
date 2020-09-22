@@ -94,7 +94,7 @@ async function hashAndStoreFieldsOfObject(typeSchemaName, fields, obsidianTypeSc
               if (newId) {
                 value[nestedSchemaName + '~' + newId] = true;
               } else {
-                value = null;
+                value[`${nestedSchemaName}~null`] = true;
               }
             }
             // NamedType
@@ -124,6 +124,7 @@ async function hashAndStoreFieldsOfObject(typeSchemaName, fields, obsidianTypeSc
 }
 
 function hashGenerator(typeSchemaName, id, property) {
+  if (!id) return typeSchemaName + '~null~' + property;
   return typeSchemaName + '~' + String(id) + '~' + property;
 }
 
