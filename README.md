@@ -14,10 +14,9 @@ from <em>Lascaux</em>
 
 - GraphQL query abstraction and caching in SSR React projects, improving the performance of your app
 - Normalized caching, optimizing memory management to keep your site lightweight and fast
-- Intuitive component subscriptions, enabling the power of reactive caching with minimal boilerplate
 - Fullstack integration, leveraging client-side and server-side caching to streamline your caching strategy
 
-## Quick Start
+## Overview
 
 Obsidian is Deno's first native GraphQL caching client and server module. Boasting lightning-fast caching and fetching capabilities alongside headlining normalization and destructuring strategies, obsidian is equipped to support scalable, highly performant applications.
 
@@ -25,7 +24,7 @@ Optimized for use in server-side rendered React apps built with Deno, fullstack 
 
 ## Installation
 
-<div align="center"><strong>PLACEHOLDER INSTALLATION INSTRUCTIONS</strong></div>
+<div align="center"><strong>QUICK START</strong></div>
 <br>
 
 In the server:
@@ -153,7 +152,7 @@ const WeatherApp = () => {
 
 ## Documentation
 
-obsidian.land
+[obsidian.land](http://obsidian.land)
 
 ## Demo
 
