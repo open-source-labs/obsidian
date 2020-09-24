@@ -15,7 +15,7 @@ export default function(queryName, query, obsidianSchema) {
   // Rebuilds and stores parameters //
   while (brackets.length === 0) {
     if (query[i] === ' ') {
-      // Skipping everything else for whitespace
+      // Skipping everything else for whitespace //
     } else if (query[i] === '{') {
       brackets.push('{');
     } else if (query[i] === '(') {
@@ -40,9 +40,6 @@ export default function(queryName, query, obsidianSchema) {
 
   queryObj.properties = buildPropertyObject(query, i).propsObj;
 
-  console.log('Obsidian Query Object:')
-  console.log(queryObj);
-
   return queryObj;
 }
 
@@ -57,7 +54,7 @@ function buildPropertyObject(query, startIdx) {
 
   while (true) {
     if (query[i] === ' ' && !property) {
-      // do nothing, eat
+      // do nothing, eat space //
     } else if (query[i] === ' ') {
       propsObj[property] = true;
       lastStoredProp = property;

@@ -25,7 +25,7 @@ export default async function destructureQueries(query, obsidianSchema, cache) {
     // Create object representation of query //
     const queryObj = createQueryObj(queryName, query, obsidianSchema);
 
-    // If hasn't been stored in the database //  HEY THIS IS WHERE WE NEED TO FIX NULL OKAYYYY
+    // If hasn't been stored in the database //
     if (!queryHashes[queryName]) continue;
 
     const hashes = Object.keys(queryHashes[queryName])
@@ -43,7 +43,7 @@ async function buildResultsObject(hashes, obsidianSchema, queryObj, cache) {
   let queryResult = {};
 
   // For each property hash, add to result object //
-  // NOTE: queryResult built as object and turned into an array at end in order to preserve constant look up time during build. Keys are ids. //
+  // NOTE: queryResult built as object and turned into an array at end in order to preserve constant look up time during build. Keys are ids //
   for (let j = 0; j < hashes.length; j++) {
     const typeSchemaName = findTypeSchemaName(hashes[j]);
     const id = hashes[j].match(/(?<=~).*(?=~)/)[0];
@@ -76,7 +76,7 @@ async function buildResultsObject(hashes, obsidianSchema, queryObj, cache) {
       // If this field is complex, recursive call to build nested property object //
     } else {
       let partialHashes = await retrieveComplex(hashes[j], cache);
-      if (partialHashes[0] === '"') partialHashes = JSON.parse(partialHashes) // Added for odd edge case of double stringified complex types
+      if (partialHashes[0] === '"') partialHashes = JSON.parse(partialHashes) // Added for odd edge case of double stringified complex types //
       // Field is ListType //
       if (typeof partialHashes === 'object') {
         const partialHashesArray = Object.keys(partialHashes);
@@ -125,7 +125,7 @@ async function findSpecificQueries(query, obsidianSchema, cache) {
 
   const redisResults = {};
 
-  // Loop through all sub-queries and find their values in redis
+  // Loop through all sub-queries and find their values in redis //
   for (let queryHash in queryHashes) {
     redisResults[queryHash] = await checkAndRetrieveQuery(queryHashes[queryHash], cache);
   }
@@ -145,9 +145,9 @@ function findQueryName(query, startIdx = query.indexOf('{') + 1) {
   }
 
   while (i < query.length) {
-    // Eat whitespace
+    // Eat whitespace //
     if (query[i] === ' ') {
-    // Eat new line characters
+    // Eat new line characters //
     } else if (query[i] === '\\') {
       if (query[i+1] === 'n') {
         i++;
