@@ -32,6 +32,7 @@ export interface ResolversProps {
   [dynamicProperty: string]: any;
 }
 
+// Export developer chosen port for redis database connection //
 export let redisPortExport: number = 6379;
 
 export async function ObsidianRouter<T>({
@@ -49,9 +50,8 @@ export async function ObsidianRouter<T>({
 
   const schema = makeExecutableSchema({ typeDefs, resolvers });
 
-  // create easy-to-use schema from typeDefs once when server boots up
+  // Create easy-to-use schema from typeDefs once when server boots up //
   const obsidianSchema = getObsidianSchema(typeDefs);
-  console.log('obsidianSchema', obsidianSchema);
 
   router.obsidianSchema = obsidianSchema;
 
@@ -63,23 +63,18 @@ export async function ObsidianRouter<T>({
         const contextResult = context ? await context(ctx) : undefined;
         const body = await request.body().value;
 
-        console.log('Incoming Query:');
-        console.log(body.query);
+        // Variable to block the normalization of mutations //
         let toNormalize = true;
 
         if (useCache) {
           // Send query off to be destructured and found in Redis if possible //
           const obsidianReturn = await destructureQueries(body.query, obsidianSchema);
-          console.log('Obsidian Reconstructed Result:', obsidianReturn)
           
           if (obsidianReturn === 'mutation') toNormalize = false;
 
           if (obsidianReturn && obsidianReturn !== 'mutation') {
             response.status = 200;
             response.body = obsidianReturn;
-
-            console.log('Reconstructed results object using cache, returning without querying db.')
-
             return;
           } 
         }
@@ -92,14 +87,11 @@ export async function ObsidianRouter<T>({
           body.operationName || undefined
         );
 
+        // Send database response to client //
         response.status = 200;
         response.body = result;
 
-        // Store the new results
-        console.log('GraphQL result object');
-        console.log(result);
-        console.log('Sending results off to normalize...')
-
+        // Normalize response and store in cache //
         if (useCache && toNormalize) normalizeResult(body.query, result, obsidianSchema);
 
         return;

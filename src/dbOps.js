@@ -10,7 +10,7 @@ if (!browser) {
   })
 }
 
-
+// Checks if hash value is stored already, if not it stores it in either client-side cache or redis on server //
 async function checkAndInsert(hash, value, cache, expiration = 20) {
   let ifCached;
 
@@ -60,6 +60,7 @@ async function checkAndInsert(hash, value, cache, expiration = 20) {
   }
 }
 
+// if Query is stored, return hashes associated with full query //
 async function checkAndRetrieveQuery(hash, cache) {
   if (browser) {
     return cache[hash];
@@ -73,6 +74,7 @@ async function checkAndRetrieveQuery(hash, cache) {
   }
 }
 
+// If cached, returns scalar or list value stored at hash //
 async function retrieveScalar(hash, cache) {
   if (browser) {
     return cache[hash];
@@ -88,6 +90,7 @@ async function retrieveScalar(hash, cache) {
   }
 }
 
+// If cached, returns object of hashes associated with complex (named) type //
 async function retrieveComplex(hash, cache) {
   if (browser) {
     return cache[hash];
@@ -99,6 +102,7 @@ async function retrieveComplex(hash, cache) {
   }
 }
 
+// Clears entire redis database //
 async function clearRedis() {
   if (!redis) redis = await connectFunc(browser);
   redis.flushdb(function (err, succeeded) {

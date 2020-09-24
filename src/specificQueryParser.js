@@ -8,48 +8,48 @@ export default function specificQueryParser(startIdx, query) {
   let output = '';
   let i = startIdx;
 
-  // Construct beginning of output to find first curly brace
+  // Construct beginning of output to find first curly brace //
   while (parens.length === 0) {
     // Eat whitespace
     if (query[i] === ' ') {
-    // Came to the start of the requested fields, break out of loop
+    // Came to the start of the requested fields, break out of loop //
     } else if (query[i] === '{') {
       parens.push('{');
       output += '{';
-    // Eat newline character
+    // Eat newline character //
     } else if (query[i] === '\\') {
       if (query[i+1] === 'n') {
         i++;
       } else {
         output += query[i];
       }
-    // Adds to minified query
+    // Adds to minified query //
     } else {
       output += query[i];
     }
     i++;
   }
 
-  // Loop through the query string until we hit the end of the query
+  // Loop through the query string until we hit the end of the query //
   while (parens.length > 0) {
     // Eat whitespace
     if (query[i] === ' ') {
-    // Keep our open parens balanced by tracking them in array
+    // Keep our open parens balanced by tracking them in array //
     } else if (query[i] === '{') {
       parens.push('{');
       output += '{';
-    // Remove the last open parens from our array
+    // Remove the last open parens from our array //
     } else if (query[i] === '}') {
       parens.pop();
       output += '}';
-    // Eat newline character
+    // Eat newline character //
     } else if (query[i] === '\\') {
       if (query[i+1] === 'n') {
         i++;
       } else {
         output += query[i];
       }
-    // Adds to minified query
+    // Adds to minified query //
     } else {
       output += query[i];
     }
