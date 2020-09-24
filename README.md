@@ -32,7 +32,11 @@
 
 Obsidian is Deno's first native GraphQL caching client and server module. Boasting lightning-fast caching and fetching capabilities alongside headlining normalization and destructuring strategies, obsidian is equipped to support scalable, highly performant applications.
 
-Optimized for use in server-side rendered React apps built with Deno, fullstack integration of obsidian enables many of its most powerful features, including optimized caching exchanges between client and server as well as server-side user session storage, maintaining the benefits of server-side rendering even after client-side caches have expired.
+Optimized for use in server-side rendered React apps built with Deno, full stack integration of obsidian enables many of its most powerful features, including optimized caching exchanges between client and server and extremely lightweight client-side caching.
+
+## Documentation and Demo
+
+[obsidian.land](http://obsidian.land)
 
 ## Installation
 
@@ -66,9 +70,7 @@ const types = (gql as any)`
 `;
 
 const resolvers = {
-  Query: {
-    // Resolvers
-  }
+  // Resolvers
 }
 
 interface ObsRouter extends Router {
@@ -79,6 +81,7 @@ const GraphQLRouter = await ObsidianRouter<ObsRouter>({
   Router,
   typeDefs: types,
   resolvers: resolvers,
+  redisPort: 6379,
 });
 
 app.use(GraphQLRouter.routes(), GraphQLRouter.allowedMethods());
@@ -141,13 +144,12 @@ const App = () => {
 
 ## Making a Query
 
-
 ```javascript
 import { useObsidian } from 'https://deno.land/x/obsidian@v1.0.0/mod.ts';
 
 const WeatherApp = () => {
   const { gather } = useObsidian();
-  const [weather, setWeather] = useState('Sunny');
+  const [weather, setWeather] = (React as any).useState('Sunny');
 
   return (
     <h1>{weather}</h1>
@@ -159,13 +161,7 @@ const WeatherApp = () => {
     >Get Weather</button>
   );
 };
-
 ```
-
-## Documentation and Demo
-
-[obsidian.land](http://obsidian.land)
-
 
 ## Authors
 
