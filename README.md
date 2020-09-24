@@ -4,11 +4,23 @@
 
 <div align="center">
 
-<h1>Obsidian</h1>
+<h1 align="center">
+	<a>Obsidian</a>
+	<a href="https://twitter.com/intent/tweet?text=Meet%20Obsidian!%20Deno's%20first%20native%20GraphQL%20caching%20client%20and%20server%20module&url=http://obsidian.land/&via=obsidian_land&hashtags=deno,denoland,nodejs,graphql,javascript" rel="nofollow"><img src="https://camo.githubusercontent.com/83d4084f7b71558e33b08844da5c773a8657e271/68747470733a2f2f696d672e736869656c64732e696f2f747769747465722f75726c2f687474702f736869656c64732e696f2e7376673f7374796c653d736f6369616c" alt="Tweet" data-canonical-src="https://img.shields.io/twitter/url/http/shields.io.svg?style=social" style="max-width:100%;"></a>
+</h1>
 
-from <em>Lascaux</em>
+<p align="center">from <em align="center">Lascaux</em></p>
 
 </div>
+
+<p align="center">
+  <img alt="GitHub" src="https://img.shields.io/github/license/oslabs-beta/obsidian">
+  <img alt="GitHub issues" src="https://img.shields.io/github/issues-raw/oslabs-beta/obsidian?color=yellow">
+  <img alt="GitHub All Releases" src="https://img.shields.io/github/downloads/oslabs-beta/obsidian/total?color=green">
+  <img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/oslabs-beta/obsidian?color=orange">
+  <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/oslabs-beta/obsidian?style=social">  
+</p>
+
 
 ## Features
 
