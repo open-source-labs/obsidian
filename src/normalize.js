@@ -13,7 +13,6 @@ export default async function normalizeResult(query, result, obsidianSchema, cac
   // Iterates through sub-queries to create hash-value pairs in Redis //
   for (let i = 0; i < specificQueryArray.length; i++) {
     const hashedQuery = await hashSpecificQuery(specificQueryArray[i], result.data[specificQueryArray[i]], returnTypes, query, obsidianTypeSchema, cache);
-    console.log(hashedQuery.value);
     promiseArr.push(checkAndInsert(hashedQuery.hash, hashedQuery.value, cache));
   }
 
@@ -24,16 +23,16 @@ export default async function normalizeResult(query, result, obsidianSchema, cac
 // where hash = minified query && value = array of hashes for each property needed for the response //
 async function hashSpecificQuery(queryType, fields, returnTypes, query, obsidianTypeSchema, cache) {
 
-  // Stringify the query to reveal newline characters
+  // Stringify the query to reveal newline characters //
   query = JSON.stringify(query);
 
-  // Find starting index of query name in order to create the specific query hash
+  // Find starting index of query name in order to create the specific query hash //
   const startIdx = query.indexOf(queryType);
 
-  // Create the hash of the specific query
+  // Create the hash of the specific query //
   const hash = specificQueryParser(startIdx, query).output;
 
-  // Create array of hashes of all key:value pairs (will check and store in cache inside)
+  // Create array of hashes of all key:value pairs (will check and store in cache inside) //
   const objOfHashes = await hashAndStoreFields(queryType, fields, returnTypes, obsidianTypeSchema, cache);
 
   return {
@@ -97,7 +96,7 @@ async function hashAndStoreFieldsOfObject(typeSchemaName, fields, obsidianTypeSc
                 value[`${nestedSchemaName}~null`] = true;
               }
             }
-            // NamedType
+            // NamedType //
           } else {
             const newId = checkID(fields[property])
             if (newId) {
