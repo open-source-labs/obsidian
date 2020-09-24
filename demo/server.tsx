@@ -14,7 +14,10 @@ import * as Colors from 'https://deno.land/std/fmt/colors.ts';
 import { ObsidianRouter } from '../src/obsidian.ts';
 
 // Importing Obsidian Wrapper for client-side application
-import { ObsidianWrapper } from '../ObsidianWrapper/ObsidianWrapper.jsx';
+import {
+  ObsidianWrapper,
+  ObsidianClient,
+} from '../ObsidianWrapper/ObsidianWrapper.jsx';
 
 import client from './sqlclient.ts';
 
@@ -33,7 +36,9 @@ app.use(async (ctx, next) => {
   const rt = ctx.response.headers.get('X-Response-Time');
   // console.log(`${ctx.request.method} ${ctx.request.url} - ${rt}`);
   if (ctx.request.url.href === 'http://localhost:8000/graphql') {
-    console.log(Colors.underline(Colors.cyan(`QUERY TOOK ` + Colors.bold(`${rt}`))));
+    console.log(
+      Colors.underline(Colors.cyan(`QUERY TOOK ` + Colors.bold(`${rt}`)))
+    );
   }
 });
 
@@ -69,9 +74,6 @@ serverrouter.get('/static/client.js', (context) => {
 app.use(router.routes());
 app.use(serverrouter.routes());
 app.use(router.allowedMethods());
-
-
-
 
 // GraphQL types
 const types = (gql as any)`
@@ -124,15 +126,15 @@ const resolvers = {
       );
       // console.log('Returned rows:');
       // console.log(data.rows);
-      const whereToBuy:any = [];
+      const whereToBuy: any = [];
 
-      data.rows.forEach((book:any) => {
+      data.rows.forEach((book: any) => {
         whereToBuy.push({
           id: book[7],
           name: book[8],
-          address: book[9]
-        })
-      })
+          address: book[9],
+        });
+      });
 
       const book = {
         id: data.rows[0][0],
@@ -142,7 +144,7 @@ const resolvers = {
         publicationDate: data.rows[0][4],
         publisher: data.rows[0][5],
         coverPrice: data.rows[0][6],
-        whereToBuy
+        whereToBuy,
       };
 
       // console.log('book', book)
@@ -179,21 +181,30 @@ const resolvers = {
     },
   },
   Mutation: {
-    updateAuthor: async (parent: any, { id, author }: any, context: any, info: any) => {
+    updateAuthor: async (
+      parent: any,
+      { id, author }: any,
+      context: any,
+      info: any
+    ) => {
       try {
-      const resp = await client.query(`
+        const resp = await client.query(
+          `
         UPDATE books
         SET author = $1
         WHERE id = $2
-      `, author, id);
+      `,
+          author,
+          id
+        );
 
-      return resp;
+        return resp;
       } catch (err) {
-        console.log('mutation error', err)
+        console.log('mutation error', err);
         return err;
       }
-    }
-  }
+    },
+  },
 };
 
 interface ObsRouter extends Router {
@@ -211,8 +222,6 @@ app.use(GraphQLRouter.routes(), GraphQLRouter.allowedMethods());
 
 initialState.obsidianSchema = GraphQLRouter.obsidianSchema;
 
-
-
 app.addEventListener('listen', () => {
   console.log(`Listening at http://localhost:${PORT}`);
 });
@@ -223,13 +232,13 @@ if (import.meta.main) {
 
 export { app };
 
-
 // SSR of React App (invoked at line 12)
 
-function handlePage(ctx: any) { // <ObsidianWrapper> needed
+function handlePage(ctx: any) {
+  // <ObsidianWrapper> needed
   try {
     const body = (ReactDomServer as any).renderToString(
-      <ObsidianWrapper>
+      <ObsidianWrapper client={new ObsidianClient({})}>
         <App state={initialState} />
       </ObsidianWrapper>
     );
@@ -260,4 +269,3 @@ function handlePage(ctx: any) { // <ObsidianWrapper> needed
 }
 
 // import { superoak } from "https://deno.land/x/superoak@2.1.0/mod.ts";
-
