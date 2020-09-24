@@ -4,55 +4,80 @@ import normalizeResult from '../src/normalize.js';
 import destructureQueries from '../src/destructureQueries.js';
 
 // Context will be used to create a custom provider for the application
-export const cacheContext = React.createContext();
+const cacheContext = React.createContext();
+
+// Class constructor for specifying global specifications
+class ObsidianClient {
+  constructor(
+    // Specify default variables if not all variables all passed in
+    {
+      url = '/graphql',
+      globalSessionStore = false,
+      globalDestructure = true,
+    } = {
+      // Creates a default object in case an object is not passed in
+      url: '/graphql',
+      globalSessionStore: false,
+      globalDestructure: true,
+    }
+  ) {
+    this.url = url;
+    this.globalSessionStore = globalSessionStore;
+    this.globalDestructure = globalDestructure;
+  }
+}
+
 // Declaration of custom Obsidian Wrapper
 function ObsidianWrapper(props) {
+  // Global Default Variables, client input defaults to empty object if an instance is not created
+  const {
+    url = '/graphql',
+    globalSessionStore = false,
+    globalDestructure = true,
+  } = props.client || {};
   const [cache, setCache] = React.useState({});
 
   // Primary function, provides access to fetching and caching capabilities
   async function gather(query, options = {}) {
     // Desctructuring of optional parameters, default values are defined and may be over written
     const {
-      endpoint = '/graphql',
+      endpoint = url,
       pollInterval = null,
-      destructure = true,
-      sessionStore = false,
+      destructure = globalDestructure,
+      sessionStore = globalSessionStore,
     } = options;
+
+    // Logic if destructuring is enabled
     if (destructure) {
+      // Specifying the schema sent from the server
       const obsidianSchema = window.__INITIAL_STATE__.obsidianSchema;
-      /* COMMENT OUT THESE LINES FOR SERVER CACHE */
-      const deepCache = sessionStore ? localStorage : Object.assign({}, cache);
+
+      // Creating deep clone of cache to send to destructure
+      const deepCache = sessionStore
+        ? sessionStorage
+        : Object.assign({}, cache);
       const obsidianReturn = await destructureQueries(
         query,
         obsidianSchema,
         deepCache
       );
-      // // Conditional to check if query is stored in global cache
+
+      // Conditional to check if query is stored in global cache
       if (obsidianReturn) {
-        console.log('--------------');
-        console.log('Found it in the cache!!');
-        console.log('--------------');
         // Returning cached response as a promise
-        return new Promise(
-          (resolve, reject) => resolve(obsidianReturn)
-          // This can be uncommeted to store cache in session storage
-          // resolve(JSON.parse(sessionStorage.getItem(query)))
-        );
+        return new Promise((resolve, reject) => resolve(obsidianReturn));
       }
     } else {
+      // If destructuring is not specified, cache or session storage is checked
       const checkStorage = sessionStore
         ? JSON.parse(sessionStorage.getItem(query))
         : cache[query];
       if (checkStorage) {
-        console.log('--------------');
-        console.log('Found it in the cache!!');
-        console.log('--------------');
         return new Promise((resolve, reject) => resolve(checkStorage));
       }
-      /* ^^^ COMMENT OUT THESE LINES FOR SERVER CACHE ^^^ */
     }
-    // If not found in cache, query is excecuted
 
+    // If not found in cache or session storage, query will be excecuted
     // Conditional check, if poll interval has been defined
     if (pollInterval) {
       console.log(
@@ -62,35 +87,33 @@ function ObsidianWrapper(props) {
       );
       // Initiation of reocurring fetch request
       setInterval(() => {
-        console.log('--------------');
-        console.log('Fetching query with poll interval');
         hunt(query, endpoint, destructure, sessionStore);
       }, pollInterval);
     }
-    console.log('--------------');
-    console.log('Fetching Data');
-    console.log('--------------');
     // Excection of fetch
     return new Promise((resolve, reject) =>
       resolve(hunt(query, endpoint, destructure, sessionStore))
     );
   }
+
   // Function to update the global cache with new response data
   function updateCache(query, response, sessionStore) {
     // Declaring new object with new data to store in cache
     const newObj = Object.assign(cache, { [query]: response });
 
-    // React hook to update global cache object
+    // React hook to update global cache object or session storage
     sessionStore
       ? sessionStorage.setItem(query, JSON.stringify(response))
       : setCache(newObj);
   }
 
+  // Function to clear cache and session storage
   function clearCache() {
     sessionStorage.clear();
     setCache({});
   }
 
+  // Function excecutes mutation and clears cache by default to avoid conflicts
   async function mutate(mutation, options = {}) {
     const { endpoint = '/graphql', clearCache = true } = options;
     try {
@@ -122,12 +145,14 @@ function ObsidianWrapper(props) {
         body: JSON.stringify({ query }),
       });
       const resp = await respJSON.json();
+
       // Excecute function to update the cache with new response
       if (destructure) {
         const obsidianSchema = window.__INITIAL_STATE__.obsidianSchema;
 
         const deepCache = Object.assign({}, cache);
 
+        // Updates all of the normalized results in our cache
         return new Promise((resolve, reject) => {
           resolve(
             normalizeResult(query, resp, obsidianSchema, deepCache).then(
@@ -143,6 +168,7 @@ function ObsidianWrapper(props) {
           );
         });
       } else {
+        // If query is not destructured, entire query and response are cached
         updateCache(query, resp, sessionStore);
         return resp;
       }
@@ -151,11 +177,12 @@ function ObsidianWrapper(props) {
     }
   }
 
-
-
   // Returning Provider React component that allows consuming components to subscribe to context changes
   return (
-    <cacheContext.Provider value={{ cache, gather, hunt, mutate, clearCache }} {...props} />
+    <cacheContext.Provider
+      value={{ cache, gather, hunt, mutate, clearCache }}
+      {...props}
+    />
   );
 }
 // Declaration of custom hook to allow access to provider
@@ -163,5 +190,6 @@ function useObsidian() {
   // React useContext hook to access the global provider by any of the consumed components
   return React.useContext(cacheContext);
 }
+
 // Exporting of Custom wrapper and hook to access wrapper cache
-export { ObsidianWrapper, useObsidian };
+export { ObsidianWrapper, useObsidian, ObsidianClient };
