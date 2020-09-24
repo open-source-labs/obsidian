@@ -162,15 +162,10 @@ const WeatherApp = () => {
 
 ```
 
-## Documentation
+## Documentation and Demo
 
 [obsidian.land](http://obsidian.land)
 
-## Demo
-
-To spin up the demo app, run:
-
-	deno run --allow-net --allow-read --unstable demo/server.tsx -c tsconfig.json
 
 ## Authors
 
