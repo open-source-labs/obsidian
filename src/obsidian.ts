@@ -1,4 +1,4 @@
-import { graphql } from 'https://deno.land/x/oak_graphql@0.6.1/deps.ts';
+import { graphql } from 'https://cdn.pika.dev/graphql@15.0.0';
 import { renderPlaygroundPage } from 'https://deno.land/x/oak_graphql@0.6.1/graphql-playground-html/render-playground-html.ts';
 import { makeExecutableSchema } from 'https://deno.land/x/oak_graphql@0.6.1/graphql-tools/schema/makeExecutableSchema.ts';
 import getObsidianSchema from './getObsidianSchema.js';
@@ -69,14 +69,14 @@ export async function ObsidianRouter<T>({
         if (useCache) {
           // Send query off to be destructured and found in Redis if possible //
           const obsidianReturn = await destructureQueries(body.query, obsidianSchema);
-          
+
           if (obsidianReturn === 'mutation') toNormalize = false;
 
           if (obsidianReturn && obsidianReturn !== 'mutation') {
             response.status = 200;
             response.body = obsidianReturn;
             return;
-          } 
+          }
         }
         const result = await (graphql as any)(
           schema,
@@ -114,9 +114,6 @@ export async function ObsidianRouter<T>({
   await router.get(path, async (ctx: any) => {
     const { request, response } = ctx;
     if (usePlayground) {
-      // perform more expensive content-type check only if necessary
-      // XXX We could potentially move this logic into the GuiOptions lambda,
-      // but I don't think it needs any overriding
       const prefersHTML = request.accepts('text/html');
 
       if (prefersHTML) {
