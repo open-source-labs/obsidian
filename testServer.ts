@@ -27,6 +27,29 @@ app.use(async (ctx, next) => {
   ctx.response.headers.set('X-Response-Time', `${ms}ms`);
 });
 
+const router = new Router();
+router.get('/', handlePage);
+
+app.use(router.routes());
+app.use(router.allowedMethods());
+
+function handlePage(ctx: any) {
+  try {
+    ctx.response.body = `<!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <title>ObsidianTest</title>
+        </head>
+        <body >
+          <div id="root"></div>
+        </body>
+      </html>`;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
 // GraphQL types
 const types = (gql as any)`
 type Book {
