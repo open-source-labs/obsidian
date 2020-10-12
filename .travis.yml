@@ -4,5 +4,7 @@ services:
     - docker
 before_install:
     - docker build -t open-source-labs/obsidian .
+before_script:
+    - sudo redis-server /etc/redis/redis.conf --port 6379
 script:
-    - docker run open-source-labs/obsidian test -A --allow-env --unstable deno.test.ts
+    - docker run open-source-labs/obsidian test --allow-net --allow-read --allow-env --unstable deno.test.ts
