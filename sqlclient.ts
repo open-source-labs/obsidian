@@ -1,9 +1,9 @@
 import { Client } from "https://deno.land/x/postgres/mod.ts";
-import "https://deno.land/x/dotenv/load.ts";
+import { config } from "https://deno.land/x/dotenv/mod.ts";
 
 // Create a new client
-const config = Deno.env.get('POSTGRES_URI');
-const client = new Client(config);
+const uri = config().POSTGRES_URI;
+const client = new Client(uri);
 
 // Connect it
 await client.connect();
