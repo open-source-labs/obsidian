@@ -3,7 +3,10 @@ services:
 - docker
 - redis-server
 before_install:
+- sudo sed -e 's/^bind.*/bind 127.0.0.1/' /etc/redis/redis.conf > redis.conf
+- sudo mv redis.conf /etc/redis
 - sudo service redis-server start
+- echo PING | nc localhost 6379
 - docker build -t open-source-labs/obsidian .
 script:
 - docker run open-source-labs/obsidian test --allow-net --allow-read --allow-env --unstable deno.test.ts
