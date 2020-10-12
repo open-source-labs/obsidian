@@ -65,12 +65,10 @@ async function checkAndRetrieveQuery(hash, cache) {
   if (browser) {
     return cache[hash];
   } else {
-    if (!browser && !redis) {
-      import('./cache.js')
-      .then(mod => {
-        connectFunc = mod.default;
-      })
-    }
+    await import('./cache.js')
+    .then(mod => {
+      connectFunc = mod.default;
+    })
     if (!redis || redis.isClosed) redis = await connectFunc(browser);
     let ifCached = await redis.get(hash);
     if (ifCached) ifCached = JSON.parse(ifCached);
