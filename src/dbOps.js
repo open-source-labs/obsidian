@@ -74,7 +74,9 @@ async function checkAndRetrieveQuery(hash, cache) {
     if (!redis) {
       import('./cache.js')
       .then(mod => {
+        console.log(mod.default);
         connectFunc = mod.default;
+        console.log(connectFunc);
       })
     }
     if (!redis || redis.isClosed) redis = await connectFunc(browser);
