@@ -42,20 +42,20 @@ Optimized for use in server-side rendered React apps built with Deno, fullstack 
 In the server:
 
 ```javascript
-import { ObsidianRouter } from 'https://deno.land/x/obsidian@v1.0.0/mod.ts';
+import { ObsidianRouter } from 'https://deno.land/x/obsidian@v1.0.1/mod.ts';
 ```
 
-In the app: 
+In the app:
 
 ```javascript
-import { ObsidianWrapper } from 'https://deno.land/x/obsidian@v1.0.0/mod.ts';
+import { ObsidianWrapper } from 'https://deno.land/x/obsidian@v1.0.1/clientMod.ts';
 ```
 
 ## Creating the Router
 
 ```javascript
 import { Application, Router } from 'https://deno.land/x/oak@v6.0.1/mod.ts';
-import { ObsidianRouter, gql } from 'https://deno.land/x/obsidian@v1.0.0/mod.ts';
+import { ObsidianRouter, gql } from 'https://deno.land/x/obsidian@v1.0.1/mod.ts';
 
 const PORT = 8000;
 
@@ -128,7 +128,7 @@ app.use(router.routes(), router.allowedMethods());
 ## Creating the Wrapper
 
 ```javascript
-import { ObsidianWrapper } from 'https://deno.land/x/obsidian@v1.0.0/mod.ts';
+import { ObsidianWrapper } from 'https://deno.land/x/obsidian@v1.0.1/clientMod.ts';
 
 const App = () => {
   return (
@@ -143,7 +143,7 @@ const App = () => {
 
 
 ```javascript
-import { useObsidian } from 'https://deno.land/x/obsidian@v1.0.0/mod.ts';
+import { useObsidian } from 'https://deno.land/x/obsidian@v1.0.1/clientMod.ts';
 
 const WeatherApp = () => {
   const { gather } = useObsidian();
@@ -166,12 +166,6 @@ const WeatherApp = () => {
 
 [obsidian.land](http://obsidian.land)
 
-## Demo
-
-To spin up the demo app, run:
-
-	deno run --allow-net --allow-read --unstable demo/server.tsx -c tsconfig.json
-
 ## Authors
 
 *Lascaux* Engineers
@@ -179,4 +173,4 @@ To spin up the demo app, run:
 [Alonso Garza](https://github.com/Alonsog66)  
 [Burak Caliskan](https://github.com/CaliskanBurak)  
 [Matt Meigs](https://github.com/mmeigs)  
-[Travis Frank](https://github.com/TravisFrankMTG/) 
+[Travis Frank](https://github.com/TravisFrankMTG/)
