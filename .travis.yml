@@ -5,4 +5,4 @@ services:
 before_install:
     - docker build -t open-source-labs/obsidian .
 script:
-    - docker run open-source-labs/obsidian test -A --unstable deno.test.ts
+    - docker run open-source-labs/obsidian test -A --allow-env --unstable deno.test.ts
