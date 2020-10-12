@@ -32,7 +32,7 @@ describe('GraphQL query response testing', () => {
             dbOps.redis.close();
           }
           done();
-        }, 1000);
+        }, 2000);
       });
   });
 
@@ -52,7 +52,7 @@ describe('GraphQL query response testing', () => {
             dbOps.redis.close();
           }
           done();
-        }, 1000);
+        }, 2000);
       });
   });
 
@@ -71,7 +71,7 @@ describe('GraphQL query response testing', () => {
             dbOps.redis.close();
           }
           done();
-        }, 1000);
+        }, 2000);
       });
   });
 });
@@ -112,6 +112,6 @@ describe('Redis cache testing', () => {
         const dbOps = await import('./src/dbOps.js');
         dbOps.redis.close();
       }
-    }, 500);
+    }, 1000);
   });
 });

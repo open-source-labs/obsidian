@@ -4,6 +4,7 @@ services:
 - redis-server
 before_install:
 - docker build -t open-source-labs/obsidian .
+- docker run open-source-labs/obsidian run src/cache.js -A --unstable
 script:
 - docker run open-source-labs/obsidian test --allow-net --allow-read --allow-env --unstable deno.test.ts
 env:
