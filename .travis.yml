@@ -3,6 +3,7 @@ services:
 - docker
 - redis-server
 before_install:
+- sudo service redis-server start
 - docker build -t open-source-labs/obsidian .
 script:
 - docker run open-source-labs/obsidian test --allow-net --allow-read --allow-env --unstable deno.test.ts
