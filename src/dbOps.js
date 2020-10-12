@@ -22,6 +22,12 @@ async function checkAndInsert(hash, value, cache, expiration = 20) {
     return cache;
   } else {
     if (!redis) {
+      import('./cache.js')
+      .then(mod => {
+        connectFunc = mod.default;
+      })
+    }
+    if (!redis) {
       redis = await connectFunc(browser);
     }
     if (Array.isArray(value)) {
@@ -84,6 +90,12 @@ async function retrieveScalar(hash, cache) {
     return cache[hash];
   } else {
     if (!redis) {
+      import('./cache.js')
+      .then(mod => {
+        connectFunc = mod.default;
+      })
+    }
+    if (!redis) {
       redis = await connectFunc(browser);
     }
     const type = await redis.type(hash);
@@ -100,6 +112,12 @@ async function retrieveComplex(hash, cache) {
     return cache[hash];
   } else {
     if (!redis) {
+      import('./cache.js')
+      .then(mod => {
+        connectFunc = mod.default;
+      })
+    }
+    if (!redis) {
       redis = await connectFunc(browser);
     }
     return JSON.parse(await redis.get(hash));
@@ -108,6 +126,12 @@ async function retrieveComplex(hash, cache) {
 
 // Clears entire redis database //
 async function clearRedis() {
+  if (!redis) {
+    import('./cache.js')
+    .then(mod => {
+      connectFunc = mod.default;
+    })
+  }
   if (!redis) redis = await connectFunc(browser);
   redis.flushdb(function (err, succeeded) {
     if (err) console.log('redis error ', err)
