@@ -3,6 +3,7 @@ services:
 - docker
 - redis-server
 before_install:
+- sudo service redis-server start --bind 127.0.0.1
 - docker build -t open-source-labs/obsidian .
 - docker run open-source-labs/obsidian run src/cache.js -A --unstable
 script:
