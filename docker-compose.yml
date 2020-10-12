@@ -1,0 +1,10 @@
+version: "3.8"
+
+services:
+    site:
+        build: .
+        restart: always
+        volumes:
+            - ./:/usr/app
+        ports:
+            - 3000:3000

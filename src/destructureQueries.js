@@ -51,8 +51,21 @@ async function buildResultsObject(hashes, obsidianSchema, queryObj, cache) {
 
     // If have not created an object at this id, make one //
     if (!queryResult[id]) {
-      queryResult[id] = {
-        id
+      queryResult[id] = {}
+
+      // Really inelegant solution to ensuring the id remains in the correct format //
+      if (obsidianSchema.obsidianTypeSchema[typeSchemaName].id) {
+        queryResult[id].id = id;
+      } else if (obsidianSchema.obsidianTypeSchema[typeSchemaName]._id) {
+        queryResult[id]._id = id;
+      } else if (obsidianSchema.obsidianTypeSchema[typeSchemaName].ID) {
+        queryResult[id].ID = id;
+      } else if (obsidianSchema.obsidianTypeSchema[typeSchemaName]._ID) {
+        queryResult[id]._ID = id;
+      } else if (obsidianSchema.obsidianTypeSchema[typeSchemaName].Id) {
+        queryResult[id].Id = id;
+      } else if (obsidianSchema.obsidianTypeSchema[typeSchemaName]._Id) {
+        queryResult[id]._Id = id;
       }
     }
 
@@ -71,7 +84,7 @@ async function buildResultsObject(hashes, obsidianSchema, queryObj, cache) {
       } else {
         propVal = await retrieveScalar(hashes[j], cache);
         if (propVal && propVal.slice(1, 5) === 'null') propVal = null;
-      } 
+      }
       queryResult[id][property] = propVal;
       // If this field is complex, recursive call to build nested property object //
     } else {

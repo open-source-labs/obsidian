@@ -4,6 +4,8 @@ import { checkAndInsert } from './dbOps.js';
 // Normalizes responses from GraphQL queries //
 export default async function normalizeResult(query, result, obsidianSchema, cache) {
 
+  if (!result.data) return;
+
   const { returnTypes, obsidianTypeSchema } = obsidianSchema;
 
   const specificQueryArray = Object.keys(result.data);
