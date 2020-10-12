@@ -72,7 +72,7 @@ async function checkAndRetrieveQuery(hash, cache) {
     return cache[hash];
   } else {
     if (!redis) {
-      import('./cache.js')
+      await import('./cache.js')
       .then(mod => {
         console.log(mod.default);
         connectFunc = mod.default;
