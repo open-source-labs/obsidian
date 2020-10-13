@@ -30,9 +30,9 @@
 
 ## Overview
 
-Obsidian is Deno's first native GraphQL caching client and server module. Boasting lightning-fast caching and fetching capabilities alongside headlining normalization and destructuring strategies, obsidian is equipped to support scalable, highly performant applications.
+Obsidian is Deno's first native GraphQL caching client and server module. Boasting lightning-fast caching and fetching capabilities alongside headlining normalization and destructuring strategies, Obsidian is equipped to support scalable, highly performant applications.
 
-Optimized for use in server-side rendered React apps built with Deno, full stack integration of obsidian enables many of its most powerful features, including optimized caching exchanges between client and server and extremely lightweight client-side caching.
+Optimized for use in server-side rendered React apps built with Deno, full stack integration of Obsidian enables many of its most powerful features, including optimized caching exchanges between client and server and extremely lightweight client-side caching.
 
 ## Documentation and Demo
 
