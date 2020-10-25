@@ -1,0 +1,10 @@
+{
+  "name": "obsidian",
+  "description": "GraphQL, built for Deno - a native GraphQL caching client and server module",
+  "homepage": "https://github.com/open-source-labs/obsidian",
+  "files": [
+    "./**/*.ts",
+    "README.md"
+  ],
+  "entry": "./mod.ts"
+}
