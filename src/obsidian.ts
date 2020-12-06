@@ -1,4 +1,4 @@
-import { graphql } from 'https://cdn.pika.dev/graphql';
+import { graphql } from 'https://cdn.pika.dev/graphql@15.0.0';
 import { renderPlaygroundPage } from 'https://deno.land/x/oak_graphql/graphql-playground-html/render-playground-html.ts';
 import { makeExecutableSchema } from 'https://deno.land/x/oak_graphql/graphql-tools/schema/makeExecutableSchema.ts';
 import getObsidianSchema from './getObsidianSchema.js';
