@@ -1,5 +1,5 @@
 import { Application, Router } from 'https://deno.land/x/oak/mod.ts';
-import * as Colors from 'https://deno.land/std/fmt/colors.ts';
+// import * as Colors from 'https://deno.land/std/fmt/colors.ts';
 
 // OBSIDIAN
 import { ObsidianRouter, gql } from './mod.ts';
@@ -16,7 +16,8 @@ app.use(async (ctx, next) => {
   await next();
   const rt = ctx.response.headers.get('X-Response-Time');
   if (ctx.request.url.href === 'http://localhost:8000/graphql') {
-    console.log(Colors.underline(Colors.cyan(`QUERY TOOK ` + Colors.bold(`${rt}`))));
+    // console.log(Colors.underline(Colors.cyan(`QUERY TOOK ` + Colors.bold(`${rt}`))));
+    console.log(`QUERY TOOK ${rt}`);
   }
 });
 

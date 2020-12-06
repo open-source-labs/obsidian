@@ -78,6 +78,7 @@ export async function ObsidianRouter<T>({
             return;
           }
         }
+
         const result = await (graphql as any)(
           schema,
           body.query,
