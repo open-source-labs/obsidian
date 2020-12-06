@@ -1,6 +1,6 @@
-import { graphql } from 'https://cdn.pika.dev/graphql@15.0.0';
-import { renderPlaygroundPage } from 'https://deno.land/x/oak_graphql@0.6.1/graphql-playground-html/render-playground-html.ts';
-import { makeExecutableSchema } from 'https://deno.land/x/oak_graphql@0.6.1/graphql-tools/schema/makeExecutableSchema.ts';
+import { graphql } from 'https://cdn.pika.dev/graphql';
+import { renderPlaygroundPage } from 'https://deno.land/x/oak_graphql/graphql-playground-html/render-playground-html.ts';
+import { makeExecutableSchema } from 'https://deno.land/x/oak_graphql/graphql-tools/schema/makeExecutableSchema.ts';
 import getObsidianSchema from './getObsidianSchema.js';
 import normalizeResult from './normalize.js';
 import destructureQueries from './destructureQueries.js';
