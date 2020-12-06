@@ -1,3 +1,4 @@
 demo/dump.rdb
 .DS_Store
 .env
+.github/workflows/publish-to-nest.land.yml
