@@ -1,4 +1,4 @@
-import React from 'https://dev.jspm.io/react@16.13.1';
+import React from 'https://dev.jspm.io/react';
 
 import normalizeResult from '../src/normalize.js';
 import destructureQueries from '../src/destructureQueries.js';
