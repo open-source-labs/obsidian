@@ -46,17 +46,25 @@ const realCache = {
   'Actor~5': { id: '5', firstName: 'Gary' },
 };
 
-//* input after parsing
+//* input after helper parsing function
 const inputQueryOne = {
   queryName: 'movies',
   arguments: '(input:{genre:ACTION})',
-  fields: ['id', 'title', 'releaseYear', { actors: ['id', 'firstName'] }],
+  fields: {
+    __typename: 'meta',
+    id: 'scalar',
+    title: 'scalar',
+    genre: 'scalar',
+    actors: { id: 'scalar', firstName: 'scalar', lastName: 'scalar' },
+  },
 };
-const inputQueryTwo = {
-  queryName: 'movies',
-  arguments: '',
-  fields: ['id', 'title', { actors: ['id', 'firstName'] }],
-};
+const inputQueryTwo = [
+  {
+    queryName: 'movies',
+    arguments: '',
+    fields: ['id', 'title', { actors: ['id', 'firstName'] }],
+  },
+];
 
 //* CRUD READ
 function readCache(query, cache) {
@@ -70,31 +78,29 @@ function readCache(query, cache) {
     dataRes = {};
     // invoke populate and add data objects to the data response
     dataRes[query.queryName] = populate(arrayTypes, cache, query.fields);
-    return dataRes;
+    return { data: dataRes };
     // no match with ROOT_QUERY we need to fetch the data
   }
-  return null;
+  return 'query not found';
 }
-// function that populates dataRes types with fields
+//* helper function that populates dataRes types with fields
 function populate(arrTypes, cache, fields) {
   return arrTypes.reduce((acc, type, idx) => {
     acc.push({});
     const dataObj = acc[idx];
-    fields.forEach((field) => {
-      if (typeof field !== 'object') {
+    for (const field in fields) {
+      if (typeof fields[field] !== 'object') {
         dataObj[field] = cache[type][field];
       } else {
-        for (const key in field) {
-          dataObj[key] = populate(cache[type][key], cache, field[key]);
-        }
+        dataObj[field] = populate(cache[type][field], cache, fields[field]);
       }
-    });
+    }
     return acc;
   }, []);
 }
 
 const data = readCache(inputQueryOne, realCache);
 console.log(readCache(inputQueryOne, realCache));
-console.log(data.movies[3]);
+console.log(data.data.movies[3]);
 
 // function that fetchs data
