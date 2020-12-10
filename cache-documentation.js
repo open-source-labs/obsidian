@@ -149,7 +149,7 @@ const cache = {
 
 // EXAMPLE 2
 // ================================================================================
-// sample query to show how the cacbe stores queries with arguments
+// sample query to show how the cache stores queries with arguments
 
 const ALL_ACTION_MOVIES = gql`
   query AllActionMovies {
