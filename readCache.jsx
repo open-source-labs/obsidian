@@ -4,6 +4,7 @@
 const realCache = {
   ROOT_QUERY: {
     movies: ['Movie~1', 'Movie~2', 'Movie~3', 'Movie~4'],
+    actors: ['Actor~1', 'Actor~2', 'Actor~3', 'Actor~4'],
     'movies(input:{genre:ACTION})': ['Movie~1', 'Movie~4'],
     // added
     'movies(input:{order:EARLIESTFIRST})': [
@@ -47,41 +48,57 @@ const realCache = {
 };
 
 //* input after helper parsing function
-const inputQueryOne = {
-  queryName: 'movies',
-  arguments: '(input:{genre:ACTION})',
-  fields: {
-    __typename: 'meta',
-    id: 'scalar',
-    title: 'scalar',
-    genre: 'scalar',
-    actors: { id: 'scalar', firstName: 'scalar', lastName: 'scalar' },
+const inputQueryOne = [
+  {
+    name: 'movies',
+    arguments: '(input:{genre:ACTION})',
+    fields: {
+      __typename: 'meta',
+      id: 'scalar',
+      title: 'scalar',
+      genre: 'scalar',
+      actors: { id: 'scalar', firstName: 'scalar', lastName: 'scalar' },
+    },
   },
-};
+  {
+    name: 'actors',
+    arguments: '',
+    fields: {
+      id: 'scalar',
+      firstName: 'scalar',
+      lastName: 'scalar',
+    },
+  },
+];
 const inputQueryTwo = [
   {
-    queryName: 'movies',
+    name: 'movies',
     arguments: '',
     fields: ['id', 'title', { actors: ['id', 'firstName'] }],
   },
 ];
 
 //* CRUD READ
-function readCache(query, cache) {
-  let dataRes;
-  let arrayTypes;
-  // get the entire str query from the nama query and arguments
-  const rootQuery = query.queryName.concat(query.arguments);
-  // match in ROOT_QUERY
-  if (cache.ROOT_QUERY[rootQuery]) {
-    arrayTypes = cache.ROOT_QUERY[query.queryName];
-    dataRes = {};
-    // invoke populate and add data objects to the data response
-    dataRes[query.queryName] = populate(arrayTypes, cache, query.fields);
-    return { data: dataRes };
-    // no match with ROOT_QUERY we need to fetch the data
+function readCache(queries, cache) {
+  const dataRes = {};
+  for (const query in queries) {
+    let arrayTypes;
+    // get the entire str query from the nama query and arguments
+    const rootQuery = queries[query].name.concat(queries[query].arguments);
+    // match in ROOT_QUERY
+    if (cache.ROOT_QUERY[rootQuery]) {
+      arrayTypes = cache.ROOT_QUERY[queries[query].name];
+
+      // invoke populate and add data objects to the data response
+      dataRes[queries[query].name] = populate(
+        arrayTypes,
+        cache,
+        queries[query].fields
+      );
+      // no match with ROOT_QUERY return null or ...
+    } else return 'query not found';
   }
-  return 'query not found';
+  return { data: dataRes };
 }
 //* helper function that populates dataRes types with fields
 function populate(arrTypes, cache, fields) {
@@ -101,6 +118,6 @@ function populate(arrTypes, cache, fields) {
 
 const data = readCache(inputQueryOne, realCache);
 console.log(readCache(inputQueryOne, realCache));
-console.log(data.data.movies[3]);
+console.log(data.data);
 
 // function that fetchs data
