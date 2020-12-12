@@ -83,7 +83,7 @@ const ALL_MOVIES = gql`
 `;
 const respAllMovies = {
   data: {
-    Movie: [
+    movies: [
       {
         id: '1',
         title: 'Indiana Jones and the Last Crusade',
@@ -149,7 +149,7 @@ const cache = {
 
 // EXAMPLE 2
 // ================================================================================
-// sample query to show how the cacbe stores queries with arguments
+// sample query to show how the cache stores queries with arguments
 
 const ALL_ACTION_MOVIES = gql`
   query AllActionMovies {
@@ -164,7 +164,7 @@ const ALL_ACTION_MOVIES = gql`
 
 const respAllActionMovies = {
   data: {
-    Movie: [
+    movies: [
       {
         id: '1',
         title: 'Indiana Jones and the Last Crusade',
@@ -229,7 +229,7 @@ const ALL_MOVIES_CHRONOLOGICAL = gql`
 
 const respAllMoviesChronological = {
   data: {
-    Movie: [
+    movies: [
       {
         id: '2',
         title: 'Empire Strikes Back',
@@ -315,7 +315,7 @@ const ALL_ACTORS_ALPHABETICAL_LAST_NAME = gql`
 
 const respAllActorsAlphabeticalLastName = {
   data: {
-    Actor: [
+    actors: [
       {
         id: '2',
         firstName: 'Sean',
@@ -413,7 +413,7 @@ const GET_ACTOR_BY_ID = gql`
 
 const respGetActorById = {
   data: {
-    Actor: [
+    actor: [
       {
         id: '1',
         firstName: 'Harrion',
@@ -522,7 +522,7 @@ const ADD_FAVORITE_MOVIE = gql`
 
 const respAddFavoriteMovie = {
   data: {
-    Movie: [
+    favoriteMovie: [
       {
         id: '2',
         isFavorite: true,
@@ -607,7 +607,7 @@ const ADD_MOVIE = gql`
 
 const respAddMovie = {
   data: {
-    Movie: [
+    addMovie: [
       {
         id: '5',
         title: 'The Fugitive',
