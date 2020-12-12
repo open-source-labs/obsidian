@@ -196,4 +196,4 @@ const response = readCache(inputQueries, cacheObject);
 console.log(response);
 console.log(response.data);
 
-console.log(JSON.stringify(response) === JSON.stringify(testResponse));
+console.log(JSON.stringify(response) === JSON.stringify(testResponse)); // true
