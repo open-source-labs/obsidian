@@ -89,7 +89,6 @@ function populateAllTypes(arrTypes, cache, fields) {
       for (const field in fields) {
         // for each field in the fields input query, add the corresponding value from the cache if the field is not another array of types
         if (typeof fields[field] !== 'object') {
-          console.log(cache[type][field]);
           if (!cache[type][field] && field !== '__typename') return undefined;
           // add the typename for the type
           if (field === '__typename') {
