@@ -13,52 +13,18 @@
  * 9. We will handle only the meta field "__typename" for now
  * 10. This function will return undefined if any of the value is missing from the cache or/and if the query does not exist in the cache
  */
-const cacheObject = {
-  ROOT_QUERY: {
-    'actor(id:1)': 'Actor~1',
-    movies: ['Movie~1', 'Movie~2', 'Movie~3', 'Movie~4'],
-    actors: ['Actor~1', 'Actor~2', 'Actor~3', 'Actor~4'],
-    'movies(input:{genre:ACTION})': ['Movie~1', 'Movie~4'],
-  },
-  'Movie~1': {
-    id: '1',
-    title: 'Indiana Jones and the Last Crusade',
-    actors: ['Actor~1', 'Actor~2'],
-    genre: 'ACTION',
-    releaseYear: 1989,
-  },
-  'Movie~2': {
-    id: '2',
-    title: 'Empire Strikes Back',
-    actors: ['Actor~1', 'Actor~3'],
-    releaseYear: 1980,
-  },
-  'Movie~3': {
-    id: '3',
-    title: 'Witness',
-    actors: ['Actor~1', 'Actor~4'],
-    releaseYear: 1985,
-  },
-  'Movie~4': {
-    id: '4',
-    title: 'Air Force One',
-    actors: ['Actor~1', 'Actor~5'],
-    genre: 'ACTION',
-    releaseYear: 1997,
-  },
-  'Actor~1': { id: '1', firstName: 'Harrison', lastName: 'Ford' },
-  'Actor~2': { id: '2', firstName: 'Sean' },
-  'Actor~3': { id: '3', firstName: 'Mark' },
-  'Actor~4': { id: '4', firstName: 'Patti' },
-  'Actor~5': { id: '5', firstName: 'Gary' },
-};
+// Import newDestructure function
+import destructureQueries from './newDestructure.js';
 
 //* CRUD READ
-function readCache(queries, cache) {
+function readCache(queryOperationStr, cache) {
+  // destructure the query string into an object
+  const queries = destructureQueries(queryOperationStr).queries
   const responseObject = {};
   // iterate through each query in the input queries object
   for (const query in queries) {
     // get the entire str query from the name input query and arguments
+    console.log(queries[query].name);
     const rootQuery = queries[query].name.concat(queries[query].arguments);
     // match in ROOT_QUERY
     if (cache.ROOT_QUERY[rootQuery]) {
@@ -129,33 +95,72 @@ function populateAllTypes(arrTypes, cache, fields) {
   }
   return [dataObj];
 }
-//* input after destructuring queries parser
-const inputQueries = [
-  {
-    name: 'movies',
-    arguments: '(input:{genre:ACTION})',
-    fields: {
-      __typename: 'meta',
-      id: 'scalar',
-      title: 'scalar',
-      genre: 'scalar',
-      actors: {
-        __typename: 'meta',
-        id: 'scalar',
-        firstName: 'scalar',
-      },
-    },
+
+//* TESTS:
+// Cache example:
+const cacheObject = {
+  ROOT_QUERY: {
+    'actor(id:1)': 'Actor~1',
+    movies: ['Movie~1', 'Movie~2', 'Movie~3', 'Movie~4'],
+    actors: ['Actor~1', 'Actor~2', 'Actor~3', 'Actor~4'],
+    'movies(input:{genre:ACTION})': ['Movie~1', 'Movie~4'],
   },
-  {
-    name: 'actors',
-    arguments: '',
-    fields: {
-      __typename: 'meta',
-      id: 'scalar',
-      firstName: 'scalar',
-    },
+  'Movie~1': {
+    id: '1',
+    title: 'Indiana Jones and the Last Crusade',
+    actors: ['Actor~1', 'Actor~2'],
+    genre: 'ACTION',
+    releaseYear: 1989,
   },
-];
+  'Movie~2': {
+    id: '2',
+    title: 'Empire Strikes Back',
+    actors: ['Actor~1', 'Actor~3'],
+    releaseYear: 1980,
+  },
+  'Movie~3': {
+    id: '3',
+    title: 'Witness',
+    actors: ['Actor~1', 'Actor~4'],
+    releaseYear: 1985,
+  },
+  'Movie~4': {
+    id: '4',
+    title: 'Air Force One',
+    actors: ['Actor~1', 'Actor~5'],
+    genre: 'ACTION',
+    releaseYear: 1997,
+  },
+  'Actor~1': { id: '1', firstName: 'Harrison', lastName: 'Ford' },
+  'Actor~2': { id: '2', firstName: 'Sean' },
+  'Actor~3': { id: '3', firstName: 'Mark' },
+  'Actor~4': { id: '4', firstName: 'Patti' },
+  'Actor~5': { id: '5', firstName: 'Gary' },
+};
+//* input before destructuring 
+const  queryStr = `
+  query AllActionMoviesAndAllActors {
+    movies(input: { genre: ACTION }) {
+      __typename
+      id
+      title
+      genre
+      actors {
+        __typename
+        id
+        firstName
+      }
+    }
+    actors {
+      __typename
+      id
+      firstName
+    }
+  }
+  }
+`;
+
+//* Response example after readCache()
 const testResponse = {
   data: {
     movies: [
@@ -208,23 +213,22 @@ const testResponse = {
     ],
   },
 };
-const response = readCache(inputQueries, cacheObject);
+const response = readCache(queryStr, cacheObject);
 console.log(response);
 console.log(response.data);
 
 console.log(JSON.stringify(response) === JSON.stringify(testResponse)); // true
-const oneTypeQuery = [
-  {
-    name: 'actor',
-    arguments: '(id:1)',
-    fields: {
-      __typename: 'meta',
-      id: 'scalar',
-      firstName: 'scalar',
-      lastName: 'scalar',
-    },
-  },
-];
+
+const oneTypeQuery = `
+  query getActorById {
+    actor(id: 1) {
+      __typename
+      id
+      firstName
+      lastName
+    }
+  }
+`;
 const respGetActorById = {
   data: {
     actor: [
@@ -240,3 +244,5 @@ const respGetActorById = {
 const res = readCache(oneTypeQuery, cacheObject);
 console.log(res.data);
 console.log(JSON.stringify(res) === JSON.stringify(respGetActorById)); // true
+
+export default readCache;
