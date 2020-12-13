@@ -17,7 +17,7 @@
 import destructureQueries from './newDestructure.js';
 
 //* CRUD READ
-function readCache(queryOperationStr, cache) {
+export function readCache(queryOperationStr, cache) {
   // destructure the query string into an object
   const queries = destructureQueries(queryOperationStr).queries
   const responseObject = {};
@@ -43,8 +43,9 @@ function readCache(queryOperationStr, cache) {
   }
   return { data: responseObject };
 }
+
 //* helper function that populates responseObject types with fields
-function populateAllTypes(arrTypes, cache, fields) {
+export function populateAllTypes(arrTypes, cache, fields) {
   if (Array.isArray(arrTypes)) {
     // include the typename for each type
     const hyphenIdx = arrTypes[0].indexOf('~');
@@ -80,6 +81,7 @@ function populateAllTypes(arrTypes, cache, fields) {
   const typeName = arrTypes.slice(0, hyphenIdx);
   const dataObj = {};
   for (const field in fields) {
+    if (!cache[arrTypes][field] && field !== '__typename') return undefined;
     if (typeof fields[field] !== 'object') {
       // add the typename for the type
       if (field === '__typename') {
@@ -245,4 +247,4 @@ const res = readCache(oneTypeQuery, cacheObject);
 console.log(res.data);
 console.log(JSON.stringify(res) === JSON.stringify(respGetActorById)); // true
 
-export default readCache;
+// export default readCache;
