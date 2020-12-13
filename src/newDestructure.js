@@ -223,3 +223,4 @@ const testResult = {
 };
 
 console.log(JSON.stringify(result) === JSON.stringify(testResult)); // true
+export default destructureQueries;
