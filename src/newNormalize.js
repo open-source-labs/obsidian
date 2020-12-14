@@ -170,6 +170,65 @@ const resultObject = {
 
 //Normalizes responses using the query object from destructure and the response object from
 //the graphql request
+export default async function normalizeResult(queryObj, resultObj) {
+  const output = {};
+  if (!resultObj.data) return;
+
+  let resultKeys = Object.keys(resultObj.data);
+  const hashes = [];
+
+  console.log(queryObj.queries[0]);
+  let queriesKeys = Object.keys(queryObj.queries[0]);
+
+  for (let i = 0; i < queryObj.queries; i++) {
+    const queriesKeys = Object.keys(queryObj.queries[i]);
+  }
+
+  for (let i = 0; i < resultKeys.length; i++) {
+    const curr = resultObj.data[resultKeys[i]];
+    for (let j = 0; j < curr.length; j++) {
+      const hash = createHash(curr[j]);
+      output[hash.hash] = hash.output;
+    }
+  }
+  console.log(output);
+}
+
+function createHash(obj) {
+  let hash = obj.__typename + '~' + obj.id;
+  let output = {};
+  let innerOutput = {};
+  for (let curr in obj) {
+    if (!Array.isArray(obj[curr])) {
+      if (curr !== '__typename') {
+        output[curr] = obj[curr];
+      }
+    } else {
+      const innerRes = innerQuery(obj[curr]);
+      output[curr] = innerRes.output;
+      for (let i = 0; i < innerRes.output.length; i++) {
+        innerOutput[innerRes.output[i]] = innerRes.obj[i];
+      }
+      console.log(innerOutput);
+    }
+  }
+  console.log(output);
+  return {hash, output, innerOutput};
+}
+
+function innerQuery(innerArray) {
+  let output = [];
+  let obj = [];
+  for (let i = 0; i < innerArray.length; i++) {
+    const hashCreated = createHash(innerArray[i]);
+    obj.push(hashCreated.output);
+
+    output.push(hashCreated.hash);
+
+    console.log(obj);
+  }
+  return {output, obj};
+}
 
 //
 
