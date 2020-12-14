@@ -1,12 +1,12 @@
 /**
  * NOTES:
  * 1.This file will test readCache functionalities:
- * Should return an object if all required values are found in the cache.
+ * Should return a graphql response object if all required values are found in the cache.
  * Should return undefined if any field is missing value  in the cache.
  * Should accept multiple queries in one query operation.
  * 2. This file will test populateAllTypes functionalities:
  * Should return undefined if any field is missing from the cache.
- * Should return an array of objects with all the fields found in the cache corresponding to the query.
+ * Should return an array of field objects if all the elements are found in the cache.
  */
 
 import { readCache, populateAllTypes } from '../../src/readCache.js';
@@ -16,7 +16,7 @@ import { test } from '../test_variables/readCache_variables.ts';
 Rhum.testPlan('readCache.js', () => {
   Rhum.testSuite('readCache()', () => {
     Rhum.testCase(
-      'should return an object if all required values are found in the cache',
+      'should return a graphql response object if all required values are found in the cache',
       () => {
         const result = readCache(test.singularInputQuery, test.cache);
         Rhum.asserts.assertEquals(result, test.singularQueryResObj);
@@ -51,7 +51,7 @@ Rhum.testPlan('readCache.js', () => {
       }
     );
     Rhum.testCase(
-      'should return an array of objects with all the fields found in the cache corresponding to the query',
+      'should return an array of field objects if all the elements are found in the cache',
       () => {
         const result = populateAllTypes(
           'Actor~1',
