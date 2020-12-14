@@ -1,12 +1,12 @@
 /**
  * NOTES:
  * 1.This file will test readCache functionality:
- * Should return an object if all values are in the cache
- * Should return undefined if any field is missing value  in the cache
- * Should accept multiple queries in one query operation
+ * Should return an object if all values are in the cache.
+ * Should return undefined if any field is missing value  in the cache.
+ * Should accept multiple queries in one query operation.
  * 2. This file will test populateAllTypes functionality:
- * Should return an array if all fields are found
- * Should return undefined if any field is missing value
+ * Should return an array if all fields are found.
+ * Should return undefined if any field is missing value.
  */
 
 import { readCache, populateAllTypes } from '../../src/readCache.js';
