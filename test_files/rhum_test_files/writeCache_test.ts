@@ -14,168 +14,18 @@
 
 import { writeCache } from '../../src/writeCache.js';
 import { Rhum } from 'https://deno.land/x/rhum@v1.1.4/mod.ts';
-const toAddInCache = {
-  ROOT_QUERY: {
-    'actor(id:1)': 'Actor~1',
-    movies: ['Movie~1', 'Movie~2', 'Movie~3', 'Movie~4'],
-  },
-  'Movie~1': {
-    id: '1',
-    title: 'Indiana Jones and the Last Crusade',
-    actors: ['Actor~1', 'Actor~2'],
-    genre: 'ACTION',
-    releaseYear: 1989,
-  },
-  'Movie~2': {
-    id: '2',
-    title: 'Empire Strikes Back',
-    actors: ['Actor~1', 'Actor~3'],
-    releaseYear: 1980,
-  },
-  'Movie~3': {
-    id: '3',
-    title: 'Witness',
-    actors: ['Actor~1', 'Actor~4'],
-    releaseYear: 1985,
-  },
-  'Movie~4': {
-    id: '4',
-    title: 'Air Force One',
-    actors: ['Actor~1', 'Actor~5'],
-    genre: 'ACTION',
-    releaseYear: 1997,
-  },
-  'Actor~1': {
-    id: '1',
-    firstName: 'Harrison',
-    lastName: 'Ford',
-    films: ['Movie~1', 'Movie~2', 'Movie~3', 'Movie~4'],
-  },
-  'Actor~3': {
-    id: '3',
-    firstName: 'Mark',
-    lastName: 'Hamill',
-    films: ['Movie~2'],
-  },
-  'Actor~4': {
-    id: '4',
-    firstName: 'Patti',
-    lastName: 'LuPone',
-    films: ['Movie~3'],
-  },
-  'Actor~5': {
-    id: '5',
-    firstName: 'Gary',
-    lastName: 'Oldman',
-    films: ['Movie~4'],
-  },
-};
-const originalCache = {
-  ROOT_QUERY: {
-    'movies(input:{genre:ACTION})': ['Movie~1', 'Movie~4'],
-    actors: ['Actor~1', 'Actor~2', 'Actor~3', 'Actor~4', 'Actor~5'],
-  },
-  'Movie~1': {
-    id: '1',
-    title: 'Indiana Jones and the Last Crusade',
-    actors: ['Actor~1', 'Actor~2'],
-    genre: 'ACTION',
-  },
-  'Movie~2': {
-    id: '2',
-    title: 'Empire Strikes Back',
-  },
-  'Movie~3': {
-    id: '3',
-    title: 'Witness',
-  },
-  'Movie~4': {
-    id: '4',
-    title: 'Air Force One',
-    actors: ['Actor~1', 'Actor~5'],
-    genre: 'ACTION',
-  },
+import { test } from '../test_variables/writeCache_variables.ts';
 
-  'Actor~2': {
-    id: '2',
-    firstName: 'Sean',
-    lastName: 'Connery',
-    films: ['Movie~1'],
-  },
-};
-const expectedResultCache = {
-  ROOT_QUERY: {
-    'actor(id:1)': 'Actor~1',
-    movies: ['Movie~1', 'Movie~2', 'Movie~3', 'Movie~4'],
-    'movies(input:{genre:ACTION})': ['Movie~1', 'Movie~4'],
-    actors: ['Actor~1', 'Actor~2', 'Actor~3', 'Actor~4', 'Actor~5'],
-  },
-  'Movie~1': {
-    id: '1',
-    title: 'Indiana Jones and the Last Crusade',
-    actors: ['Actor~1', 'Actor~2'],
-    genre: 'ACTION',
-    releaseYear: 1989,
-  },
-  'Movie~2': {
-    id: '2',
-    title: 'Empire Strikes Back',
-    actors: ['Actor~1', 'Actor~3'],
-    releaseYear: 1980,
-  },
-  'Movie~3': {
-    id: '3',
-    title: 'Witness',
-    actors: ['Actor~1', 'Actor~4'],
-    releaseYear: 1985,
-  },
-  'Movie~4': {
-    id: '4',
-    title: 'Air Force One',
-    actors: ['Actor~1', 'Actor~5'],
-    genre: 'ACTION',
-    releaseYear: 1997,
-  },
-  'Actor~1': {
-    id: '1',
-    firstName: 'Harrison',
-    lastName: 'Ford',
-    films: ['Movie~1', 'Movie~2', 'Movie~3', 'Movie~4'],
-  },
-  'Actor~2': {
-    id: '2',
-    firstName: 'Sean',
-    lastName: 'Connery',
-    films: ['Movie~1'],
-  },
-  'Actor~3': {
-    id: '3',
-    firstName: 'Mark',
-    lastName: 'Hamill',
-    films: ['Movie~2'],
-  },
-  'Actor~4': {
-    id: '4',
-    firstName: 'Patti',
-    lastName: 'LuPone',
-    films: ['Movie~3'],
-  },
-  'Actor~5': {
-    id: '5',
-    firstName: 'Gary',
-    lastName: 'Oldman',
-    films: ['Movie~4'],
-  },
-};
 Rhum.testPlan('writeCache.js', () => {
   Rhum.testSuite('creatCache()', () => {
     Rhum.testCase(
-      'should return an updated cache with the new fields and queries',
+      'should update the original cache with the new fields and queries',
       () => {
-        const result = writeCache(toAddInCache, originalCache);
-        Rhum.asserts.assertEquals(result, expectedResultCache);
+        writeCache(test.toAddInCache, test.originalCache);
+        Rhum.asserts.assertEquals(test.originalCache, test.expectedResultCache);
       }
     );
   });
 });
-// deno test --allow-env
+// deno test test_files/rhum_test_files/writeCache_test.ts --allow-env
+Rhum.run();

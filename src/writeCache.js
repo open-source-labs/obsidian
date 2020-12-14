@@ -2,7 +2,7 @@
  * 1.This function will assume that everything passed in is a response object from gql request, query string (use the destructure queries to return a query object), and the original cache
  * 2. This function will add new fields to the cache and new key/value pair queries to the ROOT_QUERY .
  * 3. This function will update an existent field or an existent ROOT_QUERY key/value pair.
- * 4. This function will return the updated cache with the same reference.
+ * 4. This function will update the existent cache keeping its reference.
  */
 const toAddInCache = {
   ROOT_QUERY: {
@@ -94,12 +94,16 @@ const originalCache = {
   },
 };
 export function writeCache(resFromNormalize, cache) {
+  // function writeCache(responseObj, queryStr, cache )
+  //queryStr => destructureQueries => objectQuery
+  // (objectQuery, responseObj) => normalize => resFromNormalize
+  // (resFromNormalize, cache) => update the original cache with same reference
   // update the root query from both objects and merge them into the response object. This will modify resFromNormalize with the updated ROOT_QUERY
   Object.assign(resFromNormalize.ROOT_QUERY, cache.ROOT_QUERY);
-  // update the original cache with the response object. This will return the reference to the original cache
-  return Object.assign(cache, resFromNormalize);
+  // update the original cache with the response object. This will keep the reference to the original cache
+  Object.assign(cache, resFromNormalize);
+  return 'Cache Updated';
 }
 
 const respCache = writeCache(toAddInCache, originalCache);
 console.log(respCache);
-console.log(originalCache === respCache);
