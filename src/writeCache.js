@@ -93,9 +93,9 @@ const originalCache = {
     films: ['Movie~1'],
   },
 };
-export function writeCache(resFromNormalize, cache) {
+function writeCache(resFromNormalize, cache) {
   // function writeCache(responseObj, queryStr, cache )
-  //queryStr => destructureQueries => objectQuery
+  // queryStr => destructureQueries => objectQuery
   // (objectQuery, responseObj) => normalize => resFromNormalize
   // (resFromNormalize, cache) => update the original cache with same reference
   // update the root query from both objects and merge them into the response object. This will modify resFromNormalize with the updated ROOT_QUERY
@@ -106,4 +106,4 @@ export function writeCache(resFromNormalize, cache) {
 }
 
 const respCache = writeCache(toAddInCache, originalCache);
-console.log(respCache);
+console.log(originalCache);
