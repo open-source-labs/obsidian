@@ -39,48 +39,62 @@ const cache = {
   'Actor~3': { id: '3', firstName: 'Mark' },
   'Actor~4': { id: '4', firstName: 'Patti' },
   'Actor~5': { id: '5', firstName: 'Gary' },
-}
+};
 
-const fields = { __typename: 'meta', 
-  id: 'scalar', 
-  title: 'scalar', 
-  genre: 'scalar', 
-  actors: { __typename: 'meta', id: 'scalar', firstName: 'scalar' }
-} 
-  
+const fields = {
+  __typename: 'meta',
+  id: 'scalar',
+  title: 'scalar',
+  genre: 'scalar',
+  actors: { __typename: 'meta', id: 'scalar', firstName: 'scalar' },
+};
+
 Rhum.testPlan('readCache.js', () => {
   Rhum.testSuite('readCache()', () => {
     Rhum.testCase('should return an object or undefined', () => {
-      const result = readCache(`
-  query getActorById {
-    actor(id: 1) {
-      __typename
-      id
-      firstName
-      lastName
-    }
-  }
-`, cache)
-      Rhum.asserts.assertEquals(result, {
-  data: {
-    actor: [
-      {
-        __typename: 'Actor',
-        id: '1',
-        firstName: 'Harrison',
-        lastName: 'Ford',
-      },
-    ],
-  },
-} || undefined);
+      const result = readCache(
+        `
+          query getActorById {
+            actor(id: 1) {
+              __typename
+              id
+              firstName
+              lastName
+            }
+          }
+        `,
+        cache
+      );
+      Rhum.asserts.assertEquals(
+        result,
+        {
+          data: {
+            actor: [
+              {
+                __typename: 'Actor',
+                id: '1',
+                firstName: 'Harrison',
+                lastName: 'Ford',
+              },
+            ],
+          },
+        } || undefined
+      );
     });
   });
 
   Rhum.testSuite('populateAllTypes()', () => {
     Rhum.testCase('return an array', () => {
       const result = populateAllTypes(['Movie~1', 'Movie~4'], cache, fields);
-      Rhum.asserts.assertEquals(result, [{ __typename: 'Actor', id: '1', firstName: 'Harrison', lastName: 'Ford' }]);
-    })
-  })
+      Rhum.asserts.assertEquals(result, [
+        {
+          __typename: 'Actor',
+          id: '1',
+          firstName: 'Harrison',
+          lastName: 'Ford',
+        },
+      ]);
+    });
+  });
 });
 Rhum.run();
