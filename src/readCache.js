@@ -2,8 +2,8 @@
 /* eslint-disable guard-for-in */
 /**
  * NOTES:
- * 1.This function will assume that everything passed in is a query, not a mutation
- * 2. This function would assume that the input query passed in is the result from destructuring the original query.
+ * 1.This function will record the arguments as a string unless we come up with an alternative argument
+ * 2. This function will assume that everything passed in is a query, not a mutation.
  * 3. This function accepts one query operation which contains one/multiples queries as input
  * 4. We won't worry about arguments on fields for now
  * 5. We won't worry about aliases for now
@@ -11,7 +11,8 @@
  * 7. We wont' worry about fragments for now
  * 8. We won't handle variables for now
  * 9. We will handle only the meta field "__typename" for now
- * 10. This function will return undefined if any of the value is missing from the cache or/and if the query does not exist in the cache
+ * 10. This function will return undefined if any of the field value is missing from the cache or/and if the query does not exist in the cache
+ * 11. Edge cases: if not passed a query string, return undefined
  */
 // Import newDestructure function
 import destructureQueries from './newDestructure.js';
@@ -45,12 +46,12 @@ export function readCache(queryOperationStr, cache) {
 }
 
 //* helper function that populates responseObject types with fields
-export function populateAllTypes(arrTypes, cache, fields) {
-  if (Array.isArray(arrTypes)) {
+export function populateAllTypes(allTypesFromQuery, cache, fields) {
+  if (Array.isArray(allTypesFromQuery)) {
     // include the typename for each type
-    const hyphenIdx = arrTypes[0].indexOf('~');
-    const typeName = arrTypes[0].slice(0, hyphenIdx);
-    return arrTypes.reduce((acc, type) => {
+    const hyphenIdx = allTypesFromQuery[0].indexOf('~');
+    const typeName = allTypesFromQuery[0].slice(0, hyphenIdx);
+    return allTypesFromQuery.reduce((acc, type) => {
       // for each type from the input query, build the response object
       const dataObj = {};
       for (const field in fields) {
@@ -75,21 +76,21 @@ export function populateAllTypes(arrTypes, cache, fields) {
       return acc;
     }, []);
   }
-  // case where arrTypes has only one type and is not an array but a single string
+  //* Case where allTypesFromQuery has only one type and is not an array but a single string
   // include the typename for each type
-  const hyphenIdx = arrTypes.indexOf('~');
-  const typeName = arrTypes.slice(0, hyphenIdx);
+  const hyphenIdx = allTypesFromQuery.indexOf('~');
+  const typeName = allTypesFromQuery.slice(0, hyphenIdx);
   const dataObj = {};
   for (const field in fields) {
-    if (!cache[arrTypes][field] && field !== '__typename') return undefined;
+    if (!cache[allTypesFromQuery][field] && field !== '__typename') return undefined;
     if (typeof fields[field] !== 'object') {
       // add the typename for the type
       if (field === '__typename') {
         dataObj[field] = typeName;
-      } else dataObj[field] = cache[arrTypes][field];
+      } else dataObj[field] = cache[allTypesFromQuery][field];
     } else {
       dataObj[field] = populateAllTypes(
-        cache[arrTypes][field],
+        cache[allTypesFromQuery][field],
         cache,
         fields[field]
       );
