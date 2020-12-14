@@ -93,13 +93,13 @@ const originalCache = {
     films: ['Movie~1'],
   },
 };
-export function createCache(resFromNormalize, cache) {
+export function writeCache(resFromNormalize, cache) {
   // update the root query from both objects and merge them into the response object. This will modify resFromNormalize with the updated ROOT_QUERY
   Object.assign(resFromNormalize.ROOT_QUERY, cache.ROOT_QUERY);
   // update the original cache with the response object. This will return the reference to the original cache
   return Object.assign(cache, resFromNormalize);
 }
 
-const respCache = createCache(toAddInCache, originalCache);
+const respCache = writeCache(toAddInCache, originalCache);
 console.log(respCache);
 console.log(originalCache === respCache);

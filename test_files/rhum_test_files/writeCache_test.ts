@@ -12,7 +12,7 @@
  * Adding a file that contains all the variables for the test suite readCache
  */
 
-import { createCache } from '../../src/createCache.js';
+import { writeCache } from '../../src/writeCache.js';
 import { Rhum } from 'https://deno.land/x/rhum@v1.1.4/mod.ts';
 const toAddInCache = {
   ROOT_QUERY: {
@@ -167,12 +167,12 @@ const expectedResultCache = {
     films: ['Movie~4'],
   },
 };
-Rhum.testPlan('createCache.js', () => {
+Rhum.testPlan('writeCache.js', () => {
   Rhum.testSuite('creatCache()', () => {
     Rhum.testCase(
       'should return an updated cache with the new fields and queries',
       () => {
-        const result = createCache(toAddInCache, originalCache);
+        const result = writeCache(toAddInCache, originalCache);
         Rhum.asserts.assertEquals(result, expectedResultCache);
       }
     );
