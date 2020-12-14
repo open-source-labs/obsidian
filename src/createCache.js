@@ -1,3 +1,9 @@
+/** NOTES:
+ * 1.This function will assume that everything passed in is a response object from gql request, query object from the destructure queries, and the original cache
+ * 2. This function will add new fields to the cache and new key/value pair queries to the ROOT_QUERY .
+ * 3. This function will update an existent field or an existent ROOT_QUERY key/value pair.
+ * 4. This function will return the updated cache with the same reference.
+ */
 const toAddInCache = {
   ROOT_QUERY: {
     'actor(id:1)': 'Actor~1',
