@@ -8,7 +8,6 @@
 const queryObject = {
   queries: [
     {
-      __typename: 'meta',
       name: 'movies',
       arguments: '(input:{genre:ACTION})',
       fields: {
@@ -16,14 +15,19 @@ const queryObject = {
         id: 'scalar',
         title: 'scalar',
         genre: 'scalar',
-        actors: {id: 'scalar', firstName: 'scalar', lastName: 'scalar'},
+        actors: {
+          __typename: 'meta',
+          id: 'scalar',
+          firstName: 'scalar',
+          lastName: 'scalar',
+        },
       },
     },
     {
-      __typename: 'meta',
       name: 'actors',
       arguments: '',
       fields: {
+        __typename: 'meta',
         id: 'scalar',
         firstName: 'scalar',
         lastName: 'scalar',
@@ -171,51 +175,91 @@ const resultObject = {
 //Normalizes responses using the query object from destructure and the response object from
 //the graphql request
 export default async function normalizeResult(queryObj, resultObj) {
-  const output = {};
   if (!resultObj.data) return;
 
+  //Object to hold normalized obj
+  const cache = {};
+
+  //
   let resultKeys = Object.keys(resultObj.data);
   const hashes = [];
 
-  console.log(queryObj.queries[0]);
-  let queriesKeys = Object.keys(queryObj.queries[0]);
+  //creates a stringified version of query request and stores it in ROOT_QUERY key
+  cache['ROOT_QUERY'] = createRootQuery(queryObj, resultObj);
 
-  for (let i = 0; i < queryObj.queries; i++) {
-    const queriesKeys = Object.keys(queryObj.queries[i]);
-  }
-
+  //stores appropriate response obj with hashed __typename and id
   for (let i = 0; i < resultKeys.length; i++) {
+    //curr assigned the value of the response of that query
     const curr = resultObj.data[resultKeys[i]];
     for (let j = 0; j < curr.length; j++) {
+      //pass current obj to createHash function to create hash and appropriate response obj
       const hash = createHash(curr[j]);
-      output[hash.hash] = hash.output;
+      //store the output of createHash in output cache obj
+      cache[hash.hash] = hash.output;
+      //checks if the information in complex types is already stored in our output cache, if not update the cache
+      checkAndInsert(hash.innerOutput, cache);
     }
   }
-  console.log(output);
+  console.log(cache);
+  return cache;
 }
 
+//checks if the object in innerObj exsits within output, if not create new reference in the output cache
+function checkAndInsert(innerObj, output) {
+  for (let obj in innerObj) {
+    if (!output[obj]) {
+      output[obj] = innerObj[obj];
+    } else {
+      Object.assign(output[obj], innerObj[obj]);
+    }
+  }
+}
+
+//creates the hashes for query requests and stores the references with the appropriate hashes in an object
+function createRootQuery(queryObj, resultObj) {
+  let output = {};
+  for (let i = 0; i < queryObj.queries.length; i++) {
+    const name = queryObj.queries[i].name;
+    const args = queryObj.queries[i].arguments;
+    //create hashes that will be store the appropriate root query value
+    const hashes = createHash(resultObj.data).output;
+    console.log(hashes);
+
+    //store the hashes associated with the query request and arguement
+    output[name + args] = hashes[name];
+  }
+  console.log(output);
+  return output;
+}
+
+//creates hashes and checks for complex fields
+//returns hashes, appropriate obj, and innerObj if a complex field exists
 function createHash(obj) {
   let hash = obj.__typename + '~' + obj.id;
   let output = {};
   let innerOutput = {};
   for (let curr in obj) {
+    //checks if the current value is an array
     if (!Array.isArray(obj[curr])) {
+      //if not array and the curr key isn't __typename add to output obj
       if (curr !== '__typename') {
         output[curr] = obj[curr];
       }
+
+      //if array, we create hashes and appropriate obj for those hashes
     } else {
       const innerRes = innerQuery(obj[curr]);
       output[curr] = innerRes.output;
+      //store complex fields info in innerOutput obj as a hash:obj pair
       for (let i = 0; i < innerRes.output.length; i++) {
         innerOutput[innerRes.output[i]] = innerRes.obj[i];
       }
-      console.log(innerOutput);
     }
   }
-  console.log(output);
   return {hash, output, innerOutput};
 }
 
+//creates hash:obj pair for complex fields
 function innerQuery(innerArray) {
   let output = [];
   let obj = [];
@@ -224,8 +268,6 @@ function innerQuery(innerArray) {
     obj.push(hashCreated.output);
 
     output.push(hashCreated.hash);
-
-    console.log(obj);
   }
   return {output, obj};
 }
