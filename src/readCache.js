@@ -248,5 +248,3 @@ const respGetActorById = {
 const res = readCache(oneTypeQuery, cacheObject);
 console.log(res.data);
 console.log(JSON.stringify(res) === JSON.stringify(respGetActorById)); // true
-
-//
