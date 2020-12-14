@@ -1,3 +1,14 @@
+/**
+ * NOTES:
+ * 1.This file will test readCache functionality:
+ * Should return an object if all values are in the cache
+ * Should return undefined if any field is missing value  in the cache
+ * Should accept multiple queries in one query operation
+ * 2. This file will test populateAllTypes functionality:
+ * Should return an array if all fields are found
+ * Should return undefined if any field is missing value
+ */
+
 import { readCache, populateAllTypes } from '../../src/readCache.js';
 import { Rhum } from 'https://deno.land/x/rhum@v1.1.4/mod.ts';
 
@@ -71,7 +82,7 @@ Rhum.testPlan('readCache.js', () => {
   },
 });
     });
-    Rhum.testCase('should return undefined if any field value is not found in the cache', () => {
+    Rhum.testCase('should return undefined if any field is missing value  in the cache', () => {
       const result = readCache(`
   query getActorById {
     actor(id: 1) {
@@ -162,7 +173,7 @@ Rhum.testPlan('readCache.js', () => {
   });
 
   Rhum.testSuite('populateAllTypes()', () => {
-    Rhum.testCase('should return undefined if field is missing value ', () => {
+    Rhum.testCase('should return undefined if any field is missing value ', () => {
       const result = populateAllTypes('Actor~1', cache, fields);
       Rhum.asserts.assertEquals(result, undefined);
     })
