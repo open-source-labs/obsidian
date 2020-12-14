@@ -1,10 +1,10 @@
 /**
  * NOTES:
- * 1.This file will test readCache functionality:
+ * 1.This file will test readCache functionalities:
  * Should return an object if all values are in the cache.
  * Should return undefined if any field is missing value  in the cache.
  * Should accept multiple queries in one query operation.
- * 2. This file will test populateAllTypes functionality:
+ * 2. This file will test populateAllTypes functionalities:
  * Should return an array if all fields are found.
  * Should return undefined if any field is missing value.
  */
