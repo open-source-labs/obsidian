@@ -7,6 +7,9 @@
  * 2. This file will test populateAllTypes functionality:
  * Should return an array if all fields are found.
  * Should return undefined if any field is missing value.
+ * Reviews:
+ * Change comments for what we are testing
+ * Adding a file that contains all the variables for the test suite readCache
  */
 
 import { readCache, populateAllTypes } from '../../src/readCache.js';
@@ -50,18 +53,21 @@ const cache = {
   'Actor~3': { id: '3', firstName: 'Mark' },
   'Actor~4': { id: '4', firstName: 'Patti' },
   'Actor~5': { id: '5', firstName: 'Gary' },
-}
+};
 
-const fields = { __typename: 'meta', 
+const fields = {
+  __typename: 'meta',
   id: 'scalar',
   firstName: 'scalar',
   lastName: 'scalar',
-} 
-  
+};
 Rhum.testPlan('readCache.js', () => {
   Rhum.testSuite('readCache()', () => {
-    Rhum.testCase('should return an object if all values are in the cache', () => {
-      const result = readCache(`
+    Rhum.testCase(
+      'should return the correct object if all values are in the cache',
+      () => {
+        const result = readCache(
+          `
   query getActorById {
     actor(id: 1) {
       __typename
@@ -69,21 +75,27 @@ Rhum.testPlan('readCache.js', () => {
       firstName
     }
   }
-`, cache)
-      Rhum.asserts.assertEquals(result, {
-  data: {
-    actor: [
-      {
-        __typename: 'Actor',
-        id: '1',
-        firstName: 'Harrison',
-      },
-    ],
-  },
-});
-    });
-    Rhum.testCase('should return undefined if any field is missing value  in the cache', () => {
-      const result = readCache(`
+`,
+          cache
+        );
+        Rhum.asserts.assertEquals(result, {
+          data: {
+            actor: [
+              {
+                __typename: 'Actor',
+                id: '1',
+                firstName: 'Harrison',
+              },
+            ],
+          },
+        });
+      }
+    );
+    Rhum.testCase(
+      'should return undefined if any field is missing value  in the cache',
+      () => {
+        const result = readCache(
+          `
   query getActorById {
     actor(id: 1) {
       __typename
@@ -92,11 +104,17 @@ Rhum.testPlan('readCache.js', () => {
       lastName
     }
   }
-`, cache);
-      Rhum.asserts.assertEquals(result, undefined)
-    });
-    Rhum.testCase('should accept multiple queries in one query operation', () => {
-      const result = readCache(`
+`,
+          cache
+        );
+        Rhum.asserts.assertEquals(result, undefined);
+      }
+    );
+    Rhum.testCase(
+      'should accept multiple queries in one query operation',
+      () => {
+        const result = readCache(
+          `
       query AllActionMoviesAndAllActors {
         movies(input: { genre: ACTION }) {
           __typename
@@ -116,74 +134,83 @@ Rhum.testPlan('readCache.js', () => {
         }
       }
       }
-    `, cache);
-      Rhum.asserts.assertEquals(result, {
-        data: {
-          movies: [
-            {
-              __typename: 'Movie',
-              id: '1',
-              title: 'Indiana Jones and the Last Crusade',
-              genre: 'ACTION',
-              actors: [
-                {
-                  __typename: 'Actor',
-                  id: '1',
-                  firstName: 'Harrison',
-                },
-                {
-                  __typename: 'Actor',
-                  id: '2',
-                  firstName: 'Sean',
-                },
-              ],
-            },
-            {
-              __typename: 'Movie',
-              id: '4',
-              title: 'Air Force One',
-              genre: 'ACTION',
-              actors: [
-                {
-                  __typename: 'Actor',
-                  id: '1',
-                  firstName: 'Harrison',
-                },
-                {
-                  __typename: 'Actor',
-                  id: '5',
-                  firstName: 'Gary',
-                },
-              ],
-            },
-          ],
-          actors: [
-            {
-              __typename: 'Actor',
-              id: '1',
-              firstName: 'Harrison',
-            },
-            { __typename: 'Actor', id: '2', firstName: 'Sean' },
-            { __typename: 'Actor', id: '3', firstName: 'Mark' },
-            { __typename: 'Actor', id: '4', firstName: 'Patti' },
-          ],
-        },
-      })
-    })
+    `,
+          cache
+        );
+        Rhum.asserts.assertEquals(result, {
+          data: {
+            movies: [
+              {
+                __typename: 'Movie',
+                id: '1',
+                title: 'Indiana Jones and the Last Crusade',
+                genre: 'ACTION',
+                actors: [
+                  {
+                    __typename: 'Actor',
+                    id: '1',
+                    firstName: 'Harrison',
+                  },
+                  {
+                    __typename: 'Actor',
+                    id: '2',
+                    firstName: 'Sean',
+                  },
+                ],
+              },
+              {
+                __typename: 'Movie',
+                id: '4',
+                title: 'Air Force One',
+                genre: 'ACTION',
+                actors: [
+                  {
+                    __typename: 'Actor',
+                    id: '1',
+                    firstName: 'Harrison',
+                  },
+                  {
+                    __typename: 'Actor',
+                    id: '5',
+                    firstName: 'Gary',
+                  },
+                ],
+              },
+            ],
+            actors: [
+              {
+                __typename: 'Actor',
+                id: '1',
+                firstName: 'Harrison',
+              },
+              { __typename: 'Actor', id: '2', firstName: 'Sean' },
+              { __typename: 'Actor', id: '3', firstName: 'Mark' },
+              { __typename: 'Actor', id: '4', firstName: 'Patti' },
+            ],
+          },
+        });
+      }
+    );
   });
 
   Rhum.testSuite('populateAllTypes()', () => {
-    Rhum.testCase('should return undefined if any field is missing value ', () => {
-      const result = populateAllTypes('Actor~1', cache, fields);
-      Rhum.asserts.assertEquals(result, undefined);
-    })
+    Rhum.testCase(
+      'should return undefined if any field is missing value ',
+      () => {
+        const result = populateAllTypes('Actor~1', cache, fields);
+        Rhum.asserts.assertEquals(result, undefined);
+      }
+    );
     Rhum.testCase('should return an array if all fields are found', () => {
-      const result = populateAllTypes('Actor~1', cache, { __typename: 'meta', 
-      id: 'scalar',
-      firstName: 'scalar'
-    } )
-      Rhum.asserts.assertEquals(result,  [{ __typename: 'Actor', id: '1', firstName: 'Harrison'}] )
-    })
-  })
+      const result = populateAllTypes('Actor~1', cache, {
+        __typename: 'meta',
+        id: 'scalar',
+        firstName: 'scalar',
+      });
+      Rhum.asserts.assertEquals(result, [
+        { __typename: 'Actor', id: '1', firstName: 'Harrison' },
+      ]);
+    });
+  });
 });
 Rhum.run();

@@ -20,7 +20,7 @@ import destructureQueries from './newDestructure.js';
 //* CRUD READ
 export function readCache(queryOperationStr, cache) {
   // destructure the query string into an object
-  const queries = destructureQueries(queryOperationStr).queries
+  const queries = destructureQueries(queryOperationStr).queries;
   const responseObject = {};
   // iterate through each query in the input queries object
   for (const query in queries) {
@@ -82,7 +82,8 @@ export function populateAllTypes(allTypesFromQuery, cache, fields) {
   const typeName = allTypesFromQuery.slice(0, hyphenIdx);
   const dataObj = {};
   for (const field in fields) {
-    if (!cache[allTypesFromQuery][field] && field !== '__typename') return undefined;
+    if (!cache[allTypesFromQuery][field] && field !== '__typename')
+      return undefined;
     if (typeof fields[field] !== 'object') {
       // add the typename for the type
       if (field === '__typename') {
@@ -140,8 +141,8 @@ const cacheObject = {
   'Actor~4': { id: '4', firstName: 'Patti' },
   'Actor~5': { id: '5', firstName: 'Gary' },
 };
-//* input before destructuring 
-const  queryStr = `
+//* input before destructuring
+const queryStr = `
   query AllActionMoviesAndAllActors {
     movies(input: { genre: ACTION }) {
       __typename
@@ -248,4 +249,4 @@ const res = readCache(oneTypeQuery, cacheObject);
 console.log(res.data);
 console.log(JSON.stringify(res) === JSON.stringify(respGetActorById)); // true
 
-// export default readCache;
+//
