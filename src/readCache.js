@@ -45,8 +45,6 @@ export function readCache(queryOperationStr, cache) {
 }
 //* helper function that populates responseObject types with fields
 export function populateAllTypes(arrTypes, cache, fields) {
-  console.log(fields);
-
   if (Array.isArray(arrTypes)) {
     // include the typename for each type
     const hyphenIdx = arrTypes[0].indexOf('~');
