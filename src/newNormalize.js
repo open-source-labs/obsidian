@@ -55,12 +55,33 @@ const resultObject = {
             id: '1',
             firstName: 'Harrison',
             lastName: 'Ford',
+            friends: [
+              {
+                __typename: 'Actor',
+                id: '6',
+                firstName: 'Fred',
+                favHobby: 'sleeping',
+              },
+              {
+                __typename: 'Actor',
+                id: '7',
+                firstName: 'Gary',
+                favHobby: 'climbing',
+              },
+              {
+                __typename: 'Actor',
+                id: '2',
+                firstName: 'Sean',
+                favHobby: 'fishing',
+              },
+            ],
           },
           {
             __typename: 'Actor',
             id: '2',
             firstName: 'Sean',
             lastName: 'Connery',
+            friends: [],
           },
         ],
       },
@@ -75,12 +96,33 @@ const resultObject = {
             id: '1',
             firstName: 'Harrison',
             lastName: 'Ford',
+            friends: [
+              {
+                __typename: 'Actor',
+                id: '6',
+                firstName: 'Fred',
+                favHobby: 'sleeping',
+              },
+              {
+                __typename: 'Actor',
+                id: '7',
+                firstName: 'Gary',
+                favHobby: 'climbing',
+              },
+              {
+                __typename: 'Actor',
+                id: '2',
+                firstName: 'Sean',
+                favHobby: 'fishing',
+              },
+            ],
           },
           {
             __typename: 'Actor',
             id: '5',
             firstName: 'Gary',
             lastName: 'Oldman',
+            friends: [],
           },
         ],
       },
@@ -195,9 +237,13 @@ export default async function normalizeResult(queryObj, resultObj) {
       //pass current obj to createHash function to create hash and appropriate response obj
       const hash = createHash(curr[j]);
       //store the output of createHash in output cache obj
-      cache[hash.hash] = hash.output;
-      //checks if the information in complex types is already stored in our output cache, if not update the cache
-      checkAndInsert(hash.innerOutput, cache);
+      if (cache[hash.hash]){
+        Object.assign(cache[hash.hash], hash.output)
+      } else {
+        cache[hash.hash] = hash.output
+      }
+      console.log(cache);
+      
     }
   }
   console.log(cache);
@@ -234,10 +280,11 @@ function createRootQuery(queryObj, resultObj) {
 
 //creates hashes and checks for complex fields
 //returns hashes, appropriate obj, and innerObj if a complex field exists
-function createHash(obj) {
+function createHash(obj, output) {
   let hash = obj.__typename + '~' + obj.id;
   let output = {};
-  let innerOutput = {};
+
+  // let innerOutput = {};
   for (let curr in obj) {
     //checks if the current value is an array
     if (!Array.isArray(obj[curr])) {
@@ -248,36 +295,46 @@ function createHash(obj) {
 
       //if array, we create hashes and appropriate obj for those hashes
     } else {
-      const innerRes = innerQuery(obj[curr]);
-      output[curr] = innerRes.output;
-      //store complex fields info in innerOutput obj as a hash:obj pair
-      for (let i = 0; i < innerRes.output.length; i++) {
-        innerOutput[innerRes.output[i]] = innerRes.obj[i];
+      let nestedField = obj[curr];
+      const hashArr = [];
+      let hashObj = {};
+      for (let i = 0; i < nestedField.length; i++) {
+        let nestedHash = createHash(nestedField[i]);
+        console.log(nestedHash.output);
+        console.log(nestedHash.hash);
+        hashArr.push(nestedHash.hash);
       }
+      output[curr] = hashArr;
     }
   }
-  return {hash, output, innerOutput};
+  console.log({hash, output});
+  return {hash, output};
 }
 
-//creates hash:obj pair for complex fields
-function innerQuery(innerArray) {
-  let output = [];
-  let obj = [];
-  for (let i = 0; i < innerArray.length; i++) {
-    const hashCreated = createHash(innerArray[i]);
-    obj.push(hashCreated.output);
+// //creates hash:obj pair for complex fields
+// function innerQuery(innerArray) {
+//   let output = [];
+//   let obj = [];
+//   let innerInfo = [];
+//   for (let i = 0; i < innerArray.length; i++) {
+//     const hashCreated = createHash(innerArray[i]);
+//     obj.push(hashCreated.output);
 
-    output.push(hashCreated.hash);
-  }
-  return {output, obj};
-}
+//     output.push(hashCreated.hash);
+//     if (hashCreated.innerOutput) {
+//       innerInfo.push(hashCreated.innerOutput);
+//     }
+//   }
+//   console.log(innerInfo);
+//   return {output, obj, innerInfo};
+// }
 
 //
 
 //===========================================================
 //OUTPUT
 
-const output = normalizeResult(queryObject, resultObject);
+const result = normalizeResult(queryObject, resultObject);
 
 //
 const resultObj = {
