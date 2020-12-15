@@ -59,7 +59,7 @@ function findQueryStrings(queryStrings) {
   }
   return result;
 }
-// helper function to create a queries object from an array of querie strings
+// helper function to create a queries object from an array of query strings
 function createQueriesObj(arrayOfQueryStrings) {
   // define a new empty result object
   const queriesObj = {
@@ -76,7 +76,7 @@ function createQueriesObj(arrayOfQueryStrings) {
   });
   return queriesObj;
 }
-// helper function that returns an oblect with a query string split into multiple parts
+// helper function that returns an object with a query string split into multiple parts
 function splitUpQueryStr(queryStr) {
   // creates new queryObj
   const queryObj = {};
