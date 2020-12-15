@@ -311,7 +311,7 @@ function createHash(obj, output = {}) {
           obj[field]._ID ||
           obj[field].Id ||
           obj[field]._Id;
-        output[hash][field] = [obj[field].__typename + '~' + id];
+        output[hash][field] = obj[field].__typename + '~' + id;
         output = createHash(obj[field], output);
       } else {
         output[hash][field] = obj[field];
@@ -343,6 +343,40 @@ const hashInput = {
       id: '1',
       firstName: 'Harrison',
       lastName: 'Ford',
+      friends: [
+        {
+          __typename: 'Actor',
+          id: '2',
+          firstName: 'Alicia',
+          friends: [
+            {
+              __typename: 'Actor',
+              id: '4',
+              firstName: 'Bob',
+            },
+            {
+              __typename: 'Actor',
+              id: '6',
+              firstName: 'Ben',
+            },
+            {
+              __typename: 'Actor',
+              id: '7',
+              firstName: 'Axel',
+            },
+          ],
+        },
+        {
+          __typename: 'Actor',
+          id: '5',
+          firstName: 'Ali',
+        },
+        {
+          __typename: 'Actor',
+          id: '3',
+          firstName: 'Amber',
+        },
+      ],
     },
   },
 };
@@ -359,6 +393,8 @@ const queryInput = {
     },
   },
 };
+
+console.log(normalizeResult(queryInput, hashInput));
 
 const hashOutput = {
   'Movie~1': {
@@ -390,31 +426,6 @@ const hashOutput = {
     friends: [],
   },
 };
-
-console.log(normalizeResult(queryInput, hashInput));
-
-// //creates hash:obj pair for complex fields
-// function innerQuery(innerArray) {
-//   let output = [];
-//   let obj = [];
-//   let innerInfo = [];
-//   for (let i = 0; i < innerArray.length; i++) {
-//     const hashCreated = createHash(innerArray[i]);
-//     obj.push(hashCreated.output);
-
-//     output.push(hashCreated.hash);
-//     if (hashCreated.innerOutput) {
-//       innerInfo.push(hashCreated.innerOutput);
-//     }
-//   }
-//   console.log(innerInfo);
-//   return {output, obj, innerInfo};
-// }
-
-//
-
-//===========================================================
-//OUTPUT
 
 const result = normalizeResult(queryObject, resultObject);
 
