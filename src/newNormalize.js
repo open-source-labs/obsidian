@@ -227,17 +227,28 @@ export default function normalizeResult(queryObj, resultObj) {
   // creates a stringified version of query request and stores it in ROOT_QUERY key
   result['ROOT_QUERY'] = createRootQuery(queryObj, resultObj);
 
-  for (let curr in resultObj.data) {
-    for (let i = 0; i < resultObj.data[curr].length; i++) {
-      // pass current obj to createHash function to create  obj of hashes
-      const hashObj = createHash(resultObj.data[curr][i]);
-      // check if the hash object pair exists, if not create new key value pair
-      // if it does exist merge the hash pair with the existing key value pair
+  for (const curr in resultObj.data) {
+    if (!Array.isArray(resultObj.data[curr])) {
+      const hashObj = createHash(resultObj.data[curr]);
       for (const hash in hashObj) {
         if (result[hash]) {
           Object.assign(result[hash], hashObj[hash]);
         } else {
           result[hash] = hashObj[hash];
+        }
+      }
+    } else {
+      for (let i = 0; i < resultObj.data[curr].length; i++) {
+        // pass current obj to createHash function to create  obj of hashes
+        const hashObj = createHash(resultObj.data[curr][i]);
+        // check if the hash object pair exists, if not create new key value pair
+        // if it does exist merge the hash pair with the existing key value pair
+        for (const hash in hashObj) {
+          if (result[hash]) {
+            Object.assign(result[hash], hashObj[hash]);
+          } else {
+            result[hash] = hashObj[hash];
+          }
         }
       }
     }
@@ -248,22 +259,32 @@ export default function normalizeResult(queryObj, resultObj) {
 // creates the hashes for query requests and stores the reference has that will be stored in result
 function createRootQuery(queryObj, resultObj) {
   const output = {};
-  queryObj.queries.forEach((query) => {
+  const query = queryObj.queries;
+  if (!Array.isArray(query)) {
     const name = query.name;
     const args = query.arguments;
     const queryHash = name + args;
+    const obj = resultObj.data[name];
+    const id = obj.id || obj.ID || obj._id || obj._ID || obj.Id || obj._Id;
+    output[queryHash] = obj.__typename + `~` + id;
+  } else {
+    query.forEach((query) => {
+      const name = query.name;
+      const args = query.arguments;
+      const queryHash = name + args;
 
-    // iterate thru the array of current query response
-    // and store the hash of that response in an array
-    const resultArray = resultObj.data[name];
-    const arrOfHashes = [];
-    resultArray.forEach((obj) => {
-      const id = obj.id || obj.ID || obj._id || obj._ID || obj.Id || obj._Id;
-      arrOfHashes.push(obj.__typename + '~' + id);
+      // iterate thru the array of current query response
+      // and store the hash of that response in an array
+      const resultArray = resultObj.data[name];
+      const arrOfHashes = [];
+      resultArray.forEach((obj) => {
+        const id = obj.id || obj.ID || obj._id || obj._ID || obj.Id || obj._Id;
+        arrOfHashes.push(obj.__typename + '~' + id);
+      });
+      //store the array of hashes associated with the queryHash
+      output[queryHash] = arrOfHashes;
     });
-    //store the array of hashes associated with the queryHash
-    output[queryHash] = arrOfHashes;
-  });
+  }
   return output;
 }
 
@@ -316,50 +337,27 @@ function createHash(obj, output = {}) {
 // ================================
 
 const hashInput = {
-  __typename: 'Movie',
-  id: '1',
-  title: 'Indiana Jones and the Last Crusade',
-  genre: 'ACTION',
-  actors: [
-    {
+  data: {
+    actor: {
       __typename: 'Actor',
       id: '1',
       firstName: 'Harrison',
       lastName: 'Ford',
-      friends: [
-        {
-          __typename: 'Actor',
-          id: '6',
-          firstName: 'Fred',
-          favHobby: 'sleeping',
-        },
-        {
-          __typename: 'Actor',
-          id: '7',
-          firstName: 'Gary',
-          favHobby: 'climbing',
-        },
-        {
-          __typename: 'Actor',
-          id: '2',
-          firstName: 'Sean',
-          favHobby: 'fishing',
-        },
-      ],
     },
-    {
-      __typename: 'Actor',
-      id: '2',
-      firstName: 'Sean',
-      lastName: 'Connery',
-      friends: {
-        __typename: 'Actor',
-        id: '8',
-        firstName: 'alicia',
-        favHobby: 'eating',
-      },
+  },
+};
+
+const queryInput = {
+  queries: {
+    name: 'actor',
+    arguments: '(id:1)',
+    fields: {
+      __typename: 'meta',
+      id: 'scalar',
+      title: 'scalar',
+      genre: 'scalar',
     },
-  ],
+  },
 };
 
 const hashOutput = {
@@ -392,6 +390,8 @@ const hashOutput = {
     friends: [],
   },
 };
+
+console.log(normalizeResult(queryInput, hashInput));
 
 // //creates hash:obj pair for complex fields
 // function innerQuery(innerArray) {
