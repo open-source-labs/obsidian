@@ -8,6 +8,7 @@
 const queryObject = {
   queries: [
     {
+      __typename: 'meta',
       name: 'movies',
       arguments: '(input:{genre:ACTION})',
       fields: {
@@ -15,19 +16,14 @@ const queryObject = {
         id: 'scalar',
         title: 'scalar',
         genre: 'scalar',
-        actors: {
-          __typename: 'meta',
-          id: 'scalar',
-          firstName: 'scalar',
-          lastName: 'scalar',
-        },
+        actors: {id: 'scalar', firstName: 'scalar', lastName: 'scalar'},
       },
     },
     {
+      __typename: 'meta',
       name: 'actors',
       arguments: '',
       fields: {
-        __typename: 'meta',
         id: 'scalar',
         firstName: 'scalar',
         lastName: 'scalar',
@@ -55,33 +51,12 @@ const resultObject = {
             id: '1',
             firstName: 'Harrison',
             lastName: 'Ford',
-            friends: [
-              {
-                __typename: 'Actor',
-                id: '6',
-                firstName: 'Fred',
-                favHobby: 'sleeping',
-              },
-              {
-                __typename: 'Actor',
-                id: '7',
-                firstName: 'Gary',
-                favHobby: 'climbing',
-              },
-              {
-                __typename: 'Actor',
-                id: '2',
-                firstName: 'Sean',
-                favHobby: 'fishing',
-              },
-            ],
           },
           {
             __typename: 'Actor',
             id: '2',
             firstName: 'Sean',
             lastName: 'Connery',
-            friends: [],
           },
         ],
       },
@@ -96,26 +71,6 @@ const resultObject = {
             id: '1',
             firstName: 'Harrison',
             lastName: 'Ford',
-            friends: [
-              {
-                __typename: 'Actor',
-                id: '6',
-                firstName: 'Fred',
-                favHobby: 'sleeping',
-              },
-              {
-                __typename: 'Actor',
-                id: '7',
-                firstName: 'Gary',
-                favHobby: 'climbing',
-              },
-              {
-                __typename: 'Actor',
-                id: '2',
-                firstName: 'Sean',
-                favHobby: 'fishing',
-              },
-            ],
           },
           {
             __typename: 'Actor',
@@ -390,8 +345,12 @@ console.log(createHash(hashInput));
 //===========================================================
 //OUTPUT
 
+<<<<<<< HEAD
 const result = normalizeResult(queryObject, resultObject);
 console.log(result)
+=======
+const output = normalizeResult(queryObject, resultObject);
+>>>>>>> c125c89a028a7c66b79850ccf074c2637f7a0440
 
 //
 const resultObj = {
