@@ -235,9 +235,9 @@ export default function normalizeResult(queryObj, resultObj) {
       // store the output of createHash in output cache obj
       for (const hash in hashObj) {
         if (result[hash]) {
-          Object.assign(result[hash], hashObj[hash])
-        } else{
-          result[hash] = hashObj[hash]
+          Object.assign(result[hash], hashObj[hash]);
+        } else {
+          result[hash] = hashObj[hash];
         }
       }
     }
