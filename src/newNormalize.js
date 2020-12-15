@@ -242,7 +242,6 @@ export default function normalizeResult(queryObj, resultObj) {
       }
     }
   }
-  console.log(result);
   return result;
 }
 
@@ -393,8 +392,6 @@ const hashOutput = {
     friends: [],
   },
 };
-
-console.log(createHash(hashInput));
 
 // //creates hash:obj pair for complex fields
 // function innerQuery(innerArray) {
