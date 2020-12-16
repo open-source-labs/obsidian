@@ -58,9 +58,11 @@ Rhum.testPlan('readCache.js', () => {
           test.cache,
           test.fieldsComplete
         );
-        Rhum.asserts.assertEquals(result, [
-          { __typename: 'Actor', id: '1', firstName: 'Harrison' },
-        ]);
+        Rhum.asserts.assertEquals(result, {
+          __typename: 'Actor',
+          id: '1',
+          firstName: 'Harrison',
+        });
       }
     );
   });

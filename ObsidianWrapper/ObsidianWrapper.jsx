@@ -1,5 +1,4 @@
 import React from 'https://dev.jspm.io/react';
-2
 import normalizeResult from '../src/normalize.js';
 import destructureQueries from '../src/destructureQueries.js';
 
@@ -184,7 +183,7 @@ function ObsidianWrapper(props) {
       {...props}
     />
   );
-};
+}
 // Declaration of custom hook to allow access to provider
 function useObsidian() {
   // React useContext hook to access the global provider by any of the consumed components

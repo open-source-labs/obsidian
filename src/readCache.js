@@ -1,5 +1,3 @@
-/* eslint-disable no-restricted-syntax */
-/* eslint-disable guard-for-in */
 /**
  * NOTES:
  * 1.This function will record the arguments as a string unless we come up with an alternative argument
@@ -25,13 +23,11 @@ export function readCache(queryOperationStr, cache) {
   // iterate through each query in the input queries object
   for (const query in queries) {
     // get the entire str query from the name input query and arguments
-    console.log(queries[query].name);
     const rootQuery = queries[query].name.concat(queries[query].arguments);
     // match in ROOT_QUERY
     if (cache.ROOT_QUERY[rootQuery]) {
       // get the types to populate from the existent query in the cache
       const arrayTypes = cache.ROOT_QUERY[rootQuery];
-
       // invoke populateAllTypes and add data objects to the response object for each input query
       responseObject[queries[query].name] = populateAllTypes(
         arrayTypes,
@@ -56,8 +52,8 @@ export function populateAllTypes(allTypesFromQuery, cache, fields) {
       const dataObj = {};
       for (const field in fields) {
         // for each field in the fields input query, add the corresponding value from the cache if the field is not another array of types
-        if (typeof fields[field] !== 'object') {
-          if (!cache[type][field] && field !== '__typename') return undefined;
+        if (!cache[type][field] && field !== '__typename') return undefined;
+        else if (typeof fields[field] !== 'object') {
           // add the typename for the type
           if (field === '__typename') {
             dataObj[field] = typeName;
@@ -84,7 +80,7 @@ export function populateAllTypes(allTypesFromQuery, cache, fields) {
   for (const field in fields) {
     if (!cache[allTypesFromQuery][field] && field !== '__typename')
       return undefined;
-    if (typeof fields[field] !== 'object') {
+    else if (typeof fields[field] !== 'object') {
       // add the typename for the type
       if (field === '__typename') {
         dataObj[field] = typeName;
@@ -97,7 +93,7 @@ export function populateAllTypes(allTypesFromQuery, cache, fields) {
       );
     }
   }
-  return [dataObj];
+  return dataObj;
 }
 
 //* TESTS:
@@ -217,11 +213,11 @@ const testResponse = {
     ],
   },
 };
-const response = readCache(queryStr, cacheObject);
-console.log(response);
-console.log(response.data);
+// const response = readCache(queryStr, cacheObject);
+// console.log(response);
+// console.log(response.data);
 
-console.log(JSON.stringify(response) === JSON.stringify(testResponse)); // true
+// console.log(JSON.stringify(response) === JSON.stringify(testResponse)); // true
 
 const oneTypeQuery = `
   query getActorById {
@@ -245,6 +241,3 @@ const respGetActorById = {
     ],
   },
 };
-const res = readCache(oneTypeQuery, cacheObject);
-console.log(res.data);
-console.log(JSON.stringify(res) === JSON.stringify(respGetActorById)); // true

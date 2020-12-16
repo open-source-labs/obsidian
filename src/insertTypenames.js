@@ -1,5 +1,5 @@
 // this function will insert __typename meta fields into a querystring
-function insertTypenames(queryOperationStr) {
+export function insertTypenames(queryOperationStr) {
   let newQueryStr = '';
   // removes extra whitespace
   const queryStr = queryOperationStr.replace(/\s\s+/g, ' ').trim();
