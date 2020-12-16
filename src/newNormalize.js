@@ -1,5 +1,7 @@
-//Normalizes responses using the query object from destructure and the response object from
-//the graphql request
+
+
+//==========================================================
+
 // Normalizes responses using the query object from destructure and the response object from
 // the graphql request
 export default function normalizeResult(queryObj, resultObj) {
@@ -8,7 +10,6 @@ export default function normalizeResult(queryObj, resultObj) {
   // creates a stringified version of query request and stores it in ROOT_QUERY key
   result['ROOT_QUERY'] = createRootQuery(queryObj, resultObj);
 
-  //
   for (const curr in resultObj.data) {
     if (!Array.isArray(resultObj.data[curr])) {
       const hashObj = createHash(resultObj.data[curr]);
@@ -42,7 +43,6 @@ export default function normalizeResult(queryObj, resultObj) {
 function createRootQuery(queryObj, resultObj) {
   const output = {};
   const query = queryObj.queries;
-  console.log('');
   if (!Array.isArray(query)) {
     const name = query.name;
     const args = query.arguments;
@@ -60,7 +60,6 @@ function createRootQuery(queryObj, resultObj) {
       // and store the hash of that response in an array
       const resultArray = resultObj.data[name];
       const arrOfHashes = [];
-
       resultArray.forEach((obj) => {
         const id = obj.id || obj.ID || obj._id || obj._ID || obj.Id || obj._Id;
         arrOfHashes.push(obj.__typename + '~' + id);
@@ -69,7 +68,6 @@ function createRootQuery(queryObj, resultObj) {
       output[queryHash] = arrOfHashes;
     });
   }
-  console.log('output', output);
   return output;
 }
 
@@ -119,4 +117,3 @@ function createHash(obj, output = {}) {
   return output;
 }
 
-// ================================
