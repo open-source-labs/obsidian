@@ -1,5 +1,4 @@
 import React from 'https://dev.jspm.io/react';
-
 import normalizeResult from '../src/normalize.js';
 import destructureQueries from '../src/destructureQueries.js';
 
@@ -39,7 +38,7 @@ function ObsidianWrapper(props) {
 
   // Primary function, provides access to fetching and caching capabilities
   async function gather(query, options = {}) {
-    // Desctructuring of optional parameters, default values are defined and may be over written
+    // Destructuring of optional parameters, default values are defined and may be over written
     const {
       endpoint = url,
       pollInterval = null,
@@ -77,7 +76,7 @@ function ObsidianWrapper(props) {
       }
     }
 
-    // If not found in cache or session storage, query will be excecuted
+    // If not found in cache or session storage, query will be executed
     // Conditional check, if poll interval has been defined
     if (pollInterval) {
       console.log(
@@ -85,12 +84,12 @@ function ObsidianWrapper(props) {
           pollInterval / 1000
         } second poll interval for graphql request`
       );
-      // Initiation of reocurring fetch request
+      // Initiation of recurring fetch request
       setInterval(() => {
         hunt(query, endpoint, destructure, sessionStore);
       }, pollInterval);
     }
-    // Excection of fetch
+    // Expectation of fetch
     return new Promise((resolve, reject) =>
       resolve(hunt(query, endpoint, destructure, sessionStore))
     );
@@ -113,7 +112,7 @@ function ObsidianWrapper(props) {
     setCache({});
   }
 
-  // Function excecutes mutation and clears cache by default to avoid conflicts
+  // Function executes mutation and clears cache by default to avoid conflicts
   async function mutate(mutation, options = {}) {
     const { endpoint = '/graphql', clearCache = true } = options;
     try {
@@ -133,7 +132,7 @@ function ObsidianWrapper(props) {
     }
   }
 
-  // Excecutes graphql fetch request
+  // Executes graphql fetch request
   async function hunt(query, endpoint, destructure, sessionStore) {
     try {
       const respJSON = await fetch(endpoint, {
@@ -146,7 +145,7 @@ function ObsidianWrapper(props) {
       });
       const resp = await respJSON.json();
 
-      // Excecute function to update the cache with new response
+      // Execute function to update the cache with new response
       if (destructure) {
         const obsidianSchema = window.__INITIAL_STATE__.obsidianSchema;
 
