@@ -7,8 +7,9 @@
  */
 
 import normalizeResult from './newNormalize.js';
-
-export function writeCache(queryObj, resultObj, cache) {
+import destructureQueries from './newDestructure.js';
+export function writeCache(queryStr, resultObj, cache) {
+  const queryObj = destructureQueries(queryStr);
   const resFromNormalize = normalizeResult(queryObj, resultObj);
   // update the original cache with same reference
   for (const key in resFromNormalize) {

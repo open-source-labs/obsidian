@@ -1,28 +1,49 @@
 export const test = {
-  queryObj: {
-    queries: [
-      {
-        name: 'movies',
-        arguments: '',
-        fields: {
-          __typename: 'meta',
-          id: 'scalar',
-          title: 'scalar',
-          actors: { __typename: 'meta', id: 'scalar', firstName: 'scalar' },
-        },
-      },
-      {
-        name: 'actor',
-        arguments: '(id:1)',
-        fields: {
-          __typename: 'meta',
-          id: 'scalar',
-          firstName: 'scalar',
-          LastName: 'scalar',
-        },
-      },
-    ],
-  },
+  queryObj: `
+  query AllMoviesAndGetActorById  {
+    movies {
+      __typename
+      id
+      title
+      actors {
+        __typename
+        id
+        firstName
+      }
+    }
+    actor(id: 1) {
+      __typename
+      id
+      firstName
+      LastName
+    }
+  }
+`,
+
+  // {
+  //   queries: [
+  //     {
+  //       name: 'movies',
+  //       arguments: '',
+  //       fields: {
+  //         __typename: 'meta',
+  //         id: 'scalar',
+  //         title: 'scalar',
+  //         actors: { __typename: 'meta', id: 'scalar', firstName: 'scalar' },
+  //       },
+  //     },
+  //     {
+  //       name: 'actor',
+  //       arguments: '(id:1)',
+  //       fields: {
+  //         __typename: 'meta',
+  //         id: 'scalar',
+  //         firstName: 'scalar',
+  //         LastName: 'scalar',
+  //       },
+  //     },
+  //   ],
+  // },
   resultObj: {
     data: {
       movies: [

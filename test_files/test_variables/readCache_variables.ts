@@ -87,13 +87,11 @@ export const test = {
   fieldsComplete: { __typename: 'meta', id: 'scalar', firstName: 'scalar' },
   singularQueryResObj: {
     data: {
-      actor: [
-        {
-          __typename: 'Actor',
-          id: '1',
-          firstName: 'Harrison',
-        },
-      ],
+      actor: {
+        __typename: 'Actor',
+        id: '1',
+        firstName: 'Harrison',
+      },
     },
   },
   multipleQueriesResObj: {
