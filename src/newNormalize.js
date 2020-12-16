@@ -1,5 +1,3 @@
-
-
 //==========================================================
 
 // Normalizes responses using the query object from destructure and the response object from
@@ -60,6 +58,7 @@ function createRootQuery(queryObj, resultObj) {
       // and store the hash of that response in an array
       const resultArray = resultObj.data[name];
       const arrOfHashes = [];
+      console.log(resultArray);
       resultArray.forEach((obj) => {
         const id = obj.id || obj.ID || obj._id || obj._ID || obj.Id || obj._Id;
         arrOfHashes.push(obj.__typename + '~' + id);
@@ -116,4 +115,78 @@ function createHash(obj, output = {}) {
   }
   return output;
 }
-
+const queryObj = {
+  queries: [
+    {
+      name: 'movies',
+      arguments: '',
+      fields: {
+        __typename: 'meta',
+        id: 'scalar',
+        title: 'scalar',
+        actors: { __typename: 'meta', id: 'scalar', firstName: 'scalar' },
+      },
+    },
+    {
+      name: 'actor',
+      arguments: '(id:1)',
+      fields: {
+        __typename: 'meta',
+        id: 'scalar',
+        firstName: 'scalar',
+        LastName: 'scalar',
+      },
+    },
+  ],
+};
+const resultObj = {
+  data: {
+    movies: [
+      {
+        __typename: 'Movie',
+        id: '1',
+        title: 'Indiana Jones and the Last Crusade',
+        actors: [
+          { __typename: 'Actor', id: '1', firstName: 'Harrison' },
+          { __typename: 'Actor', id: '2', firstName: 'Sean' },
+        ],
+      },
+      {
+        __typename: 'Movie',
+        id: '2',
+        title: 'Empire Strikes Back',
+        actors: [
+          { __typename: 'Actor', id: '1', firstName: 'Harrison' },
+          { __typename: 'Actor', id: '3', firstName: 'Mark' },
+        ],
+      },
+      {
+        __typename: 'Movie',
+        id: '3',
+        title: 'Witness',
+        actors: [
+          { __typename: 'Actor', id: '1', firstName: 'Harrison' },
+          { __typename: 'Actor', id: '4', firstName: 'Patti' },
+        ],
+      },
+      {
+        __typename: 'Movie',
+        id: '4',
+        title: 'Air Force One',
+        actors: [
+          { __typename: 'Actor', id: '1', firstName: 'Harrison' },
+          { __typename: 'Actor', id: '5', firstName: 'Gary' },
+        ],
+      },
+    ],
+    actor: [
+      {
+        __typename: 'Actor',
+        id: '1',
+        firstName: 'Harrison',
+        lastName: 'Ford',
+      },
+    ],
+  },
+};
+console.log(normalizeResult(queryObj, resultObj));

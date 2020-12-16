@@ -22,3 +22,25 @@ export function writeCache(queryStr, resultObj, cache) {
   return cache;
   // return 'Cache Updated';
 }
+console.log(
+  destructureQueries(`
+query AllMoviesAndGetActorById  {
+  movies {
+    __typename
+    id
+    title
+    actors {
+      __typename
+      id
+      firstName
+    }
+  }
+  actor(id: 1) {
+    __typename
+    id
+    firstName
+    LastName
+  }
+}
+`)
+);
