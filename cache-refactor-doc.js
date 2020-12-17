@@ -24,8 +24,13 @@
 // Cache constructor
 
 class Cache {
-  consturctor(cache = {}) {
-    this.cache = cache;
+  constructor(
+    cache = {
+      ROOT_QUERY: {},
+      ROOT_MUTATION: {},
+    }
+  ) {
+    this.storage = cache;
     this.context = window.deno ? 'server' : 'client';
   }
 
@@ -36,7 +41,7 @@ class Cache {
   write(qryStr, respObj) {
     // writeCache; updates cache with all data from response object
   }
-  delete(respObj) {
+  delete(qryStr, respObj) {
     // deleteCache; sets any top level hashed values of response object to 'DELETE'
   }
   gc() {
