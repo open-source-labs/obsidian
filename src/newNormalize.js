@@ -58,7 +58,6 @@ function createRootQuery(queryObj, resultObj) {
       // and store the hash of that response in an array
       const resultArray = resultObj.data[name];
       const arrOfHashes = [];
-      console.log(resultArray);
       resultArray.forEach((obj) => {
         const id = obj.id || obj.ID || obj._id || obj._ID || obj.Id || obj._Id;
         arrOfHashes.push(obj.__typename + '~' + id);
