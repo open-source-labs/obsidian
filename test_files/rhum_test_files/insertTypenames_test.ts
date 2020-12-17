@@ -44,14 +44,14 @@ Rhum.testPlan('insertTypenames.js', () => {
     Rhum.testCase(
       'should return the index of the matching closing brace',
       () => {
-        const result = findClosingBrace('asdf{asasd}a');
+        const result = findClosingBrace('asdf{asasd}a', 4);
         Rhum.asserts.assertEquals(result, 10);
       }
     );
     Rhum.testCase(
       'should return the index of the matching closing brace when there are other nested brace',
       () => {
-        const result = findClosingBrace('asdf{as{{a}}sd}a');
+        const result = findClosingBrace('asdf{as{{a}}sd}a', 4);
         Rhum.asserts.assertEquals(result, 14);
       }
     );

@@ -36,7 +36,7 @@ export const test = {
 `,
 
   singleMutationOutput:
-    'mutation AllActionMoviesAndAllActors { movies(input: { genre: ACTION }) { __typename id title genre actors { __typename  id firstName lastName } } } }',
+    'mutation AllActionMoviesAndAllActors { movies(input: { genre: ACTION }) { __typename  id title genre actors { __typename  id firstName lastName } } } }',
 
   multipleQueriesInput: `
   query AllActionMoviesAndAllActors {
