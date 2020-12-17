@@ -1,7 +1,7 @@
 To run tests:
 
-1. Call deno test [specific_file.ts] --allow-env to run tests on that file
-2. Call deno test [folder] --allow-env to run all test files in that folder (test files match the pattern '\*test.ts')
+1. Call deno test [specific_file.ts] --allow-env --allow-read --allow-net to run tests on that file
+2. Call deno test [folder] --allow-env --allow-read --allow-net to run all test files in that folder (test files match the pattern '\*test.ts')
 
 Other Notes:
 One challenge is how do we test functionality that is not exported?
