@@ -1,5 +1,3 @@
-
-
 //==========================================================
 
 // Normalizes responses using the query object from destructure and the response object from
@@ -116,4 +114,3 @@ function createHash(obj, output = {}) {
   }
   return output;
 }
-
