@@ -19,6 +19,7 @@ function mutate(mutation, options) {
 // options object
 const options = {
   endpoint: '/graphql', // the endpoint where the post request with mutation string will be sent; DEFAULT: '/graphql'
+  cache: true, // flag to enable automatic cache updates; DEFAULT: 'true'
   delete: false, // flag the developer can set to indicate delete mutation; DEFAULT: 'false'
   update: updateFunc(cache, respObj), // optional update function to customize cache updating behavior; DEFAULT: null
 };
@@ -51,7 +52,7 @@ const cachePreMut = {
 
 const ADD_FAVORITE_MOVIE = gql`
   mutation AddFavoriteMovie {
-    favoriteMovie(id: 2) {
+    favoriteMovie(id: 4) {
       __typename
       id
       isFavorite
@@ -76,7 +77,7 @@ const cachePostMut = {
     'movies(input:{genre:ACTION})': ['Movie~1', 'Movie~4'],
   },
   ROOT_MUTATION: {
-    'favoriteMovie(id: 2)': 'Movie~2',
+    'favoriteMovie(id: 4)': 'Movie~4',
   },
 
   'Movie~1': {
@@ -130,7 +131,7 @@ const cachePreMut = {
 };
 
 const DELETE_MOVIE = gql`
-  mutation AddMovie {
+  mutation DeleteMovie {
     deleteMovie(id: 4) {
       __typename
       id
