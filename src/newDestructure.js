@@ -221,22 +221,5 @@ const testResult = {
     },
   ],
 };
-// console.log(
-//   destructureQueries(`{
-//   movies {
-//   id
-//   title
-//   actors {
-//     id
-//     firstName
-//   }
-// }
-// actor(id: 1) {
-//   id
-//   firstName
-//   LastName
-// }
-// }`)
-// );
-// console.log(JSON.stringify(result) === JSON.stringify(testResult)); // true
+
 export default destructureQueries;

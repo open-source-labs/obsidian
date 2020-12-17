@@ -31,7 +31,6 @@ function ObsidianWrapper(props) {
 
   async function hunt(query, endpoint, destructure, sessionStore) {
     query = insertTypenames(query);
-    console.log('query', query);
     try {
       //send fetch request with query
       const resJSON = await fetch(endpoint, {
@@ -44,7 +43,6 @@ function ObsidianWrapper(props) {
       });
       const resObj = await resJSON.json();
       const deepResObj = Object.assign({}, resObj);
-      console.log('resObj', resObj);
       //create deep clone of cache
       const deepCache = Object.assign({}, cache);
 
