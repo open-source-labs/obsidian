@@ -8,23 +8,25 @@
  *
  */
 
-import { writeCache } from '../../src/writeCache.js';
+import { Cache } from '../../src/CacheClass.js';
 import { Rhum } from 'https://deno.land/x/rhum@v1.1.4/mod.ts';
 import { test } from '../test_variables/writeCache_variables.ts';
 
 Rhum.testPlan('writeCache.js', () => {
   Rhum.testSuite('writeCache()', () => {
-    Rhum.testCase(
-      'should return the new updated cache when the cache was successfully updated with the same reference to the original cache',
-      () => {
-        const result = writeCache(
-          test.queryObj,
-          test.resultObj,
-          test.originalCache
-        );
-        Rhum.asserts.assertEquals(result, test.originalCache);
-      }
-    );
+    // Rhum.testCase(
+    //   'should return the new updated cache when the cache was successfully updated with the same reference to the original cache',
+    //   () => {
+    //     const cache = new Cache(test.originalCache)
+    //     cache.write(test.queryStr, test.respObj);
+    //     const result = writeCache(
+    //       test.queryObj,
+    //       test.resultObj,
+    //       test.originalCache
+    //     );
+    //     Rhum.asserts.assertEquals(result, test.originalCache);
+    //   }
+    // );
     // Rhum.testCase(
     //   'should return the string "Cache Updated" when the cache was successfully updated',
     //   () => {
@@ -39,17 +41,18 @@ Rhum.testPlan('writeCache.js', () => {
     Rhum.testCase(
       'should update the original cache with the new fields and queries',
       () => {
-        writeCache(test.queryObj, test.resultObj, test.originalCache);
-        Rhum.asserts.assertEquals(test.originalCache, test.expectedResultCache);
+        const cache = new Cache(test.originalCache);
+        cache.write(test.queryStr, test.respObj);
+        Rhum.asserts.assertEquals(cache.storage, test.expectedResultCache);
       }
     );
-    Rhum.testCase(
-      'should not overwrite the fields in the original cache with the new fields if the fields are not the same',
-      () => {
-        writeCache(test.queryObj, test.resultObj, test.originalCache);
-        Rhum.asserts.assertEquals(test.originalCache, test.expectedResultCache);
-      }
-    );
+    // Rhum.testCase(
+    //   'should not overwrite the fields in the original cache with the new fields if the fields are not the same',
+    //   () => {
+    //     writeCache(test.queryObj, test.resultObj, test.originalCache);
+    //     Rhum.asserts.assertEquals(test.originalCache, test.expectedResultCache);
+    //   }
+    // );
   });
 });
 Rhum.run();

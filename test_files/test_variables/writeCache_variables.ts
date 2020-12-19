@@ -1,5 +1,5 @@
 export const test = {
-  queryObj: `
+  queryStr: `
   query AllMoviesAndGetActorById  {
     movies {
       __typename
@@ -19,7 +19,7 @@ export const test = {
     }
   }
 `,
-  resultObj: {
+  respObj: {
     data: {
       movies: [
         {
