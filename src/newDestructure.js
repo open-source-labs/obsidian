@@ -16,13 +16,13 @@ function destructureQueries(queryOperationStr) {
   // ignore operation name by finding the beginning of the query strings
   const startIndex = queryOperationStr.indexOf('{');
   const queryStrings = queryOperationStr.substring(startIndex).trim();
-  // create an array of indivdual query strings
+  // create an array of individual query strings
   const arrayOfQueryStrings = findQueryStrings(queryStrings);
-  // define the operation name of the gql request query/mutation
-  const operationName =
+  // define the type property name of the operation query/mutation
+  const typePropName =
     queryOperationStr.trim()[0] === 'q' ? 'queries' : 'mutations';
   // create a queries object from array of query strings
-  const queriesObj = createQueriesObj(arrayOfQueryStrings, operationName);
+  const queriesObj = createQueriesObj(arrayOfQueryStrings, typePropName);
   return queriesObj;
 }
 
@@ -61,10 +61,10 @@ function findQueryStrings(queryStrings) {
   return result;
 }
 // helper function to create a queries object from an array of query strings
-function createQueriesObj(arrayOfQueryStrings, operationName) {
+function createQueriesObj(arrayOfQueryStrings, typePropName) {
   // define a new empty result object
   const queriesObj = {};
-  queriesObj[operationName] = [];
+  queriesObj[typePropName] = [];
   // for each query string
   arrayOfQueryStrings.forEach((queryStr) => {
     // split the query string into multiple parts
@@ -72,7 +72,7 @@ function createQueriesObj(arrayOfQueryStrings, operationName) {
     // recursively convert the fields string to a fields object and update the fields property
     queryObj.fields = findQueryFields(queryObj.fields);
     // push the finished query object into the queries/mutations array on the result object
-    queriesObj[operationName].push(queryObj);
+    queriesObj[typePropName].push(queryObj);
   });
   return queriesObj;
 }
