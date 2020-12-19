@@ -105,5 +105,3 @@ const result = insertTypenames(ALL_ACTION_MOVIES_AND_ALL_ACTORS);
 
 const testResult =
   'query AllActionMoviesAndAllActors { movies(input: { genre: ACTION }) { __typename id title genre actors { __typename  id firstName lastName } } actors { __typename  id firstName lastName films { __typename id title } } } }';
-
-console.log(result === testResult); // true
