@@ -12,32 +12,16 @@ import { Cache } from '../../src/CacheClass.js';
 import { Rhum } from 'https://deno.land/x/rhum@v1.1.4/mod.ts';
 import { test } from '../test_variables/writeCache_variables.ts';
 
-Rhum.testPlan('writeCache.js', () => {
-  Rhum.testSuite('writeCache()', () => {
-    // Rhum.testCase(
-    //   'should return the new updated cache when the cache was successfully updated with the same reference to the original cache',
-    //   () => {
-    //     const cache = new Cache(test.originalCache)
-    //     cache.write(test.queryStr, test.respObj);
-    //     const result = writeCache(
-    //       test.queryObj,
-    //       test.resultObj,
-    //       test.originalCache
-    //     );
-    //     Rhum.asserts.assertEquals(result, test.originalCache);
-    //   }
-    // );
-    // Rhum.testCase(
-    //   'should return the string "Cache Updated" when the cache was successfully updated',
-    //   () => {
-    //     const result = writeCache(
-    //       test.queryObj,
-    //       test.resultObj,
-    //       test.originalCache
-    //     );
-    //     Rhum.asserts.assertEquals(result, 'Cache Updated');
-    //   }
-    // );
+Rhum.testPlan('write method on Cache class', () => {
+  Rhum.testSuite('write', () => {
+    Rhum.testCase(
+      'should return the new updated cache when the cache was successfully updated with the same reference to the original cache',
+      () => {
+        const cache = new Cache(test.originalCache);
+        cache.write(test.queryStr, test.respObj);
+        Rhum.asserts.assertEquals(cache.storage, test.originalCache);
+      }
+    );
     Rhum.testCase(
       'should update the original cache with the new fields and queries',
       () => {
