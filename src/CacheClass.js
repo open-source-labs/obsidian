@@ -40,9 +40,9 @@ export class Cache {
     return { data: responseObject };
   }
 
-  write(queryStr, respObj) {
+  write(queryStr, respObj, deleteFlag) {
     const queryObj = destructureQueries(queryStr);
-    const resFromNormalize = normalizeResult(queryObj, respObj);
+    const resFromNormalize = normalizeResult(queryObj, respObj, deleteFlag);
     // update the original cache with same reference
     for (const hash in resFromNormalize) {
       if (this.cacheRead(hash)) {
@@ -58,9 +58,6 @@ export class Cache {
     return;
   }
 
-  delete(qryStr, respObj) {
-    // deleteCache; sets any top level hashed values of response object to 'DELETE'
-  }
   gc() {
     // garbageCollection;  garbage collection: removes any inaccessible hashes from the cache
   }
