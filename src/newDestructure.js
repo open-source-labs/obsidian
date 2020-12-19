@@ -20,7 +20,9 @@ function destructureQueries(queryOperationStr) {
   const arrayOfQueryStrings = findQueryStrings(queryStrings);
   // define the type property name of the operation query/mutation
   const typePropName =
-    queryOperationStr.trim()[0] === 'q' ? 'queries' : 'mutations';
+    queryOperationStr.trim().slice(0, 8) === 'mutation'
+      ? 'mutations'
+      : 'queries';
   // create a queries object from array of query strings
   const queriesObj = createQueriesObj(arrayOfQueryStrings, typePropName);
   return queriesObj;
