@@ -1,6 +1,6 @@
 /**
  * NOTES:
- * 1.This file will test writeCache functionality:
+ * 1.This file will test the write method on the Cache class functionality:
  * Should return the new updated cache when the cache was successfully updated with the same reference to the original cache
 // Should return the string 'Cache update' when the cache was successfully updated.
  * Should update the original cache with the new fields and queries.
@@ -30,13 +30,14 @@ Rhum.testPlan('write method on Cache class', () => {
         Rhum.asserts.assertEquals(cache.storage, test.expectedResultCache);
       }
     );
-    // Rhum.testCase(
-    //   'should not overwrite the fields in the original cache with the new fields if the fields are not the same',
-    //   () => {
-    //     writeCache(test.queryObj, test.resultObj, test.originalCache);
-    //     Rhum.asserts.assertEquals(test.originalCache, test.expectedResultCache);
-    //   }
-    // );
+    Rhum.testCase(
+      'should not overwrite the fields in the original cache with the new fields if the fields are not the same',
+      () => {
+        const cache = new Cache(test.originalCache);
+        cache.write(test.queryStrTwo, test.respObj);
+        Rhum.asserts.assertEquals(test.originalCache, cache.storage);
+      }
+    );
   });
 });
 Rhum.run();

@@ -4,12 +4,12 @@ export const test = {
       'actor(id:1)': 'Actor~1',
       movies: ['Movie~1', 'Movie~2', 'Movie~3', 'Movie~4'],
       actors: ['Actor~1', 'Actor~2', 'Actor~3', 'Actor~4'],
-      'movies(input:{genre:ACTION})': ['Movie~1', 'Movie~4'],
+      'movies(input:{genre:ACTION})': ['Movie~1', 'Movie~4', 'Movie~5'],
     },
     'Movie~1': {
       id: '1',
       title: 'Indiana Jones and the Last Crusade',
-      actors: ['Actor~1', 'Actor~2'],
+      actors: ['Actor~1', 'Actor~2', 'Actor~6'],
       genre: 'ACTION',
       releaseYear: 1989,
     },
@@ -32,11 +32,13 @@ export const test = {
       genre: 'ACTION',
       releaseYear: 1997,
     },
+    'Movie~5': 'DELETED',
     'Actor~1': { id: '1', firstName: 'Harrison' },
     'Actor~2': { id: '2', firstName: 'Sean' },
     'Actor~3': { id: '3', firstName: 'Mark' },
     'Actor~4': { id: '4', firstName: 'Patti' },
     'Actor~5': { id: '5', firstName: 'Gary' },
+    'Actor~6': 'DELETED',
   },
   singularInputQuery: `
     query getActorById {
@@ -70,7 +72,7 @@ export const test = {
            firstName
          }
        }
-       actors {
+        actors {
          __typename
          id
         firstName
@@ -146,4 +148,25 @@ export const test = {
       ],
     },
   },
+  queryStrDelete: `
+  query AllActionMoviesAndAllActors {
+    movies(input: { genre: ACTION }) {
+       __typename
+       id
+       title
+       genre
+       actors {
+         __typename
+         id
+         firstName
+       }
+     }
+      actors {
+       __typename
+       id
+      firstName
+    }
+   }
+  }
+  `,
 };

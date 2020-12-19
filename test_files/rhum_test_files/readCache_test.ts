@@ -1,9 +1,10 @@
 /**
  * NOTES:
- * 1.This file will test readCache functionalities:
+ * 1.This file will test the read method on the Cache class functionalities:
  * Should return a graphql response object if all required values are found in the cache.
  * Should return undefined if any field is missing value  in the cache.
  * Should accept multiple queries in one query operation.
+ * Should ignore the elements with a 'DELETE' value and not throw a cache miss if asked for in the query string
  * 2. This file will test populateAllHashes functionalities:
  * Should return undefined if any field is missing from the cache.
  * Should return an array of field objects if all the elements are found in the cache.
@@ -36,6 +37,14 @@ Rhum.testPlan('read method on Cache class', () => {
       () => {
         const cache = new Cache(test.cache);
         const result = cache.read(test.multipleInputQuery);
+        Rhum.asserts.assertEquals(result, test.multipleQueriesResObj);
+      }
+    );
+    Rhum.testCase(
+      "should ignore the elements with a 'DELETE' value and not throw a cache miss if asked for in the query string",
+      () => {
+        const cache = new Cache(test.cache);
+        const result = cache.read(test.queryStrDelete);
         Rhum.asserts.assertEquals(result, test.multipleQueriesResObj);
       }
     );

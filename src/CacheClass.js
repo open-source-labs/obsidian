@@ -90,10 +90,10 @@ export class Cache {
       throw Error('Redis functionality has not been implemented');
     }
   }
-  cacheClear(hash) {
+  cacheClear() {
     // erases either object cache or redis cache
     if (this.context === 'client') {
-      this.storage = {};
+      this.storage = { ROOT_QUERY: {}, ROOT_MUTATION: {} };
     } else {
       throw Error('Redis functionality has not been implemented');
     }

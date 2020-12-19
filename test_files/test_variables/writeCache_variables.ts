@@ -19,6 +19,26 @@ export const test = {
     }
   }
 `,
+  queryStrTwo: `
+  query AllMoviesAndGetActorById  {
+    movies {
+      __typename
+      id
+      nickname
+      actors {
+        __typename
+        id
+        firstName
+      }
+    }
+    actor(id: 1) {
+      __typename
+      id
+      firstName
+      LastName
+    }
+  }
+`,
   respObj: {
     data: {
       movies: [
