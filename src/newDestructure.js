@@ -163,6 +163,28 @@ function findClosingBrace(str, index) {
   }
 }
 
+const queryStr = `
+  query AllMoviesAndGetActorById  {
+    movies {
+      __typename
+      id
+      title
+      actors {
+        __typename
+        id
+        firstName
+      }
+    }
+    actor(id: 1) {
+      __typename
+      id
+      firstName
+      LastName
+    }
+  }
+`;
+console.log(destructureQueries(queryStr));
+
 const ALL_ACTION_MOVIES_AND_ALL_ACTORS = `
   query AllActionMoviesAndAllActors {
     movies(input: { genre: ACTION }) {

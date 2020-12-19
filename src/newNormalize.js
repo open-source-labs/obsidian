@@ -1,5 +1,3 @@
-
-
 //==========================================================
 
 // Normalizes responses using the query object from destructure and the response object from
@@ -38,6 +36,65 @@ export default function normalizeResult(queryObj, resultObj) {
   }
   return result;
 }
+
+const queryObj = {
+  queries: [
+    { name: 'movies', arguments: '', fields: [Object] },
+    { name: 'actor', arguments: '(id:1)', fields: [Object] },
+  ],
+};
+
+const resultObj = {
+  data: {
+    movies: [
+      {
+        __typename: 'Movie',
+        id: '1',
+        title: 'Indiana Jones and the Last Crusade',
+        actors: [
+          { __typename: 'Actor', id: '1', firstName: 'Harrison' },
+          { __typename: 'Actor', id: '2', firstName: 'Sean' },
+        ],
+      },
+      {
+        __typename: 'Movie',
+        id: '2',
+        title: 'Empire Strikes Back',
+        actors: [
+          { __typename: 'Actor', id: '1', firstName: 'Harrison' },
+          { __typename: 'Actor', id: '3', firstName: 'Mark' },
+        ],
+      },
+      {
+        __typename: 'Movie',
+        id: '3',
+        title: 'Witness',
+        actors: [
+          { __typename: 'Actor', id: '1', firstName: 'Harrison' },
+          { __typename: 'Actor', id: '4', firstName: 'Patti' },
+        ],
+      },
+      {
+        __typename: 'Movie',
+        id: '4',
+        title: 'Air Force One',
+        actors: [
+          { __typename: 'Actor', id: '1', firstName: 'Harrison' },
+          { __typename: 'Actor', id: '5', firstName: 'Gary' },
+        ],
+      },
+    ],
+    actor: [
+      {
+        __typename: 'Actor',
+        id: '1',
+        firstName: 'Harrison',
+        lastName: 'Ford',
+      },
+    ],
+  },
+};
+console.log(normalizeResult(queryObj, resultObj));
 
 // creates the hashes for query requests and stores the reference has that will be stored in result
 function createRootQuery(queryObj, resultObj) {
@@ -116,4 +173,3 @@ function createHash(obj, output = {}) {
   }
   return output;
 }
-

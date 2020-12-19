@@ -39,15 +39,23 @@ Rhum.testPlan('writeCache.js', () => {
     Rhum.testCase(
       'should update the original cache with the new fields and queries',
       () => {
-        writeCache(test.queryObj, test.resultObj, test.originalCache);
-        Rhum.asserts.assertEquals(test.originalCache, test.expectedResultCache);
+        const result = writeCache(
+          test.queryObj,
+          test.resultObj,
+          test.originalCache
+        );
+        Rhum.asserts.assertEquals(result, test.expectedResultCache);
       }
     );
     Rhum.testCase(
       'should not overwrite the fields in the original cache with the new fields if the fields are not the same',
       () => {
-        writeCache(test.queryObj, test.resultObj, test.originalCache);
-        Rhum.asserts.assertEquals(test.originalCache, test.expectedResultCache);
+        const result = writeCache(
+          test.queryObj,
+          test.resultObj,
+          test.originalCache
+        );
+        Rhum.asserts.assertEquals(result, test.expectedResultCache);
       }
     );
   });
