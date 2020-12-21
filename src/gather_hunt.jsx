@@ -1,21 +1,20 @@
 import React from 'https://dev.jspm.io/react';
-import { readCache } from './readCache.js';
-import { writeCache } from './writeCache.js';
+import { Cache } from './CacheClass.js';
 import { insertTypenames } from './insertTypenames.js';
 
 const cacheContext = React.createContext();
 
 function ObsidianWrapper(props) {
-  const [cache, setCache] = React.useState({ ROOT_QUERY: {} });
-
+  // const [cache, setCache] = React.useState({ ROOT_QUERY: {} });
+  const cache = new Cache();
   async function gather(query, options = {}) {
     //create deep clone of cache to send to destructure
     const destructure = true;
     const sessionStore = false;
-    const deepCache = Object.assign({}, cache);
+    // const deepCache = Object.assign({}, cache);
     const { endpoint } = options;
     //create graphql response object from query string
-    const resObj = await readCache(query, deepCache);
+    const resObj = cache.read(query);
 
     //check if query is stored in cache
     if (resObj) {
@@ -31,7 +30,6 @@ function ObsidianWrapper(props) {
 
   async function hunt(query, endpoint, destructure, sessionStore) {
     query = insertTypenames(query);
-    console.log('query', query);
     try {
       //send fetch request with query
       const resJSON = await fetch(endpoint, {
@@ -44,13 +42,9 @@ function ObsidianWrapper(props) {
       });
       const resObj = await resJSON.json();
       const deepResObj = Object.assign({}, resObj);
-      console.log('resObj', resObj);
-      //create deep clone of cache
-      const deepCache = Object.assign({}, cache);
-
       //update normalized result in cache
-      writeCache(query, deepResObj, deepCache);
-      setCache(deepCache);
+      cache.write(query, deepResObj);
+      // setCache(deepCache);
       return resObj;
       // return new Promise((resolve, reject) => {
       //   resolve(
@@ -65,7 +59,7 @@ function ObsidianWrapper(props) {
   }
   // Function to clear cache and session storage
   function clearCache() {
-    setCache({ ROOT_QUERY: {} });
+    cache.cacheClear();
   }
   // Returning Provider React component that allows consuming components to subscribe to context changes
   return (

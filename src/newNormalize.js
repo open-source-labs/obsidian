@@ -1,3 +1,5 @@
+//==========================================================
+
 // Normalizes responses using the query object from destructure and the response object from
 // the graphql request
 export default function normalizeResult(queryObj, resultObj) {
