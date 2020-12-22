@@ -22,8 +22,8 @@ class Cache {
  *    - remove any hash reference that is a member of the deleted hash Set
  *    - for any hash reference that has not been deleted
  *       - add that hash to a Set of accessible hashes
- *       - recrusively trace that hash and continue removing any deleted hashe references and updating the Set of accesible hashes
- *  4. remove any hashes that are not a member of the accessible hashe Set
+ *       - recrusively trace that hash and continue removing any deleted hash references and updating the Set of accesible hashes
+ *  4. remove any hashes that are not a member of the accessible hash Set
  */
 
 // EXAMPLE ===========================================================================================
