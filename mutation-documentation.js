@@ -10,6 +10,9 @@
  *        - cache.read() will need to be updated to ignore any hashes with the value 'DELETE' (not treat as cache miss)
  *      3. If the update property is set to a function.  That function will be executed causing a cache update as specified by the developer.
  *        - the cache object and respObj will automatically be passed into the update object as arguments
+ * 4. After implementing garbage collection: This function would invoke gc() every time a mutation is made except when an update function is provided by the developer.
+ * 5. This implementation would update the cache only if the flag cache is set to true.
+ * 6. This function takes in a mutation string and an optional options object and returns the response object from the request made.
  */
 
 function mutate(mutation, options) {
