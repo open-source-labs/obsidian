@@ -61,10 +61,46 @@ function ObsidianWrapper(props) {
   function clearCache() {
     cache.cacheClear();
   }
+  // mutate method, refer to mutate.js for more info
+  async function mutate(mutation, options = {}) {
+    // set the options object default properties if not provided
+    const {
+      endpoint = '/graphql',
+      cache = true,
+      toDelete = false,
+      update = null,
+    } = options;
+    // for any mutation a request to the server is made
+    try {
+      const responseObj = fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({ query: mutation }),
+      }).then((resp) => resp.json());
+      if (!cache) return responseObj;
+      // first behaviour when delete cache is set to true
+      if (toDelete) {
+        cache.write(mutation, responseObj, true);
+        return responseObj;
+      }
+      // second behaviour if update function provided
+      if (update) {
+        return update(cache, responseObj);
+      }
+      // third behaviour just for normal update (no-delete, no update function)
+      cache.write(mutation, responseObj);
+      return responseObj;
+    } catch (e) {
+      console.log(e);
+    }
+  }
   // Returning Provider React component that allows consuming components to subscribe to context changes
   return (
     <cacheContext.Provider
-      value={{ cache, gather, hunt, clearCache }}
+      value={{ cache, gather, hunt, clearCache, mutate }}
       {...props}
     />
   );
