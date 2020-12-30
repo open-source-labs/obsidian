@@ -2,28 +2,63 @@
 
 // Normalizes responses using the query object from destructure and the response object from
 // the graphql request
-export default function normalizeResult(queryObj, resultObj) {
+export default function normalizeResult(queryObj, resultObj, deleteFlag) {
   // Object to hold normalized obj
   const result = {};
-  // creates a stringified version of query request and stores it in ROOT_QUERY key
-  result['ROOT_QUERY'] = createRootQuery(queryObj, resultObj);
 
-  for (const curr in resultObj.data) {
-    if (!Array.isArray(resultObj.data[curr])) {
-      const hashObj = createHash(resultObj.data[curr]);
-      for (const hash in hashObj) {
-        if (result[hash]) {
-          Object.assign(result[hash], hashObj[hash]);
-        } else {
-          result[hash] = hashObj[hash];
-        }
-      }
+  // checks if there is a delete mutation
+  if (deleteFlag) {
+    //creates the ROOT_MUTATION hash that is being deleted
+    result['ROOT_MUTATION'] = createRootQuery(
+      queryObj.mutations,
+      resultObj,
+      deleteFlag
+    );
+
+    //iterate thru the different response objects that were mutated
+
+    const obj = resultObj.data;
+    //checks if the current element is an array
+    if (Array.isArray(obj)) {
+      //iterates thru the array of objects and stores the hash in the result object with 'DELETE' as value
+      obj.forEach((ele) => {
+        const mutationKeys = Object.keys(ele);
+        const id =
+          ele[mutationKeys[0]].id ||
+          ele[mutationKeys[0]].ID ||
+          ele[mutationKeys[0]]._id ||
+          ele[mutationKeys[0]]._ID ||
+          ele[mutationKeys[0]].Id ||
+          ele[mutationKeys[0]]._Id;
+        const hash = ele[mutationKeys[0]].__typename + '~' + id;
+        result[hash] = 'DELETED';
+      });
     } else {
-      for (let i = 0; i < resultObj.data[curr].length; i++) {
-        // pass current obj to createHash function to create  obj of hashes
-        const hashObj = createHash(resultObj.data[curr][i]);
-        // check if the hash object pair exists, if not create new key value pair
-        // if it does exist merge the hash pair with the existing key value pair
+      //else stores the hash in the result object with the value 'DELETE'
+      const mutationKeys = Object.keys(obj);
+
+      const id =
+        obj[mutationKeys[0]].id ||
+        obj[mutationKeys[0]].ID ||
+        obj[mutationKeys[0]]._id ||
+        obj[mutationKeys[0]]._ID ||
+        obj[mutationKeys[0]].Id ||
+        obj[mutationKeys[0]]._Id;
+      const hash = obj[mutationKeys[0]].__typename + '~' + id;
+      result[hash] = 'DELETED';
+    }
+  }
+
+  // creates a stringified version of query request and stores it in ROOT_QUERY key
+  else if (queryObj.queries || queryObj.mutations) {
+    if (queryObj.queries) {
+      result['ROOT_QUERY'] = createRootQuery(queryObj.queries, resultObj);
+    } else {
+      result['ROOT_MUTATION'] = createRootQuery(queryObj.mutations, resultObj);
+    }
+    for (const curr in resultObj.data) {
+      if (!Array.isArray(resultObj.data[curr])) {
+        const hashObj = createHash(resultObj.data[curr]);
         for (const hash in hashObj) {
           if (result[hash]) {
             Object.assign(result[hash], hashObj[hash]);
@@ -31,25 +66,39 @@ export default function normalizeResult(queryObj, resultObj) {
             result[hash] = hashObj[hash];
           }
         }
+      } else {
+        for (let i = 0; i < resultObj.data[curr].length; i++) {
+          // pass current obj to createHash function to create  obj of hashes
+          const hashObj = createHash(resultObj.data[curr][i]);
+          // check if the hash object pair exists, if not create new key value pair
+          // if it does exist merge the hash pair with the existing key value pair
+          for (const hash in hashObj) {
+            if (result[hash]) {
+              Object.assign(result[hash], hashObj[hash]);
+            } else {
+              result[hash] = hashObj[hash];
+            }
+          }
+        }
       }
     }
   }
+
   return result;
 }
 
 // creates the hashes for query requests and stores the reference has that will be stored in result
 function createRootQuery(queryObj, resultObj) {
   const output = {};
-  const query = queryObj.queries;
-  if (!Array.isArray(query)) {
-    const name = query.name;
-    const args = query.arguments;
+  if (!Array.isArray(queryObj)) {
+    const name = queryObj.name;
+    const args = queryObj.arguments;
     const queryHash = name + args;
     const obj = resultObj.data[name];
     const id = obj.id || obj.ID || obj._id || obj._ID || obj.Id || obj._Id;
     output[queryHash] = obj.__typename + `~` + id;
   } else {
-    query.forEach((query) => {
+    queryObj.forEach((query) => {
       const name = query.name;
       const args = query.arguments;
       const queryHash = name + args;
@@ -114,3 +163,284 @@ function createHash(obj, output = {}) {
   }
   return output;
 }
+
+const mutationTestResult = {
+  mutations: {
+    name: 'deleteMovie',
+    arguments: '(id:4)',
+    fields: {
+      __typename: 'meta',
+      id: 'scalar',
+    },
+  },
+};
+
+const respObj = {
+  data: {
+    deleteMovie: {
+      __typename: 'Movie',
+      id: '4',
+    },
+  },
+};
+
+const cachePostMut = {
+  ROOT_MUTATION: {
+    'deleteMovie(id:4)': 'Movie~4',
+  },
+  'Movie~4': 'DELETED',
+};
+
+//==============================================================================
+
+const queryObject1 = {
+  queries: [
+    {
+      __typename: 'meta',
+      name: 'movies',
+      arguments: '(input:{genre:ACTION})',
+      fields: {
+        __typename: 'meta',
+        id: 'scalar',
+        title: 'scalar',
+        genre: 'scalar',
+        actors: { id: 'scalar', firstName: 'scalar', lastName: 'scalar' },
+      },
+    },
+    {
+      __typename: 'meta',
+      name: 'actors',
+      arguments: '',
+      fields: {
+        id: 'scalar',
+        firstName: 'scalar',
+        lastName: 'scalar',
+        films: {
+          __typename: 'meta',
+          id: 'scalar',
+          title: 'scalar',
+        },
+      },
+    },
+  ],
+};
+
+const resultObject1 = {
+  data: {
+    movies: [
+      {
+        __typename: 'Movie',
+        id: '1',
+        title: 'Indiana Jones and the Last Crusade',
+        genre: 'ACTION',
+        actors: [
+          {
+            __typename: 'Actor',
+            id: '1',
+            firstName: 'Harrison',
+            lastName: 'Ford',
+          },
+          {
+            __typename: 'Actor',
+            id: '2',
+            firstName: 'Sean',
+            lastName: 'Connery',
+          },
+        ],
+      },
+      {
+        __typename: 'Movie',
+        id: '4',
+        title: 'Air Force One',
+        genre: 'ACTION',
+        actors: [
+          {
+            __typename: 'Actor',
+            id: '1',
+            firstName: 'Harrison',
+            lastName: 'Ford',
+          },
+          {
+            __typename: 'Actor',
+            id: '5',
+            firstName: 'Gary',
+            lastName: 'Oldman',
+          },
+        ],
+      },
+    ],
+    actors: [
+      {
+        __typename: 'Actor',
+        id: '1',
+        firstName: 'Harrison',
+        lastName: 'Ford',
+        films: [
+          {
+            __typename: 'Movie',
+            id: '1',
+            title: 'Indiana Jones and the Last Crusade',
+          },
+          {
+            __typename: 'Movie',
+            id: '2',
+            title: 'Empire Strikes Back',
+          },
+          {
+            __typename: 'Movie',
+            id: '3',
+            title: 'Witness',
+          },
+          {
+            __typename: 'Movie',
+            id: '4',
+            title: 'Air Force One',
+          },
+        ],
+      },
+      {
+        __typename: 'Actor',
+        id: '2',
+        firstName: 'Sean',
+        lastName: 'Connery',
+        films: [
+          {
+            __typename: 'Movie',
+            id: '1',
+            title: 'Indiana Jones and the Last Crusade',
+          },
+        ],
+      },
+      {
+        __typename: 'Actor',
+        id: '3',
+        firstName: 'Mark',
+        lastName: 'Hamill',
+        films: [
+          {
+            __typename: 'Movie',
+            id: '2',
+            title: 'Empire Strikes Back',
+          },
+        ],
+      },
+      {
+        __typename: 'Actor',
+        id: '4',
+        firstName: 'Patti',
+        lastName: 'LuPone',
+        films: [
+          {
+            __typename: 'Movie',
+            id: '3',
+            title: 'Witness',
+          },
+        ],
+      },
+      {
+        __typename: 'Actor',
+        id: '5',
+        firstName: 'Gary',
+        lastName: 'Oldman',
+        films: [
+          {
+            __typename: 'Movie',
+            id: '4',
+            title: 'Air Force One',
+          },
+        ],
+      },
+    ],
+  },
+};
+
+const resultObj1 = {
+  ROOT_QUERY: {
+    'movies(input:{genre:ACTION})': ['Movie~1', 'Movie~4'],
+    actors: ['Actor~1', 'Actor~2', 'Actor~3', 'Actor~4', 'Actor~5'],
+  },
+  'Movie~1': {
+    id: '1',
+    title: 'Indiana Jones and the Last Crusade',
+    actors: ['Actor~1', 'Actor~2'],
+    genre: 'ACTION',
+  },
+  'Movie~2': {
+    id: '2',
+    title: 'Empire Strikes Back',
+  },
+  'Movie~3': {
+    id: '3',
+    title: 'Witness',
+  },
+  'Movie~4': {
+    id: '4',
+    title: 'Air Force One',
+    genre: 'ACTION',
+    actors: ['Actor~1', 'Actor~5'],
+  },
+  'Actor~1': {
+    id: '1',
+    firstName: 'Harrison',
+    lastName: 'Ford',
+    films: ['Movie~1', 'Movie~2', 'Movie~3', 'Movie~4'],
+  },
+  'Actor~2': {
+    id: '2',
+    firstName: 'Sean',
+    lastName: 'Connery',
+    films: ['Movie~1'],
+  },
+  'Actor~3': {
+    id: '3',
+    firstName: 'Mark',
+    lastName: 'Hamill',
+    films: ['Movie~2'],
+  },
+  'Actor~4': {
+    id: '4',
+    firstName: 'Patti',
+    lastName: 'LuPone',
+    films: ['Movie~3'],
+  },
+  'Actor~5': {
+    id: '5',
+    firstName: 'Gary',
+    lastName: 'Oldman',
+    films: ['Movie~4'],
+  },
+};
+
+//===============================================================================
+
+const queryObj = {
+  mutations: {
+    name: 'addFavoriteMovie',
+    arguments: '(id:4)',
+    fields: {
+      __typename: 'meta',
+      id: 'scalar',
+      isFavorite: 'scalar',
+    },
+  },
+};
+
+const responseObj = {
+  data: {
+    addFavoriteMovie: {
+      __typename: 'Movie',
+      id: '4',
+      isFavorite: true,
+    },
+  },
+};
+
+const outputObj = {
+  ROOT_MUTATION: {
+    'addFavoriteMovie(id:4)': 'Movie~4',
+  },
+  'Movie~4': {
+    id: '4',
+    isFavorite: true,
+  },
+};
