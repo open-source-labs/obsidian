@@ -4,24 +4,27 @@
  * 2. We won't worry about arguments on fields for now
  * 3. We won't worry about aliases for now
  * 4. We won't worry about handling directives for now
- * 5. We wont't worry about fragments for now
- * 6. This function will assume that everything passed in is a query,
- *    I can't think of a reason we would ever want to destructure a mutation request
- *    Let me know if you can think of reason
+ * 5. We wont' worry about fragments for now
+ * 6. This function will assume that everything passed in can be a query or a mutation (not both).
  * 7. We won't handle variables for now, but we may very well find we need to
  * 8. We will handle only the meta field "__typename" for now
  * 9. What edge cases as far as field/query names do we have to worry about: special characters, apostrophes, etc???
  *
  */
-// this function will destructure a query operation string into a query operation object
+// this function will destructure a query/mutation operation string into a query/mutation operation object
 function destructureQueries(queryOperationStr) {
   // ignore operation name by finding the beginning of the query strings
   const startIndex = queryOperationStr.indexOf('{');
   const queryStrings = queryOperationStr.substring(startIndex).trim();
-  // create an array of indivdual query strings
+  // create an array of individual query strings
   const arrayOfQueryStrings = findQueryStrings(queryStrings);
+  // define the type property name of the operation query/mutation
+  const typePropName =
+    queryOperationStr.trim().slice(0, 8) === 'mutation'
+      ? 'mutations'
+      : 'queries';
   // create a queries object from array of query strings
-  const queriesObj = createQueriesObj(arrayOfQueryStrings);
+  const queriesObj = createQueriesObj(arrayOfQueryStrings, typePropName);
   return queriesObj;
 }
 
@@ -60,19 +63,18 @@ function findQueryStrings(queryStrings) {
   return result;
 }
 // helper function to create a queries object from an array of query strings
-function createQueriesObj(arrayOfQueryStrings) {
+function createQueriesObj(arrayOfQueryStrings, typePropName) {
   // define a new empty result object
-  const queriesObj = {
-    queries: [],
-  };
+  const queriesObj = {};
+  queriesObj[typePropName] = [];
   // for each query string
   arrayOfQueryStrings.forEach((queryStr) => {
     // split the query string into multiple parts
     const queryObj = splitUpQueryStr(queryStr);
     // recursively convert the fields string to a fields object and update the fields property
     queryObj.fields = findQueryFields(queryObj.fields);
-    // push the finished query object into the queries array on the result object
-    queriesObj.queries.push(queryObj);
+    // push the finished query object into the queries/mutations array on the result object
+    queriesObj[typePropName].push(queryObj);
   });
   return queriesObj;
 }
@@ -243,5 +245,26 @@ const testResult = {
     },
   ],
 };
-
+const mutation = `
+mutation DeleteMovie {
+  deleteMovie(id: 4) {
+    __typename
+    id
+  }
+}
+`;
+const mutationTestResult = {
+  mutations: [
+    {
+      name: 'deleteMovie',
+      arguments: '(id:4)',
+      fields: { __typename: 'meta', id: 'scalar' },
+    },
+  ],
+};
+const mutationResult = destructureQueries(mutation);
+console.log(
+  JSON.stringify(mutationTestResult) === JSON.stringify(mutationResult)
+); //true
+console.log(JSON.stringify(testResult) === JSON.stringify(result)); // true
 export default destructureQueries;
