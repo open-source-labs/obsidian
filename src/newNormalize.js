@@ -147,33 +147,36 @@ const resultObj = {
 console.log(normalizeResult(queryObj, resultObj));
 
 // creates the hashes for query requests and stores the reference has that will be stored in result
-function createRootQuery(queryObj, resultObj) {
+function createRootQuery(queryObjArr, resultObj) {
   const output = {};
-  if (!Array.isArray(queryObj)) {
-    const name = queryObj.name;
-    const args = queryObj.arguments;
+  queryObjArr.forEach((query) => {
+    const name = query.name;
+    const args = query.arguments;
     const queryHash = name + args;
-    const obj = resultObj.data[name];
-    const id = obj.id || obj.ID || obj._id || obj._ID || obj.Id || obj._Id;
-    output[queryHash] = obj.__typename + `~` + id;
-  } else {
-    queryObj.forEach((query) => {
-      const name = query.name;
-      const args = query.arguments;
-      const queryHash = name + args;
 
-      // iterate thru the array of current query response
-      // and store the hash of that response in an array
-      const resultArray = resultObj.data[name];
+    // iterate thru the array of current query response
+    // and store the hash of that response in an array
+    const result = resultObj.data[name];
+    if (Array.isArray(result)) {
       const arrOfHashes = [];
-      resultArray.forEach((obj) => {
+      result.forEach((obj) => {
         const id = obj.id || obj.ID || obj._id || obj._ID || obj.Id || obj._Id;
         arrOfHashes.push(obj.__typename + '~' + id);
       });
       //store the array of hashes associated with the queryHash
       output[queryHash] = arrOfHashes;
-    });
-  }
+    } else {
+      const id =
+        result.id ||
+        result.ID ||
+        result._id ||
+        result._ID ||
+        result.Id ||
+        result._Id;
+      output[queryHash] = result.__typename + '~' + id;
+    }
+  });
+
   return output;
 }
 
@@ -223,283 +226,320 @@ function createHash(obj, output = {}) {
   return output;
 }
 
-const mutationTestResult = {
-  mutations: {
-    name: 'deleteMovie',
-    arguments: '(id:4)',
-    fields: {
-      __typename: 'meta',
-      id: 'scalar',
-    },
-  },
-};
+// const queryObjTest = {
+//   queries: [
+//     {
+//       name: 'getMovie',
+//       arguments: '',
+//       fields: {
+//         __typename: 'meta',
+//         id: 'scalar',
+//         title: 'scalar',
+//         releaseYear: 'scalar',
+//       },
+//     },
+//   ],
+// };
 
-const respObj = {
-  data: {
-    deleteMovie: {
-      __typename: 'Movie',
-      id: '4',
-    },
-  },
-};
+// const respObjTest = {
+//   data: {
+//     getMovie: {
+//       __typename: 'Movie',
+//       id: '1',
+//       title: 'Up',
+//       releaseYear: 2009,
+//     },
+//   },
+// };
 
-const cachePostMut = {
-  ROOT_MUTATION: {
-    'deleteMovie(id:4)': 'Movie~4',
-  },
-  'Movie~4': 'DELETED',
-};
+// console.log(normalizeResult(queryObjTest, respObjTest, false));
 
-//==============================================================================
+// const mutationTestResult = {
+//   mutations: [
+//     {
+//       name: 'deleteMovie',
+//       arguments: '(id:4)',
+//       fields: {
+//         __typename: 'meta',
+//         id: 'scalar',
+//       },
+//     },
+//   ],
+// };
 
-const queryObject1 = {
-  queries: [
-    {
-      __typename: 'meta',
-      name: 'movies',
-      arguments: '(input:{genre:ACTION})',
-      fields: {
-        __typename: 'meta',
-        id: 'scalar',
-        title: 'scalar',
-        genre: 'scalar',
-        actors: { id: 'scalar', firstName: 'scalar', lastName: 'scalar' },
-      },
-    },
-    {
-      __typename: 'meta',
-      name: 'actors',
-      arguments: '',
-      fields: {
-        id: 'scalar',
-        firstName: 'scalar',
-        lastName: 'scalar',
-        films: {
-          __typename: 'meta',
-          id: 'scalar',
-          title: 'scalar',
-        },
-      },
-    },
-  ],
-};
+// const respObj = {
+//   data: {
+//     deleteMovie: {
+//       __typename: 'Movie',
+//       id: '4',
+//     },
+//   },
+// };
 
-const resultObject1 = {
-  data: {
-    movies: [
-      {
-        __typename: 'Movie',
-        id: '1',
-        title: 'Indiana Jones and the Last Crusade',
-        genre: 'ACTION',
-        actors: [
-          {
-            __typename: 'Actor',
-            id: '1',
-            firstName: 'Harrison',
-            lastName: 'Ford',
-          },
-          {
-            __typename: 'Actor',
-            id: '2',
-            firstName: 'Sean',
-            lastName: 'Connery',
-          },
-        ],
-      },
-      {
-        __typename: 'Movie',
-        id: '4',
-        title: 'Air Force One',
-        genre: 'ACTION',
-        actors: [
-          {
-            __typename: 'Actor',
-            id: '1',
-            firstName: 'Harrison',
-            lastName: 'Ford',
-          },
-          {
-            __typename: 'Actor',
-            id: '5',
-            firstName: 'Gary',
-            lastName: 'Oldman',
-          },
-        ],
-      },
-    ],
-    actors: [
-      {
-        __typename: 'Actor',
-        id: '1',
-        firstName: 'Harrison',
-        lastName: 'Ford',
-        films: [
-          {
-            __typename: 'Movie',
-            id: '1',
-            title: 'Indiana Jones and the Last Crusade',
-          },
-          {
-            __typename: 'Movie',
-            id: '2',
-            title: 'Empire Strikes Back',
-          },
-          {
-            __typename: 'Movie',
-            id: '3',
-            title: 'Witness',
-          },
-          {
-            __typename: 'Movie',
-            id: '4',
-            title: 'Air Force One',
-          },
-        ],
-      },
-      {
-        __typename: 'Actor',
-        id: '2',
-        firstName: 'Sean',
-        lastName: 'Connery',
-        films: [
-          {
-            __typename: 'Movie',
-            id: '1',
-            title: 'Indiana Jones and the Last Crusade',
-          },
-        ],
-      },
-      {
-        __typename: 'Actor',
-        id: '3',
-        firstName: 'Mark',
-        lastName: 'Hamill',
-        films: [
-          {
-            __typename: 'Movie',
-            id: '2',
-            title: 'Empire Strikes Back',
-          },
-        ],
-      },
-      {
-        __typename: 'Actor',
-        id: '4',
-        firstName: 'Patti',
-        lastName: 'LuPone',
-        films: [
-          {
-            __typename: 'Movie',
-            id: '3',
-            title: 'Witness',
-          },
-        ],
-      },
-      {
-        __typename: 'Actor',
-        id: '5',
-        firstName: 'Gary',
-        lastName: 'Oldman',
-        films: [
-          {
-            __typename: 'Movie',
-            id: '4',
-            title: 'Air Force One',
-          },
-        ],
-      },
-    ],
-  },
-};
+// const cachePostMut = {
+//   ROOT_MUTATION: {
+//     'deleteMovie(id:4)': 'Movie~4',
+//   },
+//   'Movie~4': 'DELETED',
+// };
 
-const resultObj1 = {
-  ROOT_QUERY: {
-    'movies(input:{genre:ACTION})': ['Movie~1', 'Movie~4'],
-    actors: ['Actor~1', 'Actor~2', 'Actor~3', 'Actor~4', 'Actor~5'],
-  },
-  'Movie~1': {
-    id: '1',
-    title: 'Indiana Jones and the Last Crusade',
-    actors: ['Actor~1', 'Actor~2'],
-    genre: 'ACTION',
-  },
-  'Movie~2': {
-    id: '2',
-    title: 'Empire Strikes Back',
-  },
-  'Movie~3': {
-    id: '3',
-    title: 'Witness',
-  },
-  'Movie~4': {
-    id: '4',
-    title: 'Air Force One',
-    genre: 'ACTION',
-    actors: ['Actor~1', 'Actor~5'],
-  },
-  'Actor~1': {
-    id: '1',
-    firstName: 'Harrison',
-    lastName: 'Ford',
-    films: ['Movie~1', 'Movie~2', 'Movie~3', 'Movie~4'],
-  },
-  'Actor~2': {
-    id: '2',
-    firstName: 'Sean',
-    lastName: 'Connery',
-    films: ['Movie~1'],
-  },
-  'Actor~3': {
-    id: '3',
-    firstName: 'Mark',
-    lastName: 'Hamill',
-    films: ['Movie~2'],
-  },
-  'Actor~4': {
-    id: '4',
-    firstName: 'Patti',
-    lastName: 'LuPone',
-    films: ['Movie~3'],
-  },
-  'Actor~5': {
-    id: '5',
-    firstName: 'Gary',
-    lastName: 'Oldman',
-    films: ['Movie~4'],
-  },
-};
+// console.log(normalizeResult(mutationTestResult, respObj, true));
+// // //==============================================================================
 
-//===============================================================================
+// const queryObject1 = {
+//   queries: [
+//     {
+//       __typename: 'meta',
+//       name: 'movies',
+//       arguments: '(input:{genre:ACTION})',
+//       fields: {
+//         __typename: 'meta',
+//         id: 'scalar',
+//         title: 'scalar',
+//         genre: 'scalar',
+//         actors: { id: 'scalar', firstName: 'scalar', lastName: 'scalar' },
+//       },
+//     },
+//     {
+//       __typename: 'meta',
+//       name: 'actors',
+//       arguments: '',
+//       fields: {
+//         id: 'scalar',
+//         firstName: 'scalar',
+//         lastName: 'scalar',
+//         films: {
+//           __typename: 'meta',
+//           id: 'scalar',
+//           title: 'scalar',
+//         },
+//       },
+//     },
+//   ],
+// };
 
-const queryObj = {
-  mutations: {
-    name: 'addFavoriteMovie',
-    arguments: '(id:4)',
-    fields: {
-      __typename: 'meta',
-      id: 'scalar',
-      isFavorite: 'scalar',
-    },
-  },
-};
+// const resultObject1 = {
+//   data: {
+//     movies: [
+//       {
+//         __typename: 'Movie',
+//         id: '1',
+//         title: 'Indiana Jones and the Last Crusade',
+//         genre: 'ACTION',
+//         actors: [
+//           {
+//             __typename: 'Actor',
+//             id: '1',
+//             firstName: 'Harrison',
+//             lastName: 'Ford',
+//           },
+//           {
+//             __typename: 'Actor',
+//             id: '2',
+//             firstName: 'Sean',
+//             lastName: 'Connery',
+//           },
+//         ],
+//       },
+//       {
+//         __typename: 'Movie',
+//         id: '4',
+//         title: 'Air Force One',
+//         genre: 'ACTION',
+//         actors: [
+//           {
+//             __typename: 'Actor',
+//             id: '1',
+//             firstName: 'Harrison',
+//             lastName: 'Ford',
+//           },
+//           {
+//             __typename: 'Actor',
+//             id: '5',
+//             firstName: 'Gary',
+//             lastName: 'Oldman',
+//           },
+//         ],
+//       },
+//     ],
+//     actors: [
+//       {
+//         __typename: 'Actor',
+//         id: '1',
+//         firstName: 'Harrison',
+//         lastName: 'Ford',
+//         films: [
+//           {
+//             __typename: 'Movie',
+//             id: '1',
+//             title: 'Indiana Jones and the Last Crusade',
+//           },
+//           {
+//             __typename: 'Movie',
+//             id: '2',
+//             title: 'Empire Strikes Back',
+//           },
+//           {
+//             __typename: 'Movie',
+//             id: '3',
+//             title: 'Witness',
+//           },
+//           {
+//             __typename: 'Movie',
+//             id: '4',
+//             title: 'Air Force One',
+//           },
+//         ],
+//       },
+//       {
+//         __typename: 'Actor',
+//         id: '2',
+//         firstName: 'Sean',
+//         lastName: 'Connery',
+//         films: [
+//           {
+//             __typename: 'Movie',
+//             id: '1',
+//             title: 'Indiana Jones and the Last Crusade',
+//           },
+//         ],
+//       },
+//       {
+//         __typename: 'Actor',
+//         id: '3',
+//         firstName: 'Mark',
+//         lastName: 'Hamill',
+//         films: [
+//           {
+//             __typename: 'Movie',
+//             id: '2',
+//             title: 'Empire Strikes Back',
+//           },
+//         ],
+//       },
+//       {
+//         __typename: 'Actor',
+//         id: '4',
+//         firstName: 'Patti',
+//         lastName: 'LuPone',
+//         films: [
+//           {
+//             __typename: 'Movie',
+//             id: '3',
+//             title: 'Witness',
+//           },
+//         ],
+//       },
+//       {
+//         __typename: 'Actor',
+//         id: '5',
+//         firstName: 'Gary',
+//         lastName: 'Oldman',
+//         films: [
+//           {
+//             __typename: 'Movie',
+//             id: '4',
+//             title: 'Air Force One',
+//           },
+//         ],
+//       },
+//     ],
+//   },
+// };
 
-const responseObj = {
-  data: {
-    addFavoriteMovie: {
-      __typename: 'Movie',
-      id: '4',
-      isFavorite: true,
-    },
-  },
-};
+// const resultObj1 = {
+//   ROOT_QUERY: {
+//     'movies(input:{genre:ACTION})': ['Movie~1', 'Movie~4'],
+//     actors: ['Actor~1', 'Actor~2', 'Actor~3', 'Actor~4', 'Actor~5'],
+//   },
+//   'Movie~1': {
+//     id: '1',
+//     title: 'Indiana Jones and the Last Crusade',
+//     actors: ['Actor~1', 'Actor~2'],
+//     genre: 'ACTION',
+//   },
+//   'Movie~2': {
+//     id: '2',
+//     title: 'Empire Strikes Back',
+//   },
+//   'Movie~3': {
+//     id: '3',
+//     title: 'Witness',
+//   },
+//   'Movie~4': {
+//     id: '4',
+//     title: 'Air Force One',
+//     genre: 'ACTION',
+//     actors: ['Actor~1', 'Actor~5'],
+//   },
+//   'Actor~1': {
+//     id: '1',
+//     firstName: 'Harrison',
+//     lastName: 'Ford',
+//     films: ['Movie~1', 'Movie~2', 'Movie~3', 'Movie~4'],
+//   },
+//   'Actor~2': {
+//     id: '2',
+//     firstName: 'Sean',
+//     lastName: 'Connery',
+//     films: ['Movie~1'],
+//   },
+//   'Actor~3': {
+//     id: '3',
+//     firstName: 'Mark',
+//     lastName: 'Hamill',
+//     films: ['Movie~2'],
+//   },
+//   'Actor~4': {
+//     id: '4',
+//     firstName: 'Patti',
+//     lastName: 'LuPone',
+//     films: ['Movie~3'],
+//   },
+//   'Actor~5': {
+//     id: '5',
+//     firstName: 'Gary',
+//     lastName: 'Oldman',
+//     films: ['Movie~4'],
+//   },
+// };
 
-const outputObj = {
-  ROOT_MUTATION: {
-    'addFavoriteMovie(id:4)': 'Movie~4',
-  },
-  'Movie~4': {
-    id: '4',
-    isFavorite: true,
-  },
-};
+// console.log(normalizeResult(queryObject1, resultObject1, false));
+
+// // //===============================================================================
+
+// const queryObj3 = {
+//   mutations: [
+//     {
+//       name: 'addFavoriteMovie',
+//       arguments: '(id:4)',
+//       fields: {
+//         __typename: 'meta',
+//         id: 'scalar',
+//         isFavorite: 'scalar',
+//       },
+//     },
+//   ],
+// };
+
+// const responseObj3 = {
+//   data: {
+//     addFavoriteMovie: {
+//       __typename: 'Movie',
+//       id: '4',
+//       isFavorite: true,
+//     },
+//   },
+// };
+
+// const outputObj = {
+//   ROOT_MUTATION: {
+//     'addFavoriteMovie(id:4)': 'Movie~4',
+//   },
+//   'Movie~4': {
+//     id: '4',
+//     isFavorite: true,
+//   },
+// };
+
+// console.log(normalizeResult(queryObj3, responseObj3, false));
