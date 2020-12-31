@@ -22,5 +22,3 @@ export function writeCache(queryStr, resultObj, cache) {
   return cache;
   // return 'Cache Updated';
 }
-
-
