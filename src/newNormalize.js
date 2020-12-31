@@ -444,3 +444,7 @@ const outputObj = {
     isFavorite: true,
   },
 };
+
+let str = '    sdfsf   sdfsd    sdfsd   sdd   '
+str = str.replace(/\s/g,"");
+console.log(str)

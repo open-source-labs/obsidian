@@ -97,29 +97,13 @@ export class Cache {
   }
 
   writeWholeQuery(queryStr, respObj) {
-    const query = JSON.stringify(queryStr);
-    let hash = '';
-    for (let i = 0; i < query.length; i++) {
-      if (query[i] === '\\' && query[i + 1] === 'n') {
-        i += 2;
-      } else if (query[i] !== ' ') {
-        hash += query[i];
-      }
-    }
+    let hash = queryStr.replace(/\s/g, '');
     this.cacheWrite(ROOT_QUERY[hash], respObj);
     return respObj;
   }
 
   readWholeQuery(queryStr) {
-    const query = JSON.stringify(queryStr);
-    let hash = '';
-    for (let i = 0; i < query.length; i++) {
-      if (query[i] === '\\' && query[i + 1] === 'n') {
-        i += 2;
-      } else if (query[i] !== ' ') {
-        hash += query[i];
-      }
-    }
+    let hash = queryStr.replace(/\s/g, '');
     const root = this.cacheRead('ROOT_QUERY');
     if (root[hash]) return { data: root[hash] };
     else return undefined;
