@@ -33,7 +33,8 @@ export function insertTypenames(queryOperationStr) {
   return newQueryStr;
 }
 // helper function to add typenames to fieldsStr where needed
-function addTypenamesToFieldsStr(fieldsStr) {
+export function addTypenamesToFieldsStr(fieldsStr) {
+  console.log(fieldsStr);
   let newFieldsStr = fieldsStr;
   let currentOpenBrace = 0;
   let isAnotherOpenBrace = true;
@@ -60,10 +61,12 @@ function addTypenamesToFieldsStr(fieldsStr) {
     }
     currentOpenBrace = nextOpenBrace;
   }
+  console.log(newFieldsStr);
   return newFieldsStr;
 }
 // helper function to find the partner closing brace
-function findClosingBrace(str, index) {
+export function findClosingBrace(str, index) {
+  console.log(str);
   let bracePairs = 0;
   // skips ahead 1 index to skip first brace
   for (let i = index + 1; i < str.length; i += 1) {
@@ -73,37 +76,3 @@ function findClosingBrace(str, index) {
     if (char === '}') bracePairs -= 1;
   }
 }
-
-const ALL_ACTION_MOVIES_AND_ALL_ACTORS = `
-  query AllActionMoviesAndAllActors {
-    movies(input: { genre: ACTION }) {
-      __typename
-      id
-      title
-      genre
-      actors {
-        id
-        firstName
-        lastName
-      }
-    }
-    actors {
-      id
-      firstName
-      lastName
-      films {
-        __typename
-        id
-        title
-      }
-    }
-  }
-  }
-`;
-
-const result = insertTypenames(ALL_ACTION_MOVIES_AND_ALL_ACTORS);
-
-const testResult =
-  'query AllActionMoviesAndAllActors { movies(input: { genre: ACTION }) { __typename id title genre actors { __typename  id firstName lastName } } actors { __typename  id firstName lastName films { __typename id title } } } }';
-
-console.log(result === testResult); // true
