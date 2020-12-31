@@ -445,6 +445,3 @@ const outputObj = {
   },
 };
 
-let str = '    sdfsf   sdfsd    sdfsd   sdd   '
-str = str.replace(/\s/g,"");
-console.log(str)
