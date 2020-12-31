@@ -3,7 +3,6 @@ import { checkAndRetrieveQuery, retrieveScalar, retrieveComplex, clearRedis } fr
 import createQueryObj from './createQueryObj.js';
 import { findTypeSchemaName, findProp } from './hashOps.js';
 
-
 // Attempt to rebuild results object if all hashes are found in Redis //
 export default async function destructureQueries(query, obsidianSchema, cache) {
   // Stringify to expose newline characters //
