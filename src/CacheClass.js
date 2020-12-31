@@ -96,6 +96,35 @@ export class Cache {
     }
   }
 
+  writeWholeQuery(queryStr, respObj) {
+    const query = JSON.stringify(queryStr);
+    let hash = '';
+    for (let i = 0; i < query.length; i++) {
+      if (query[i] === '\\' && query[i + 1] === 'n') {
+        i += 2;
+      } else if (query[i] !== ' ') {
+        hash += query[i];
+      }
+    }
+    this.cacheWrite(ROOT_QUERY[hash], respObj);
+    return respObj;
+  }
+
+  readWholeQuery(queryStr) {
+    const query = JSON.stringify(queryStr);
+    let hash = '';
+    for (let i = 0; i < query.length; i++) {
+      if (query[i] === '\\' && query[i + 1] === 'n') {
+        i += 2;
+      } else if (query[i] !== ' ') {
+        hash += query[i];
+      }
+    }
+    const root = this.cacheRead('ROOT_QUERY');
+    if (root[hash]) return { data: root[hash] };
+    else return undefined;
+  }
+
   // specialized helper methods
   populateAllHashes(allHashesFromQuery, fields) {
     if (Array.isArray(allHashesFromQuery)) {
