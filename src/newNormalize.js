@@ -444,4 +444,3 @@ const outputObj = {
     isFavorite: true,
   },
 };
-
