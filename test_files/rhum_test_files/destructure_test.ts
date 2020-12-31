@@ -1,33 +1,48 @@
 import { Rhum } from 'https://deno.land/x/rhum@v1.1.4/mod.ts';
+import {
+  destructureQueries,
+  findQueryStrings,
+  createQueriesObj,
+  splitUpQueryStr,
+  findQueryFields,
+  findClosingBrace,
+} from '../../src/newDestructure.js';
+import { test } from '../test_variables/destructure_variables.ts';
 
 Rhum.testPlan('destructure.ts', () => {
-  Rhum.testSuite('destructureTestSuite part one', () => {
-    Rhum.testCase('destructureTestSuite test one', async () => {
-      const result = true;
-      Rhum.asserts.assertEquals(true, result);
+  Rhum.testSuite('destructure helper function tests', () => {
+    Rhum.testCase('findQueryStrings test', () => {
+      const results = findQueryStrings(test.findQueryStringsTestData);
+      Rhum.asserts.assertEquals(test.findQueryStringsResultData, results);
     });
-    Rhum.testCase('destructureTestSuite test two', async () => {
-      const result = true;
-      Rhum.asserts.assertEquals(true, result);
+    Rhum.testCase('createQueriesObj test', () => {
+      const results = createQueriesObj(test.createQueriesObjTestData);
+      Rhum.asserts.assertEquals(test.createQueriesObjResultsData, results);
     });
-    Rhum.testCase('destructureTestSuite test three', async () => {
-      const result = true;
-      Rhum.asserts.assertEquals(true, result);
+    Rhum.testCase('findQueryFields test', () => {
+      const results = findQueryFields(test.findQueryFieldsTestData);
+      Rhum.asserts.assertEquals(test.findQueryFieldsResultData, results);
+    });
+    Rhum.testCase('findClosingBrace test', () => {
+      const results = findClosingBrace(test.findClosingBraceTestData, 62);
+      Rhum.asserts.assertEquals(test.findClosingBraceResultData, results);
     });
   });
 
-  Rhum.testSuite('destructureTestSuite part two', () => {
-    Rhum.testCase('destructureTestSuite test one', async () => {
-      const result = true;
-      Rhum.asserts.assertEquals(true, result);
+  Rhum.testSuite('destructure single query tests', () => {
+    Rhum.testCase('destructure single query string - no inputs', () => {
+      const result = destructureQueries(test.ALL_ACTORS);
+      Rhum.asserts.assertEquals(test.allActorsTestResult, result);
     });
-    Rhum.testCase('destructureTestSuite test two', async () => {
-      const result = true;
-      Rhum.asserts.assertEquals(true, result);
+    Rhum.testCase('destructure single query string - inputs', () => {
+      const result = destructureQueries(test.ALL_ACTION_MOVIES);
+      Rhum.asserts.assertEquals(test.allActionTestResult, result);
     });
-    Rhum.testCase('destructureTestSuite test three', async () => {
-      const result = true;
-      Rhum.asserts.assertEquals(true, result);
+  });
+  Rhum.testSuite('destructure multi query tests', () => {
+    Rhum.testCase('destructure multi query - input / non input', () => {
+      const result = destructureQueries(test.ALL_ACTION_MOVIES_AND_ALL_ACTORS);
+      Rhum.asserts.assertEquals(test.allActionActorsTestResult, result);
     });
   });
 });
