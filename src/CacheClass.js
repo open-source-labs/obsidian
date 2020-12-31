@@ -68,7 +68,7 @@ export class Cache {
   gc() {
     // garbageCollection;  garbage collection: removes any inaccessible hashes from the cache
   }
-  ç;
+  
   // cache read/write helper methods
   async cacheRead(hash) {
     // returns value from either object cache or   cache || 'DELETED' || undefined
@@ -108,6 +108,11 @@ export class Cache {
       await redis.set('ROOT_QUERY', JSON.stringify({}));
       await redis.set('ROOT_MUTATION', JSON.stringify({}));
     }
+  }
+
+  // functionality to stop polling
+  stopPollInterval(interval) {
+    clearInterval(interval);
   }
 
   writeWholeQuery(queryStr, respObj) {
