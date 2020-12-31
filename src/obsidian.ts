@@ -49,8 +49,8 @@ export async function ObsidianRouter<T>({
 
   const schema = makeExecutableSchema({ typeDefs, resolvers });
   const cache = new Cache();
-  
-  // clear redis cache when restarting the server 
+
+  // clear redis cache when restarting the server
   cache.cacheClear();
   // Create easy-to-use schema from typeDefs once when server boots up //
   const obsidianSchema = getObsidianSchema(typeDefs);
@@ -62,17 +62,14 @@ export async function ObsidianRouter<T>({
     if (request.hasBody) {
       try {
         const contextResult = context ? await context(ctx) : undefined;
-        console.log('ctx', contextResult);
         const body = await request.body().value;
-        console.log(body);
-
         // Variable to block the normalization of mutations //
         let toNormalize = true;
 
         if (useCache) {
           // Send query off to be destructured and found in Redis if possible //
           const obsidianReturn = await cache.read(body.query);
-          console.log('obs return', obsidianReturn);
+          console.log('retrieved from cache', obsidianReturn);
           // if (obsidianReturn === 'mutation') toNormalize = false;
 
           // if (obsidianReturn && obsidianReturn !== 'mutation') {
@@ -91,7 +88,6 @@ export async function ObsidianRouter<T>({
           body.variables || undefined,
           body.operationName || undefined
         );
-        console.log('result', result);
         // Send database response to client //
         response.status = 200;
         response.body = result;
@@ -102,7 +98,6 @@ export async function ObsidianRouter<T>({
         return;
       } catch (error) {
         response.status = 200;
-        console.log('error message', error.message);
         response.body = {
           data: null,
           errors: [
