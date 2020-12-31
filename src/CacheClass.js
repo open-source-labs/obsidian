@@ -68,7 +68,7 @@ export class Cache {
   gc() {
     // garbageCollection;  garbage collection: removes any inaccessible hashes from the cache
   }
-  ç;
+  
   // cache read/write helper methods
   async cacheRead(hash) {
     // returns value from either object cache or   cache || 'DELETED' || undefined
