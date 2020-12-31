@@ -95,7 +95,10 @@ export class Cache {
       throw Error('Redis functionality has not been implemented');
     }
   }
-
+  // functionality to stop polling
+  stopPollInterval(interval) {
+    clearInterval(interval);
+  }
   // specialized helper methods
   populateAllHashes(allHashesFromQuery, fields) {
     if (Array.isArray(allHashesFromQuery)) {
