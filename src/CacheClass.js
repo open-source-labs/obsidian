@@ -110,6 +110,19 @@ export class Cache {
     }
   }
 
+  writeWholeQuery(queryStr, respObj) {
+    let hash = queryStr.replace(/\s/g, '');
+    this.cacheWrite(ROOT_QUERY[hash], respObj);
+    return respObj;
+  }
+
+  readWholeQuery(queryStr) {
+    let hash = queryStr.replace(/\s/g, '');
+    const root = this.cacheRead('ROOT_QUERY');
+    if (root[hash]) return { data: root[hash] };
+    else return undefined;
+  }
+
   // specialized helper methods
   async populateAllHashes(allHashesFromQuery, fields) {
     if (Array.isArray(allHashesFromQuery)) {
