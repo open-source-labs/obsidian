@@ -34,7 +34,6 @@ export function insertTypenames(queryOperationStr) {
 }
 // helper function to add typenames to fieldsStr where needed
 export function addTypenamesToFieldsStr(fieldsStr) {
-  console.log(fieldsStr);
   let newFieldsStr = fieldsStr;
   let currentOpenBrace = 0;
   let isAnotherOpenBrace = true;
@@ -61,12 +60,10 @@ export function addTypenamesToFieldsStr(fieldsStr) {
     }
     currentOpenBrace = nextOpenBrace;
   }
-  console.log(newFieldsStr);
   return newFieldsStr;
 }
 // helper function to find the partner closing brace
 export function findClosingBrace(str, index) {
-  console.log(str);
   let bracePairs = 0;
   // skips ahead 1 index to skip first brace
   for (let i = index + 1; i < str.length; i += 1) {

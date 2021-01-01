@@ -53,9 +53,9 @@ export async function ObsidianRouter<T>({
   // clear redis cache when restarting the server
   cache.cacheClear();
   // Create easy-to-use schema from typeDefs once when server boots up //
-  const obsidianSchema = getObsidianSchema(typeDefs);
+  // const obsidianSchema = getObsidianSchema(typeDefs);
 
-  router.obsidianSchema = obsidianSchema;
+  // router.obsidianSchema = obsidianSchema;
 
   await router.post(path, async (ctx: any) => {
     const { response, request } = ctx;

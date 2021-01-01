@@ -68,7 +68,7 @@ export class Cache {
   gc() {
     // garbageCollection;  garbage collection: removes any inaccessible hashes from the cache
   }
-  
+
   // cache read/write helper methods
   async cacheRead(hash) {
     // returns value from either object cache or   cache || 'DELETED' || undefined
@@ -158,8 +158,9 @@ export class Cache {
           }
         }
         // acc is an array of response object for each hash
-        acc.push(dataObj);
-        return acc;
+        const resolvedProm = await Promise.resolve(acc);
+        resolvedProm.push(dataObj);
+        return resolvedProm;
       }, []);
     }
     // Case where allHashesFromQuery has only one hash and is not an array but a single string
@@ -173,7 +174,7 @@ export class Cache {
       for (const field in fields) {
         if (readVal[field] === 'DELETED') continue;
         if (!readVal[field] && field !== '__typename') {
-          return undefined
+          return undefined;
         } else if (typeof fields[field] !== 'object') {
           // add the typename for the type
           if (field === '__typename') {
