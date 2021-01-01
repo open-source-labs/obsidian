@@ -1,22 +1,34 @@
 import { Rhum } from 'https://deno.land/x/rhum@v1.1.4/mod.ts';
-import destructureQueries from '../../src/newDestructure.js';
+import {
+  destructureQueries,
+  findQueryStrings,
+  createQueriesObj,
+  splitUpQueryStr,
+  findQueryFields,
+  findClosingBrace,
+} from '../../src/newDestructure.js';
 import { test } from '../test_variables/destructure_variables.ts';
 
 Rhum.testPlan('destructure.ts', () => {
-  Rhum.testSuite('destructure invalid query tests', () => {
-    Rhum.testCase('destructure empty query string', () => {
-      const EMPTY_QUERY_STRING = '';
-      const result = destructureQueries(EMPTY_QUERY_STRING);
-      const testResult = {};
-      Rhum.asserts.assertEquals(testResult, {});
+  Rhum.testSuite('destructure helper function tests', () => {
+    Rhum.testCase('findQueryStrings test', () => {
+      const results = findQueryStrings(test.findQueryStringsTestData);
+      Rhum.asserts.assertEquals(test.findQueryStringsResultData, results);
     });
-    Rhum.testCase('destructure invalid query string', () => {
-      const INVALID_QUERY_STRING = 'abc123';
-      const result = destructureQueries(INVALID_QUERY_STRING);
-      const testResult = {};
-      Rhum.asserts.assertEquals(testResult, {});
+    Rhum.testCase('createQueriesObj test', () => {
+      const results = createQueriesObj(test.createQueriesObjTestData);
+      Rhum.asserts.assertEquals(test.createQueriesObjResultsData, results);
+    });
+    Rhum.testCase('findQueryFields test', () => {
+      const results = findQueryFields(test.findQueryFieldsTestData);
+      Rhum.asserts.assertEquals(test.findQueryFieldsResultData, results);
+    });
+    Rhum.testCase('findClosingBrace test', () => {
+      const results = findClosingBrace(test.findClosingBraceTestData, 62);
+      Rhum.asserts.assertEquals(test.findClosingBraceResultData, results);
     });
   });
+
   Rhum.testSuite('destructure single query tests', () => {
     Rhum.testCase('destructure single query string - no inputs', () => {
       const result = destructureQueries(test.ALL_ACTORS);

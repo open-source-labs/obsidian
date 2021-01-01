@@ -129,4 +129,93 @@ export const test = {
       },
     ],
   },
+
+  findQueryStringsTestData: `{
+    actors {
+      id
+      firstName
+      lastName
+      films {
+        __typename
+        id
+        title
+      }
+    }
+    }`,
+
+  findQueryStringsResultData: [
+    `actors {
+      id
+      firstName
+      lastName
+      films {
+        __typename
+        id
+        title
+      }
+    }`,
+  ],
+
+  createQueriesObjTestData: [
+    `actors {
+    id
+    firstName
+    lastName
+    films {
+      __typename
+      id
+      title
+    }
+  }`,
+  ],
+
+  createQueriesObjResultsData: {
+    queries: [
+      {
+        name: 'actors',
+        arguments: '',
+        fields: {
+          id: 'scalar',
+          firstName: 'scalar',
+          lastName: 'scalar',
+          films: {
+            __typename: 'meta',
+            id: 'scalar',
+            title: 'scalar',
+          },
+        },
+      },
+    ],
+  },
+
+  findQueryFieldsTestData: `{
+    id
+    firstName
+    lastName
+    films {
+      __typename
+      id
+      title
+    }
+  }`,
+
+  findQueryFieldsResultData: {
+    id: 'scalar',
+    firstName: 'scalar',
+    lastName: 'scalar',
+    films: { __typename: 'meta', id: 'scalar', title: 'scalar' },
+  },
+
+  findClosingBraceTestData: `{
+    id
+    firstName
+    lastName
+    films {
+      __typename
+      id
+      title
+    }
+  }`,
+
+  findClosingBraceResultData: 90,
 };

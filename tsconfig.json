@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "target": "ES2017",
+    "jsx": "react",
+    "noImplicitAny": false,
+    "module": "esnext",
+    "strict": true,
+  },
+  "include":["../src"]
+}
+
+
