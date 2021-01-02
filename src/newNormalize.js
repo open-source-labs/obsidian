@@ -195,7 +195,7 @@ function createHash(obj, output = {}) {
     //check whether current field is not an array
     if (!Array.isArray(obj[field])) {
       //check whether current field is an object
-      if (typeof obj[field] === 'object') {
+      if (typeof obj[field] === 'object' && obj[field] !== null) {
         const id =
           obj[field].id ||
           obj[field].ID ||

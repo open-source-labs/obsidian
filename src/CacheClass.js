@@ -142,7 +142,7 @@ export class Cache {
         for (const field in fields) {
           if (readVal[field] === 'DELETED') continue;
           // for each field in the fields input query, add the corresponding value from the cache if the field is not another array of hashs
-          if (!readVal[field] && field !== '__typename') {
+          if (readVal[field] === undefined && field !== '__typename') {
             return undefined;
           } else if (typeof fields[field] !== 'object') {
             // add the typename for the type
@@ -155,6 +155,7 @@ export class Cache {
               readVal[field],
               fields[field]
             );
+            if (dataObj[field] === undefined) return undefined;
           }
         }
         // acc is an array of response object for each hash
@@ -185,6 +186,7 @@ export class Cache {
             readVal[field],
             fields[field]
           );
+          if (dataObj[field] === undefined) return undefined;
         }
       }
       return dataObj;
