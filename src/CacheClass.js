@@ -23,6 +23,8 @@ export class Cache {
       throw TypeError('input should be a string');
     // destructure the query string into an object
     const queries = destructureQueries(queryStr).queries;
+    // breaks out of function if queryStr is a mutation
+    if (!queries) return undefined;
     const responseObject = {};
     // iterate through each query in the input queries object
     for (const query in queries) {
