@@ -88,13 +88,14 @@ export async function ObsidianRouter<T>({
           body.variables || undefined,
           body.operationName || undefined
         );
+
         // Send database response to client //
         response.status = 200;
         response.body = result;
 
         // Normalize response and store in cache //
-        if (useCache && toNormalize) cache.write(body.query, result, false);
-
+        if (useCache && toNormalize && !result.errors)
+          cache.write(body.query, result, false);
         return;
       } catch (error) {
         response.status = 200;
