@@ -16,12 +16,12 @@ console.log(await redis.ping());
 
 export class Cache {
   constructor(
-    cache = {
+    initialCache = {
       ROOT_QUERY: {},
       ROOT_MUTATION: {},
     }
   ) {
-    this.storage = cache;
+    this.storage = initialCache;
     this.context = window.Deno ? 'server' : 'client';
   }
 
