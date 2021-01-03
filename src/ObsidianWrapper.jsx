@@ -1,11 +1,11 @@
 import React from 'https://dev.jspm.io/react';
-import { Cache } from './CacheClass.js';
+import { Cache } from './CacheClassBrowser.js';
 import { insertTypenames } from './insertTypenames.js';
 
 const cacheContext = React.createContext();
 
 function ObsidianWrapper(props) {
-  // const [cache, setCache] = React.useState({ ROOT_QUERY: {} });
+  // const Cache = await Promise.resolve(promise);
   const cache = new Cache();
   async function query(query, options = {}) {
     // set the options object default properties if not provided
@@ -34,8 +34,8 @@ function ObsidianWrapper(props) {
     if (cacheRead) {
       let resObj;
       // when the developer decides to only utilize whole query for cache
-      if (wholeQuery) resObj = cache.readWholeQuery(query);
-      else resObj = cache.read(query);
+      if (wholeQuery) resObj = await cache.readWholeQuery(query);
+      else resObj = await cache.read(query);
       // check if query is stored in cache
       if (resObj) {
         // returning cached response as a promise
@@ -83,15 +83,16 @@ function ObsidianWrapper(props) {
   // mutate method, refer to mutate.js for more info
   async function mutate(mutation, options = {}) {
     // set the options object default properties if not provided
+    mutation = insertTypenames(mutation);
     const {
       endpoint = '/graphql',
-      cache = true,
+      cacheWrite = true,
       toDelete = false,
       update = null,
     } = options;
     // for any mutation a request to the server is made
     try {
-      const responseObj = fetch(endpoint, {
+      const responseObj = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -99,7 +100,7 @@ function ObsidianWrapper(props) {
         },
         body: JSON.stringify({ query: mutation }),
       }).then((resp) => resp.json());
-      if (!cache) return responseObj;
+      if (!cacheWrite) return responseObj;
       // first behaviour when delete cache is set to true
       if (toDelete) {
         cache.write(mutation, responseObj, true);
@@ -124,7 +125,6 @@ function ObsidianWrapper(props) {
     />
   );
 }
-
 // Declaration of custom hook to allow access to provider
 function useObsidian() {
   // React useContext hook to access the global provider by any of the consumed components
