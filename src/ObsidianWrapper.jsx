@@ -5,8 +5,8 @@ import { insertTypenames } from './insertTypenames.js';
 const cacheContext = React.createContext();
 
 function ObsidianWrapper(props) {
-  // const Cache = await Promise.resolve(promise);
-  const cache = new Cache();
+  const [cache, setCache] = React.useState(new Cache());
+
   async function query(query, options = {}) {
     // set the options object default properties if not provided
     const {
@@ -120,7 +120,7 @@ function ObsidianWrapper(props) {
   // Returning Provider React component that allows consuming components to subscribe to context changes
   return (
     <cacheContext.Provider
-      value={{ cache, query, clearCache, mutate }}
+      value={{ cache, setCache, query, clearCache, mutate }}
       {...props}
     />
   );
