@@ -3,7 +3,6 @@ import { renderPlaygroundPage } from 'https://deno.land/x/oak_graphql@0.6.2/grap
 import { makeExecutableSchema } from 'https://deno.land/x/oak_graphql@0.6.2/graphql-tools/schema/makeExecutableSchema.ts';
 import getObsidianSchema from './getObsidianSchema.js';
 import { Cache } from './CacheClass.js';
-
 interface Constructable<T> {
   new (...args: any): T & OakRouter;
 }
