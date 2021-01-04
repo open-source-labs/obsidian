@@ -3,7 +3,6 @@ import { renderPlaygroundPage } from 'https://deno.land/x/oak_graphql@0.6.2/grap
 import { makeExecutableSchema } from 'https://deno.land/x/oak_graphql@0.6.2/graphql-tools/schema/makeExecutableSchema.ts';
 import getObsidianSchema from './getObsidianSchema.js';
 import { Cache } from './CacheClass.js';
-
 interface Constructable<T> {
   new (...args: any): T & OakRouter;
 }
@@ -53,9 +52,9 @@ export async function ObsidianRouter<T>({
   // clear redis cache when restarting the server
   cache.cacheClear();
   // Create easy-to-use schema from typeDefs once when server boots up //
-  const obsidianSchema = getObsidianSchema(typeDefs);
+  // const obsidianSchema = getObsidianSchema(typeDefs);
 
-  router.obsidianSchema = obsidianSchema;
+  // router.obsidianSchema = obsidianSchema;
 
   await router.post(path, async (ctx: any) => {
     const { response, request } = ctx;
@@ -88,13 +87,14 @@ export async function ObsidianRouter<T>({
           body.variables || undefined,
           body.operationName || undefined
         );
+
         // Send database response to client //
         response.status = 200;
         response.body = result;
 
         // Normalize response and store in cache //
-        if (useCache && toNormalize) cache.write(body.query, result, false);
-
+        if (useCache && toNormalize && !result.errors)
+          cache.write(body.query, result, false);
         return;
       } catch (error) {
         response.status = 200;

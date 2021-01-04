@@ -1,20 +1,7 @@
 import normalizeResult from './newNormalize.js';
 import destructureQueries from './newDestructure.js';
-import { connect } from 'https://denopkg.com/keroxp/deno-redis/mod.ts';
 
-let redis;
-const context = window.Deno ? 'server' : 'client';
-
-if (context === 'server') {
-  redis = await connect({
-    hostname: 'redis',
-    port: 6379,
-  });
-}
-
-console.log(await redis.ping());
-
-export class Cache {
+export default class Cache {
   constructor(
     initialCache = {
       ROOT_QUERY: {},
@@ -82,42 +69,42 @@ export class Cache {
   // cache read/write helper methods
   async cacheRead(hash) {
     // returns value from either object cache or   cache || 'DELETED' || undefined
-    if (this.context === 'client') {
-      return this.storage[hash];
-    } else {
-      let hashedQuery = await redis.get(hash);
-      // if cacheRead is a miss
-      if (hashedQuery === undefined) return undefined;
-      return JSON.parse(hashedQuery);
-    }
+    // if (this.context === 'client') {
+    return this.storage[hash];
+    // } else {
+    //   let hashedQuery = await redis.get(hash);
+    //   // if cacheRead is a miss
+    //   if (hashedQuery === undefined) return undefined;
+    //   return JSON.parse(hashedQuery);
+    // }
   }
   async cacheWrite(hash, value) {
     // writes value to object cache or JSON.stringified value to redis cache
-    if (this.context === 'client') {
-      this.storage[hash] = value;
-    } else {
-      value = JSON.stringify(value);
-      await redis.set(hash, value);
-    }
+    // if (this.context === 'client') {
+    this.storage[hash] = value;
+    // } else {
+    //   // value = JSON.stringify(value);
+    //   // await redis.set(hash, value);
+    // }
   }
   async cacheDelete(hash) {
     // deletes the hash/value pair on either object cache or redis cache
-    if (this.context === 'client') {
-      delete this.storage[hash];
-    } else await redis.del(hash);
+    // if (this.context === 'client') {
+    delete this.storage[hash];
+    // } else await redis.del(hash);
   }
   async cacheClear() {
     // erases either object cache or redis cache
-    if (this.context === 'client') {
-      this.storage = { ROOT_QUERY: {}, ROOT_MUTATION: {} };
-    } else {
-      await redis.flushdb((err, successful) => {
-        if (err) console.log('redis error', err);
-        console.log(successful, 'clear');
-      });
-      await redis.set('ROOT_QUERY', JSON.stringify({}));
-      await redis.set('ROOT_MUTATION', JSON.stringify({}));
-    }
+    // if (this.context === 'client') {
+    this.storage = { ROOT_QUERY: {}, ROOT_MUTATION: {} };
+    // } else {
+    //   await redis.flushdb((err, successful) => {
+    //     if (err) console.log('redis error', err);
+    //     console.log(successful, 'clear');
+    //   });
+    //   await redis.set('ROOT_QUERY', JSON.stringify({}));
+    //   await redis.set('ROOT_MUTATION', JSON.stringify({}));
+    // }
   }
 
   // functionality to stop polling
