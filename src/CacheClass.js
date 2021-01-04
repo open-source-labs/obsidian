@@ -7,7 +7,7 @@ const context = window.Deno ? 'server' : 'client';
 
 if (context === 'server') {
   redis = await connect({
-    hostname: '127.0.0.1',
+    hostname: 'redis',
     port: 6379,
   });
 }
