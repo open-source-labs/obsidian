@@ -1,7 +1,7 @@
 import normalizeResult from './newNormalize.js';
 import destructureQueries from './newDestructure.js';
 
-export class Cache {
+export default class Cache {
   constructor(
     initialCache = {
       ROOT_QUERY: {},

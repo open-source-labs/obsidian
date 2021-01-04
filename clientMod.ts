@@ -1,7 +1,4 @@
-import {
-  ObsidianWrapper,
-  useObsidian,
-  ObsidianClient,
-} from './ObsidianWrapper/ObsidianWrapper.jsx';
+import { ObsidianWrapper, useObsidian } from './src/ObsidianWrapper.jsx';
+import BrowserCache from './src/CacheClassBrowser.js';
 
-export { ObsidianWrapper, useObsidian, ObsidianClient };
+export { BrowserCache, ObsidianWrapper, useObsidian };
