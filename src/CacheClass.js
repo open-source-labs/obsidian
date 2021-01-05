@@ -1,5 +1,6 @@
 import normalizeResult from './newNormalize.js';
 import destructureQueries from './newDestructure.js';
+import 'https://deno.land/x/dotenv/load.ts';
 import { connect } from 'https://denopkg.com/keroxp/deno-redis/mod.ts';
 
 let redis;
@@ -7,7 +8,7 @@ const context = window.Deno ? 'server' : 'client';
 
 if (context === 'server') {
   redis = await connect({
-    hostname: '127.0.0.1',
+    hostname: Deno.env.get('REDIS_HOST'),
     port: 6379,
   });
 }
@@ -60,12 +61,13 @@ export class Cache {
 
   async write(queryStr, respObj, deleteFlag) {
     const queryObj = destructureQueries(queryStr);
-
     const resFromNormalize = normalizeResult(queryObj, respObj, deleteFlag);
     // update the original cache with same reference
     for (const hash in resFromNormalize) {
       const resp = await this.cacheRead(hash);
-      if (resp) {
+      if (resFromNormalize[hash] === 'DELETED') {
+        await this.cacheWrite(hash, 'DELETED');
+      } else if (resp) {
         const newObj = Object.assign(resp, resFromNormalize[hash]);
         await this.cacheWrite(hash, newObj);
       } else {
