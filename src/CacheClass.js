@@ -61,12 +61,13 @@ export class Cache {
 
   async write(queryStr, respObj, deleteFlag) {
     const queryObj = destructureQueries(queryStr);
-
     const resFromNormalize = normalizeResult(queryObj, respObj, deleteFlag);
     // update the original cache with same reference
     for (const hash in resFromNormalize) {
       const resp = await this.cacheRead(hash);
-      if (resp) {
+      if (resFromNormalize[hash] === 'DELETED') {
+        await this.cacheWrite(hash, 'DELETED');
+      } else if (resp) {
         const newObj = Object.assign(resp, resFromNormalize[hash]);
         await this.cacheWrite(hash, newObj);
       } else {
