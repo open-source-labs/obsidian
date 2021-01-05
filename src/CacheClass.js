@@ -1,5 +1,6 @@
 import normalizeResult from './newNormalize.js';
 import destructureQueries from './newDestructure.js';
+import 'https://deno.land/x/dotenv/load.ts';
 import { connect } from 'https://denopkg.com/keroxp/deno-redis/mod.ts';
 
 let redis;
@@ -7,7 +8,7 @@ const context = window.Deno ? 'server' : 'client';
 
 if (context === 'server') {
   redis = await connect({
-    hostname: 'redis',
+    hostname: Deno.env.get('REDIS_HOST'),
     port: 6379,
   });
 }
