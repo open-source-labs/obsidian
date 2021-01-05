@@ -108,7 +108,7 @@ function ObsidianWrapper(props) {
       }
       // second behaviour if update function provided
       if (update) {
-        return update(cache, responseObj);
+        update(cache, responseObj);
       }
       // third behaviour just for normal update (no-delete, no update function)
       cache.write(mutation, responseObj);
