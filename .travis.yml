@@ -1,10 +1,10 @@
-sudo: required
-services:
-- docker
-before_install:
-- docker build -t open-source-labs/obsidian .
-script:
-- docker run open-source-labs/obsidian test --allow-net --allow-read --allow-env --unstable deno.test.ts
-env:
-  global:
-    secure: sfaHXoKGXnAkwS/QK2pdTPC1NVqd9+pVWImEcz8W9IXFRsOcHpt9lVsmB0dFvDpVm+9KFpcBwnpfOtiyoj6Q9NGIY71jG58kYHdbcWBlR3onS7/JBvgEu94DC7HZR+rQ4/GW+ROh4avBt6RjDSuLk4qQ73Yc3+SDKAl+M0PTADlVZpkicCID59qcdynbAjXu5W8lW2Hp0hqO72Prx/8hgmchI0I7zSYcPBFSy3WaEPJa52yKesVwsHcFtzOBMrDAdE+R028AzdBAXUoiqh6cTVeLSTL1jnIWbCBtfAROlTR82cZyo4c7PJxYyqT3mhRSZvBN/3hdW7+xMOzq6gmpmcl1UO2Q5i4xXEGnatfuzMVa/8SqJZoG2IFIWZ4mvelwufHVuLgF+6JvK2BKSpjFfSUGo0p9G0bMg+GHwRipTPIq1If3ELkflAM6QJwL7TritwtWzWXfAfoZ3KALdPTiFzJAKyQfFvSwWbfXqAgqZIbLjlzSgOJ4QKWD6CBksU7b4Oky6hr/+R+ZihzQLtWKkk/8cklEG/NJlknS2vPRG8xRRF7/C+vSFPrCkmsakPc8c1iGfai8J3Vc09Pg0UeShJDWkSQ6QP165ub6LEL5nz0Qzp0CD1sSQu5re5/M5ef9V69L2pdYhEj0RaZ241DF5efzYAgLI8SvMr5TcTr06+8=
+# sudo: required
+# services:
+# - docker
+# before_install:
+# - docker build -t open-source-labs/obsidian .
+# script:
+# - docker run open-source-labs/obsidian test --allow-net --allow-read --allow-env --unstable deno.test.ts
+# env:
+#   global:
+#     secure: sfaHXoKGXnAkwS/QK2pdTPC1NVqd9+pVWImEcz8W9IXFRsOcHpt9lVsmB0dFvDpVm+9KFpcBwnpfOtiyoj6Q9NGIY71jG58kYHdbcWBlR3onS7/JBvgEu94DC7HZR+rQ4/GW+ROh4avBt6RjDSuLk4qQ73Yc3+SDKAl+M0PTADlVZpkicCID59qcdynbAjXu5W8lW2Hp0hqO72Prx/8hgmchI0I7zSYcPBFSy3WaEPJa52yKesVwsHcFtzOBMrDAdE+R028AzdBAXUoiqh6cTVeLSTL1jnIWbCBtfAROlTR82cZyo4c7PJxYyqT3mhRSZvBN/3hdW7+xMOzq6gmpmcl1UO2Q5i4xXEGnatfuzMVa/8SqJZoG2IFIWZ4mvelwufHVuLgF+6JvK2BKSpjFfSUGo0p9G0bMg+GHwRipTPIq1If3ELkflAM6QJwL7TritwtWzWXfAfoZ3KALdPTiFzJAKyQfFvSwWbfXqAgqZIbLjlzSgOJ4QKWD6CBksU7b4Oky6hr/+R+ZihzQLtWKkk/8cklEG/NJlknS2vPRG8xRRF7/C+vSFPrCkmsakPc8c1iGfai8J3Vc09Pg0UeShJDWkSQ6QP165ub6LEL5nz0Qzp0CD1sSQu5re5/M5ef9V69L2pdYhEj0RaZ241DF5efzYAgLI8SvMr5TcTr06+8=

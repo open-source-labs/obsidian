@@ -1,10 +1,7 @@
 import { graphql } from 'https://cdn.pika.dev/graphql@15.0.0';
-import { renderPlaygroundPage } from 'https://deno.land/x/oak_graphql@0.6.1/graphql-playground-html/render-playground-html.ts';
-import { makeExecutableSchema } from 'https://deno.land/x/oak_graphql@0.6.1/graphql-tools/schema/makeExecutableSchema.ts';
-import getObsidianSchema from './getObsidianSchema.js';
-import normalizeResult from './normalize.js';
-import destructureQueries from './destructureQueries.js';
-
+import { renderPlaygroundPage } from 'https://deno.land/x/oak_graphql@0.6.2/graphql-playground-html/render-playground-html.ts';
+import { makeExecutableSchema } from 'https://deno.land/x/oak_graphql@0.6.2/graphql-tools/schema/makeExecutableSchema.ts';
+import { Cache } from './CacheClassServer.js';
 interface Constructable<T> {
   new (...args: any): T & OakRouter;
 }
@@ -41,7 +38,7 @@ export async function ObsidianRouter<T>({
   typeDefs,
   resolvers,
   context,
-  usePlayground = true,
+  usePlayground = false,
   useCache = true,
   redisPort = 6379,
 }: ObsidianRouterOptions<T>): Promise<T> {
@@ -49,12 +46,14 @@ export async function ObsidianRouter<T>({
   const router = new Router();
 
   const schema = makeExecutableSchema({ typeDefs, resolvers });
+  const cache = new Cache();
 
+  // clear redis cache when restarting the server
+  cache.cacheClear();
   // Create easy-to-use schema from typeDefs once when server boots up //
-  const obsidianSchema = getObsidianSchema(typeDefs);
+  // const obsidianSchema = getObsidianSchema(typeDefs);
 
-  router.obsidianSchema = obsidianSchema;
-
+  // router.obsidianSchema = obsidianSchema;
 
   await router.post(path, async (ctx: any) => {
     const { response, request } = ctx;
@@ -62,22 +61,23 @@ export async function ObsidianRouter<T>({
       try {
         const contextResult = context ? await context(ctx) : undefined;
         const body = await request.body().value;
-
         // Variable to block the normalization of mutations //
         let toNormalize = true;
 
         if (useCache) {
           // Send query off to be destructured and found in Redis if possible //
-          const obsidianReturn = await destructureQueries(body.query, obsidianSchema);
+          const obsidianReturn = await cache.read(body.query);
+          console.log('retrieved from cache', obsidianReturn);
+          // if (obsidianReturn === 'mutation') toNormalize = false;
 
-          if (obsidianReturn === 'mutation') toNormalize = false;
-
-          if (obsidianReturn && obsidianReturn !== 'mutation') {
+          // if (obsidianReturn && obsidianReturn !== 'mutation') {
+          if (obsidianReturn) {
             response.status = 200;
             response.body = obsidianReturn;
             return;
           }
         }
+
         const result = await (graphql as any)(
           schema,
           body.query,
@@ -92,12 +92,11 @@ export async function ObsidianRouter<T>({
         response.body = result;
 
         // Normalize response and store in cache //
-        if (useCache && toNormalize) normalizeResult(body.query, result, obsidianSchema);
-
+        if (useCache && toNormalize && !result.errors)
+          cache.write(body.query, result, false);
         return;
       } catch (error) {
         response.status = 200;
-        console.log('error message', error.message);
         response.body = {
           data: null,
           errors: [
@@ -110,7 +109,7 @@ export async function ObsidianRouter<T>({
       }
     }
   });
-
+  // serve graphql playground
   await router.get(path, async (ctx: any) => {
     const { request, response } = ctx;
     if (usePlayground) {
