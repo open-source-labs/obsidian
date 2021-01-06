@@ -1,185 +1,126 @@
 import React from 'https://dev.jspm.io/react';
-import normalizeResult from '../src/normalize.js';
-import destructureQueries from '../src/destructureQueries.js';
+import Cache from '../src/CacheClassBrowser.js';
+import { insertTypenames } from '../src/insertTypenames.js';
 
-// Context will be used to create a custom provider for the application
 const cacheContext = React.createContext();
 
-// Class constructor for specifying global specifications
-class ObsidianClient {
-  constructor(
-    // Specify default variables if not all variables all passed in
-    {
-      url = '/graphql',
-      globalSessionStore = false,
-      globalDestructure = true,
-    } = {
-      // Creates a default object in case an object is not passed in
-      url: '/graphql',
-      globalSessionStore: false,
-      globalDestructure: true,
-    }
-  ) {
-    this.url = url;
-    this.globalSessionStore = globalSessionStore;
-    this.globalDestructure = globalDestructure;
-  }
-}
-
-// Declaration of custom Obsidian Wrapper
 function ObsidianWrapper(props) {
-  // Global Default Variables, client input defaults to empty object if an instance is not created
-  const {
-    url = '/graphql',
-    globalSessionStore = false,
-    globalDestructure = true,
-  } = props.client || {};
-  const [cache, setCache] = React.useState({});
+  const [cache, setCache] = React.useState(new Cache());
 
-  // Primary function, provides access to fetching and caching capabilities
-  async function gather(query, options = {}) {
-    // Destructuring of optional parameters, default values are defined and may be over written
+  async function query(query, options = {}) {
+    // set the options object default properties if not provided
     const {
-      endpoint = url,
+      endpoint = '/graphql',
+      cacheRead = true,
+      cacheWrite = true,
       pollInterval = null,
-      destructure = globalDestructure,
-      sessionStore = globalSessionStore,
+      wholeQuery = false,
     } = options;
 
-    // Logic if destructuring is enabled
-    if (destructure) {
-      // Specifying the schema sent from the server
-      const obsidianSchema = window.__INITIAL_STATE__.obsidianSchema;
-
-      // Creating deep clone of cache to send to destructure
-      const deepCache = sessionStore
-        ? sessionStorage
-        : Object.assign({}, cache);
-      const obsidianReturn = await destructureQueries(
-        query,
-        obsidianSchema,
-        deepCache
-      );
-
-      // Conditional to check if query is stored in global cache
-      if (obsidianReturn) {
-        // Returning cached response as a promise
-        return new Promise((resolve, reject) => resolve(obsidianReturn));
-      }
-    } else {
-      // If destructuring is not specified, cache or session storage is checked
-      const checkStorage = sessionStore
-        ? JSON.parse(sessionStorage.getItem(query))
-        : cache[query];
-      if (checkStorage) {
-        return new Promise((resolve, reject) => resolve(checkStorage));
-      }
-    }
-
-    // If not found in cache or session storage, query will be executed
-    // Conditional check, if poll interval has been defined
+    // when pollInterval is not null the query will be sent to the server every inputted number of milliseconds
     if (pollInterval) {
-      console.log(
-        `Setting ${
-          pollInterval / 1000
-        } second poll interval for graphql request`
-      );
-      // Initiation of recurring fetch request
-      setInterval(() => {
-        hunt(query, endpoint, destructure, sessionStore);
+      const interval = setInterval(() => {
+        // pass in query() with options instead
+        new Promise((resolve, reject) =>
+          resolve(
+            query(query, { pollInterval: null, cacheRead: false, ...options })
+          )
+        );
       }, pollInterval);
+      return interval;
     }
-    // Expectation of fetch
-    return new Promise((resolve, reject) =>
-      resolve(hunt(query, endpoint, destructure, sessionStore))
-    );
-  }
 
-  // Function to update the global cache with new response data
-  function updateCache(query, response, sessionStore) {
-    // Declaring new object with new data to store in cache
-    const newObj = Object.assign(cache, { [query]: response });
+    // when cacheRead set to true
+    if (cacheRead) {
+      let resObj;
+      // when the developer decides to only utilize whole query for cache
+      if (wholeQuery) resObj = await cache.readWholeQuery(query);
+      else resObj = await cache.read(query);
+      // check if query is stored in cache
+      if (resObj) {
+        // returning cached response as a promise
+        return new Promise((resolve, reject) => resolve(resObj));
+      }
+      // execute graphql fetch request if cache miss
+      return new Promise((resolve, reject) => resolve(hunt(query)));
+      // when cacheRead set to false
+    }
+    if (!cacheRead) {
+      return new Promise((resolve, reject) => resolve(hunt(query)));
+    }
 
-    // React hook to update global cache object or session storage
-    sessionStore
-      ? sessionStorage.setItem(query, JSON.stringify(response))
-      : setCache(newObj);
+    // when cache miss or on intervals
+    async function hunt(query) {
+      if (!wholeQuery) query = insertTypenames(query);
+      try {
+        // send fetch request with query
+        const resJSON = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          body: JSON.stringify({ query }),
+        });
+        const resObj = await resJSON.json();
+        const deepResObj = { ...resObj };
+        // update result in cache if cacheWrite is set to true
+        if (cacheWrite) {
+          if (wholeQuery) cache.writeWholeQuery(query, deepResObj);
+          else cache.write(query, deepResObj);
+        }
+        return resObj;
+      } catch (e) {
+        console.log(e);
+      }
+    }
   }
 
   // Function to clear cache and session storage
   function clearCache() {
-    sessionStorage.clear();
-    setCache({});
+    cache.cacheClear();
   }
-
-  // Function executes mutation and clears cache by default to avoid conflicts
+  // mutate method, refer to mutate.js for more info
   async function mutate(mutation, options = {}) {
-    const { endpoint = '/graphql', clearCache = true } = options;
+    // set the options object default properties if not provided
+    mutation = insertTypenames(mutation);
+    const {
+      endpoint = '/graphql',
+      cacheWrite = true,
+      toDelete = false,
+      update = null,
+    } = options;
+    // for any mutation a request to the server is made
     try {
-      const respJSON = await fetch(endpoint, {
+      const responseObj = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
         },
         body: JSON.stringify({ query: mutation }),
-      });
-      const resp = await respJSON.json();
-      if (clearCache) clearCache();
-      return resp;
-    } catch (e) {
-      console.log(e);
-    }
-  }
-
-  // Executes graphql fetch request
-  async function hunt(query, endpoint, destructure, sessionStore) {
-    try {
-      const respJSON = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({ query }),
-      });
-      const resp = await respJSON.json();
-
-      // Execute function to update the cache with new response
-      if (destructure) {
-        const obsidianSchema = window.__INITIAL_STATE__.obsidianSchema;
-
-        const deepCache = Object.assign({}, cache);
-
-        // Updates all of the normalized results in our cache
-        return new Promise((resolve, reject) => {
-          resolve(
-            normalizeResult(query, resp, obsidianSchema, deepCache).then(
-              (updatedCache) => {
-                for (let key in updatedCache) {
-                  for (let hash in updatedCache[key]) {
-                    updateCache(hash, updatedCache[key][hash], sessionStore);
-                  }
-                }
-                return resp;
-              }
-            )
-          );
-        });
-      } else {
-        // If query is not destructured, entire query and response are cached
-        updateCache(query, resp, sessionStore);
-        return resp;
+      }).then((resp) => resp.json());
+      if (!cacheWrite) return responseObj;
+      // first behaviour when delete cache is set to true
+      if (toDelete) {
+        cache.write(mutation, responseObj, true);
+        return responseObj;
       }
+      // second behaviour if update function provided
+      if (update) {
+        update(cache, responseObj);
+      }
+      // third behaviour just for normal update (no-delete, no update function)
+      cache.write(mutation, responseObj);
+      return responseObj;
     } catch (e) {
       console.log(e);
     }
   }
-
   // Returning Provider React component that allows consuming components to subscribe to context changes
   return (
     <cacheContext.Provider
-      value={{ cache, gather, hunt, mutate, clearCache }}
+      value={{ cache, setCache, query, clearCache, mutate }}
       {...props}
     />
   );
@@ -191,4 +132,4 @@ function useObsidian() {
 }
 
 // Exporting of Custom wrapper and hook to access wrapper cache
-export { ObsidianWrapper, useObsidian, ObsidianClient };
+export { ObsidianWrapper, useObsidian };
