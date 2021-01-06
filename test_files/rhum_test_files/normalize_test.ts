@@ -1,5 +1,5 @@
 import { Rhum } from 'https://deno.land/x/rhum@v1.1.4/mod.ts';
-import normalizeResult from '../../src/newNormalize.js';
+import normalizeResult from '../../src/normalize.js';
 import { test } from '../test_variables/normalize_variables.ts';
 
 Rhum.testPlan('app_test.ts', () => {

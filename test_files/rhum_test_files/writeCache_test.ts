@@ -8,7 +8,7 @@
  *
  */
 
-import { Cache } from '../../src/CacheClass.js';
+import Cache from '../../src/CacheClassBrowser.js';
 import { Rhum } from 'https://deno.land/x/rhum@v1.1.4/mod.ts';
 import { test } from '../test_variables/writeCache_variables.ts';
 

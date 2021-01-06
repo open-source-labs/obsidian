@@ -6,6 +6,7 @@ export const test = {
       actors: ['Actor~1', 'Actor~2', 'Actor~3', 'Actor~4'],
       'movies(input:{genre:ACTION})': ['Movie~1', 'Movie~4', 'Movie~5'],
     },
+    ROOT_MUTATION: {},
     'Movie~1': {
       id: '1',
       title: 'Indiana Jones and the Last Crusade',
