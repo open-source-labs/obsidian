@@ -1,5 +1,5 @@
-import normalizeResult from './newNormalize.js';
-import destructureQueries from './newDestructure.js';
+import normalizeResult from './normalize.js';
+import destructureQueries from './destructure.js';
 
 export default class Cache {
   constructor(

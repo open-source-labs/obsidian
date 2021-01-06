@@ -1,5 +1,5 @@
-import normalizeResult from './newNormalize.js';
-import destructureQueries from './newDestructure.js';
+import normalizeResult from './normalize.js';
+import destructureQueries from './destructure.js';
 import 'https://deno.land/x/dotenv/load.ts';
 import { connect } from 'https://denopkg.com/keroxp/deno-redis/mod.ts';
 
