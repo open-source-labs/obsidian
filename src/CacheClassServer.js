@@ -144,6 +144,7 @@ export class Cache {
   async populateAllHashes(allHashesFromQuery, fields) {
     if (Array.isArray(allHashesFromQuery)) {
       // include the hashname for each hash
+      if (!allHashesFromQuery.length) return [];
       const hyphenIdx = allHashesFromQuery[0].indexOf('~');
       const typeName = allHashesFromQuery[0].slice(0, hyphenIdx);
       return allHashesFromQuery.reduce(async (acc, hash) => {
