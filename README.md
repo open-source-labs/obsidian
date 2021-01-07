@@ -44,20 +44,20 @@ Optimized for use in server-side rendered React apps built with Deno, full stack
 In the server:
 
 ```javascript
-import { ObsidianRouter } from 'https://deno.land/x/obsidian@v1.0.1/mod.ts';
+import { ObsidianRouter } from 'https://deno.land/x/obsidian/mod.ts';
 ```
 
 In the app:
 
 ```javascript
-import { ObsidianWrapper } from 'https://deno.land/x/obsidian@v1.0.1/clientMod.ts';
+import { ObsidianWrapper } from 'https://deno.land/x/obsidian/clientMod.ts';
 ```
 
 ## Creating the Router
 
 ```javascript
-import { Application, Router } from 'https://deno.land/x/oak@v6.0.1/mod.ts';
-import { ObsidianRouter, gql } from 'https://deno.land/x/obsidian@v1.0.1/mod.ts';
+import { Application, Router } from 'https://deno.land/x/oak/mod.ts';
+import { ObsidianRouter, gql } from 'https://deno.land/x/obsidian/mod.ts';
 
 const PORT = 8000;
 
@@ -110,7 +110,7 @@ await app.listen({ port: PORT });
 ## Creating the Wrapper
 
 ```javascript
-import { ObsidianWrapper } from 'https://deno.land/x/obsidian@v1.0.1/clientMod.ts';
+import { ObsidianWrapper } from 'https://deno.land/x/obsidian/clientMod.ts';
 
 const App = () => {
   return (
@@ -124,7 +124,7 @@ const App = () => {
 ## Making a Query
 
 ```javascript
-import { useObsidian, BrowserCache } from 'https://deno.land/x/obsidian@v1.0.1/clientMod.ts';
+import { useObsidian, BrowserCache } from 'https://deno.land/x/obsidian/clientMod.ts';
 
 const MovieApp = () => {
   const { query, cache, setCache } = useObsidian();
@@ -197,8 +197,8 @@ _Lascaux_ Engineers
 [Burak Caliskan](https://github.com/CaliskanBurak)  
 [Matt Meigs](https://github.com/mmeigs)  
 [Travis Frank](https://github.com/TravisFrankMTG/)
-[Lourent Flores](https://github.com/lourentflores)
-[Esma Sahraoui](https://github.com/EsmaShr)
-[Derek Miller](https://github.com/dsymiller)
-[Eric Marcatoma](https://github.com/ericmarc159)
-[Spencer Stockton](https://github.com/tonstock)
+[Lourent Flores](https://github.com/lourentflores)  
+[Esma Sahraoui](https://github.com/EsmaShr)  
+[Derek Miller](https://github.com/dsymiller)  
+[Eric Marcatoma](https://github.com/ericmarc159)  
+[Spencer Stockton](https://github.com/tonstock)  
