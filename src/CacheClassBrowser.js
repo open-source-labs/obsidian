@@ -9,7 +9,7 @@ export default class Cache {
     }
   ) {
     this.storage = initialCache;
-    this.context = window.Deno ? 'server' : 'client';
+    this.context = 'client';
   }
 
   // Main functionality methods
@@ -69,43 +69,16 @@ export default class Cache {
 
   // cache read/write helper methods
   async cacheRead(hash) {
-    // returns value from either object cache or   cache || 'DELETED' || undefined
-    // if (this.context === 'client') {
     return this.storage[hash];
-    // } else {
-    //   let hashedQuery = await redis.get(hash);
-    //   // if cacheRead is a miss
-    //   if (hashedQuery === undefined) return undefined;
-    //   return JSON.parse(hashedQuery);
-    // }
   }
   async cacheWrite(hash, value) {
-    // writes value to object cache or JSON.stringified value to redis cache
-    // if (this.context === 'client') {
     this.storage[hash] = value;
-    // } else {
-    //   // value = JSON.stringify(value);
-    //   // await redis.set(hash, value);
-    // }
   }
   async cacheDelete(hash) {
-    // deletes the hash/value pair on either object cache or redis cache
-    // if (this.context === 'client') {
     delete this.storage[hash];
-    // } else await redis.del(hash);
   }
   async cacheClear() {
-    // erases either object cache or redis cache
-    // if (this.context === 'client') {
     this.storage = { ROOT_QUERY: {}, ROOT_MUTATION: {} };
-    // } else {
-    //   await redis.flushdb((err, successful) => {
-    //     if (err) console.log('redis error', err);
-    //     console.log(successful, 'clear');
-    //   });
-    //   await redis.set('ROOT_QUERY', JSON.stringify({}));
-    //   await redis.set('ROOT_MUTATION', JSON.stringify({}));
-    // }
   }
 
   // functionality to stop polling
@@ -130,6 +103,7 @@ export default class Cache {
   async populateAllHashes(allHashesFromQuery, fields) {
     if (Array.isArray(allHashesFromQuery)) {
       // include the hashname for each hash
+      if (!allHashesFromQuery.length) return [];
       const hyphenIdx = allHashesFromQuery[0].indexOf('~');
       const typeName = allHashesFromQuery[0].slice(0, hyphenIdx);
       return allHashesFromQuery.reduce(async (acc, hash) => {

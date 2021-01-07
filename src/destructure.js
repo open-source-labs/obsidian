@@ -12,7 +12,7 @@
  *
  */
 // this function will destructure a query/mutation operation string into a query/mutation operation object
-function destructureQueries(queryOperationStr) {
+export function destructureQueries(queryOperationStr) {
   // ignore operation name by finding the beginning of the query strings
   const startIndex = queryOperationStr.indexOf('{');
   const queryStrings = queryOperationStr.substring(startIndex).trim();
@@ -29,7 +29,7 @@ function destructureQueries(queryOperationStr) {
 }
 
 // helper function to create an array of individual query strings from an operation string
-function findQueryStrings(queryStrings) {
+export function findQueryStrings(queryStrings) {
   const result = [];
   let queryStartIndex = 1;
   let bracePairs = 0;
@@ -63,7 +63,7 @@ function findQueryStrings(queryStrings) {
   return result;
 }
 // helper function to create a queries object from an array of query strings
-function createQueriesObj(arrayOfQueryStrings, typePropName) {
+export function createQueriesObj(arrayOfQueryStrings, typePropName) {
   // define a new empty result object
   const queriesObj = {};
   queriesObj[typePropName] = [];
@@ -79,7 +79,7 @@ function createQueriesObj(arrayOfQueryStrings, typePropName) {
   return queriesObj;
 }
 // helper function that returns an object with a query string split into multiple parts
-function splitUpQueryStr(queryStr) {
+export function splitUpQueryStr(queryStr) {
   // creates new queryObj
   const queryObj = {};
   let parensPairs = 0;
@@ -114,7 +114,7 @@ function splitUpQueryStr(queryStr) {
 }
 
 // helper function to recursively convert the fields string to a fields object
-function findQueryFields(fieldsStr) {
+export function findQueryFields(fieldsStr) {
   const fieldsObj = {};
   let fieldCache = '';
   let foundEndOfFieldName = false;
@@ -154,7 +154,7 @@ function findQueryFields(fieldsStr) {
 }
 
 // helper function to find the partner closing brace
-function findClosingBrace(str, index) {
+export function findClosingBrace(str, index) {
   let bracePairs = 0;
   // skips ahead 1 index to skip first brace
   for (let i = index + 1; i < str.length; i += 1) {
@@ -165,106 +165,4 @@ function findClosingBrace(str, index) {
   }
 }
 
-// const queryStr = `
-//   query AllMoviesAndGetActorById  {
-//     movies {
-//       __typename
-//       id
-//       title
-//       actors {
-//         __typename
-//         id
-//         firstName
-//       }
-//     }
-//     actor(id: 1) {
-//       __typename
-//       id
-//       firstName
-//       LastName
-//     }
-//   }
-// `;
-// console.log(destructureQueries(queryStr));
-
-// const ALL_ACTION_MOVIES_AND_ALL_ACTORS = `
-//   query AllActionMoviesAndAllActors {
-//     movies(input: { genre: ACTION }) {
-//       __typename
-//       id
-//       title
-//       genre
-//       actors {
-//         id
-//         firstName
-//         lastName
-//       }
-//     }
-//     actors {
-//       id
-//       firstName
-//       lastName
-//       films {
-//         __typename
-//         id
-//         title
-//       }
-//     }
-//   }
-//   }
-// `;
-
-// const result = destructureQueries(ALL_ACTION_MOVIES_AND_ALL_ACTORS);
-
-// const testResult = {
-//   queries: [
-//     {
-//       name: 'movies',
-//       arguments: '(input:{genre:ACTION})',
-//       fields: {
-//         __typename: 'meta',
-//         id: 'scalar',
-//         title: 'scalar',
-//         genre: 'scalar',
-//         actors: { id: 'scalar', firstName: 'scalar', lastName: 'scalar' },
-//       },
-//     },
-//     {
-//       name: 'actors',
-//       arguments: '',
-//       fields: {
-//         id: 'scalar',
-//         firstName: 'scalar',
-//         lastName: 'scalar',
-//         films: {
-//           __typename: 'meta',
-//           id: 'scalar',
-//           title: 'scalar',
-//         },
-//       },
-//     },
-//   ],
-// };
-// const mutation = `
-// mutation DeleteMovie {
-//   deleteMovie(id: 4) {
-//     __typename
-//     id
-//   }
-// }
-// `;
-// const mutationTestResult = {
-//   mutations: [
-//     {
-//       name: 'deleteMovie',
-//       arguments: '(id:4)',
-//       fields: { __typename: 'meta', id: 'scalar' },
-//     },
-//   ],
-// };
-// const mutationResult = destructureQueries(mutation);
-// console.log(
-//   JSON.stringify(mutationTestResult) === JSON.stringify(mutationResult)
-// ); //true
-// console.log(JSON.stringify(testResult) === JSON.stringify(result)); // true
 export default destructureQueries;

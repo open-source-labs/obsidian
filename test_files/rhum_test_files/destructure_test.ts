@@ -6,7 +6,7 @@ import {
   splitUpQueryStr,
   findQueryFields,
   findClosingBrace,
-} from '../../src/newDestructure.js';
+} from '../../src/destructure.js';
 import { test } from '../test_variables/destructure_variables.ts';
 
 Rhum.testPlan('destructure.ts', () => {
@@ -16,7 +16,10 @@ Rhum.testPlan('destructure.ts', () => {
       Rhum.asserts.assertEquals(test.findQueryStringsResultData, results);
     });
     Rhum.testCase('createQueriesObj test', () => {
-      const results = createQueriesObj(test.createQueriesObjTestData);
+      const results = createQueriesObj(
+        test.createQueriesObjTestData,
+        'queries'
+      );
       Rhum.asserts.assertEquals(test.createQueriesObjResultsData, results);
     });
     Rhum.testCase('findQueryFields test', () => {
