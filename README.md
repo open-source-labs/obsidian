@@ -196,7 +196,7 @@ _Lascaux_ Engineers
 [Alonso Garza](https://github.com/Alonsog66)  
 [Burak Caliskan](https://github.com/CaliskanBurak)  
 [Matt Meigs](https://github.com/mmeigs)  
-[Travis Frank](https://github.com/TravisFrankMTG/)
+[Travis Frank](https://github.com/TravisFrankMTG/)  
 [Lourent Flores](https://github.com/lourentflores)  
 [Esma Sahraoui](https://github.com/EsmaShr)  
 [Derek Miller](https://github.com/dsymiller)  
