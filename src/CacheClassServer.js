@@ -84,9 +84,21 @@ export class Cache {
   // cache read/write helper methods
   async cacheRead(hash) {
     // returns value from either object cache or   cache || 'DELETED' || undefined
+
     if (this.context === 'client') {
       return this.storage[hash];
     } else {
+      // logic to replace these storage keys if they have expired
+      if (hash === 'ROOT_QUERY' || hash === 'ROOT_MUTATION') {
+        const hasRootQuery = await redis.get('ROOT_QUERY');
+        if (!hasRootQuery) {
+          await redis.set('ROOT_QUERY', JSON.stringify({}));
+        }
+        const hasRootMutation = await redis.get('ROOT_MUTATION');
+        if (!hasRootMutation) {
+          await redis.set('ROOT_MUTATION', JSON.stringify({}));
+        }
+      }
       let hashedQuery = await redis.get(hash);
       // if cacheRead is a miss
       if (hashedQuery === undefined) return undefined;
@@ -99,7 +111,7 @@ export class Cache {
       this.storage[hash] = value;
     } else {
       value = JSON.stringify(value);
-      await redis.set(hash, value);
+      await redis.setex(hash, 30, value);
     }
   }
   async cacheDelete(hash) {
