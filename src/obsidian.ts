@@ -50,11 +50,7 @@ export async function ObsidianRouter<T>({
 
   // clear redis cache when restarting the server
   cache.cacheClear();
-  // Create easy-to-use schema from typeDefs once when server boots up //
-  // const obsidianSchema = getObsidianSchema(typeDefs);
-
-  // router.obsidianSchema = obsidianSchema;
-
+ 
   await router.post(path, async (ctx: any) => {
     const { response, request } = ctx;
     if (request.hasBody) {
@@ -67,10 +63,7 @@ export async function ObsidianRouter<T>({
         if (useCache) {
           // Send query off to be destructured and found in Redis if possible //
           const obsidianReturn = await cache.read(body.query);
-          console.log('retrieved from cache', obsidianReturn);
-          // if (obsidianReturn === 'mutation') toNormalize = false;
-
-          // if (obsidianReturn && obsidianReturn !== 'mutation') {
+         
           if (obsidianReturn) {
             response.status = 200;
             response.body = obsidianReturn;
