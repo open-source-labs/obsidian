@@ -4,7 +4,7 @@
  * 2. We won't worry about arguments on fields for now
  * 3. We won't worry about aliases for now
  * 4. We won't worry about handling directives for now
- * 5. We wont' worry about fragments for now
+ * 5. We won't worry about fragments for now
  * 6. This function will assume that everything passed in can be a query or a mutation (not both).
  * 7. We won't handle variables for now, but we may very well find we need to
  * 8. We will handle only the meta field "__typename" for now
