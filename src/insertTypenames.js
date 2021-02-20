@@ -1,9 +1,5 @@
 // this function will insert __typename meta fields into a querystring
 export function insertTypenames(queryOperationStr) {
-  console.log(
-    '\n\n🚀 ~ file: insertTypenames.js ~ line 3 ~ insertTypenames ~ queryOperationStr',
-    queryOperationStr
-  );
   let newQueryStr = '';
   // removes extra whitespace
   const queryStr = queryOperationStr.replace(/\s\s+/g, ' ').trim();
@@ -34,19 +30,11 @@ export function insertTypenames(queryOperationStr) {
     // adds current character to newQueryString
     newQueryStr += char;
   }
-  console.log(
-    '\n\n🚀 ~ file: insertTypenames.js ~ line 36 ~ insertTypenames ~ newQueryStr',
-    newQueryStr
-  );
   return newQueryStr;
 }
 
 // helper function to add typenames to fieldsStr where needed
 export function addTypenamesToFieldsStr(fieldsStr) {
-  console.log(
-    '\n\n🚀 ~ file: insertTypenames.js ~ line 40 ~ addTypenamesToFieldsStr ~ fieldsStr',
-    fieldsStr
-  );
   let newFieldsStr = fieldsStr;
   let currentOpenBrace = 0;
   let isAnotherOpenBrace = true;
@@ -73,10 +61,6 @@ export function addTypenamesToFieldsStr(fieldsStr) {
     }
     currentOpenBrace = nextOpenBrace;
   }
-  console.log(
-    '\n\n🚀 ~ file: insertTypenames.js ~ line 69 ~ addTypenamesToFieldsStr ~ newFieldsStr',
-    newFieldsStr
-  );
   return newFieldsStr;
 }
 
