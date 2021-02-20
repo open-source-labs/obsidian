@@ -69,19 +69,11 @@ export default class Cache {
 
   // cache read/write helper methods
   async cacheRead(hash) {
-    // console.log(
-    //   '\n\n🚀 ~ file: CacheClassBrowser.js ~ line 74 ~ Cache ~ cacheRead ~ this.storage',
-    //   this.storage
-    // );
     return this.storage[hash];
   }
 
   async cacheWrite(hash, value) {
     this.storage[hash] = value;
-    // console.log(
-    //   '\n\n🚀 ~ file: CacheClassBrowser.js ~ line 78 ~ Cache ~ cacheWrite ~ this.storage',
-    //   this.storage
-    // );
   }
   async cacheDelete(hash) {
     delete this.storage[hash];
