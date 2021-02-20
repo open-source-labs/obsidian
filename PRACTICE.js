@@ -1,4 +1,3 @@
-
 // // NHAN SPLIT FRAGMENT FROM QUERY
 // function destructureQueriesWithFragments(queryOperationStr) {
 //   // create a copy of the input to mutate
@@ -360,11 +359,37 @@ const FRAGMENT_RESULT2 = {
   ],
 };
 
+const FRAGMENT_TEST3 = `query{
+  movies(input: { genre: ACTION }) {
+    __typename
+    id
+    ...titleAndGenre
+    actors {
+      id
+      films {
+        __typename
+        id
+        title
+      }
+      ...firstAndLast
+    }
+  }
+}
+fragment titleAndGenre on asdfsdf {
+  title
+  genre
+ }
+
+fragment firstAndLast on asdsfsd {
+  firstName
+  lastName
+ }`;
+
 // NHAN & CHRISTY COMPLETE FRAGMENT FUNCTION
 function destructureQueriesWithFragments(queryOperationStr) {
   // create a copy of the input to mutate
   let queryCopy = queryOperationStr;
-  console.log("ORIGINAL QUERY STRING: ", queryOperationStr)
+  console.log('ORIGINAL QUERY STRING: ', queryOperationStr);
   // declare an array to hold all fragments
   const fragments = [];
   // helper function to separate fragment from query/mutation
@@ -391,12 +416,18 @@ function destructureQueriesWithFragments(queryOperationStr) {
         break;
       }
     }
+
     let fragment = queryCopy.slice(startFragIndex, endFragCurly + 1);
+
     fragments.push(fragment);
     let newStr = queryCopy.replace(fragment, '');
+
+  
+
     return newStr;
   };
   // keep calling helper function as long as 'fragment' is found in the string
+  //TODO indices for one time loop instead of recursion
   while (queryCopy.indexOf('fragment') !== -1) {
     queryCopy = separateFragments(queryCopy);
   }
@@ -408,8 +439,9 @@ function destructureQueriesWithFragments(queryOperationStr) {
   //   fragArray: fragments,
   //   strippedString: queryCopy,
   // };
-  console.log('queryCopy', queryCopy)
-  console.log('FRAGMENTS', fragments)
+  console.log('queryCopy', queryCopy);
+  console.log('FRAGMENTS', fragments);
+  
   const fragmentObj = {};
 
   //! TODO: OPTIMIZE, SHOULD NOT NEED TO ITERATE THROUGH WHOLE QUERY STRING TO FIND THE ONE WORD NAME OF THE FRAGMENT. MAYBE WHILE STRING INDEX< INDEX OF '{' ?
@@ -417,7 +449,7 @@ function destructureQueriesWithFragments(queryOperationStr) {
   fragments.forEach((fragment) => {
     let index = fragment.indexOf('{');
     let words = fragment.split(' ');
-    let fragmentFields = fragment.slice(index, str.length);
+    let fragmentFields = fragment.slice(index + 1, str.length - 1);
 
     fragmentObj[words[1]] = fragmentFields;
   });
@@ -428,19 +460,14 @@ function destructureQueriesWithFragments(queryOperationStr) {
     queryCopy = queryCopy.replaceAll(`...${fragment}`, fragmentObj[fragment]);
   });
 
-  // queryCopy = queryCopy.replaceAll(`...${fragmentObjKeys[1]}`, fragmentObj[fragmentObjKeys[1]]);
-
-  // fragmentObjKeys.forEach((fragment) => {
-  //   // console.log("FRAGMENT: ", `...${fragment}`)
-  //   queryCopy = queryCopy.replace(`...${fragment}`, fragmentObj[fragment]);
-  //   console.log('NEW STRING', queryCopy);
-  // });
 
   console.log('NEW STRING', queryCopy);
   // console.log('DESTRUCTURE QUERYCOPY', destructureQueries(queryCopy));
 }
 
 // console.log(destructureQueriesWithFragments(str));
-// console.log(destructureQueriesWithFragments(FRAGMENT_TEST));
-console.log(destructureQueriesWithFragments(FRAGMENT_TEST2));
+console.log(destructureQueriesWithFragments(FRAGMENT_TEST3));
+// console.log(destructureQueriesWithFragments(FRAGMENT_TEST2));
 // console.log(FRAGMENT_TEST2.replaceAll('firstAndLast', "lkkdjfas;ldkfasdjf;alsj"))
+
+ 

@@ -13,6 +13,12 @@
  */
 // this function will destructure a query/mutation operation string into a query/mutation operation object
 export function destructureQueries(queryOperationStr) {
+  // check if query has fragments
+  if (queryOperationStr.indexOf('fragment') !== -1) {
+    // reassigns query string to replace fragment references with fragment fields 
+    queryOperationStr = destructureQueriesWithFragments(queryOperationStr)
+  }
+
   // ignore operation name by finding the beginning of the query strings
   const startIndex = queryOperationStr.indexOf('{');
   const queryStrings = queryOperationStr.substring(startIndex).trim();
@@ -164,5 +170,87 @@ export function findClosingBrace(str, index) {
     if (char === '}') bracePairs -= 1;
   }
 }
+
+// helper function to find fragments
+export function destructureQueriesWithFragments(queryOperationStr) {
+  // create a copy of the input to mutate
+  let queryCopy = queryOperationStr;
+  console.log('ORIGINAL QUERY STRING: ', queryOperationStr);
+  // declare an array to hold all fragments
+  const fragments = [];
+  // helper function to separate fragment from query/mutation
+  const separateFragments = (queryCopy) => {
+    let startFragIndex = queryCopy.indexOf('fragment');
+    let startFragCurly = queryCopy.indexOf('{', startFragIndex);
+    let endFragCurly;
+    const stack = ['{'];
+    const curlsAndParens = {
+      '}': '{',
+      ')': '(',
+    };
+    for (let i = startFragCurly + 1; i < queryCopy.length; i++) {
+      let char = queryCopy[i];
+      if (char === '{' || char === '(') {
+        stack.push(char);
+      }
+      if (char === '}' || char === ')') {
+        let topOfStack = stack[stack.length - 1];
+        if (topOfStack === curlsAndParens[char]) stack.pop();
+      }
+      if (!stack[0]) {
+        endFragCurly = i;
+        break;
+      }
+    }
+
+    let fragment = queryCopy.slice(startFragIndex, endFragCurly + 1);
+
+    fragments.push(fragment);
+    let newStr = queryCopy.replace(fragment, '');
+
+  
+
+    return newStr;
+  };
+  // keep calling helper function as long as 'fragment' is found in the string
+  //TODO indices for one time loop instead of recursion
+  while (queryCopy.indexOf('fragment') !== -1) {
+    queryCopy = separateFragments(queryCopy);
+  }
+
+  queryCopy = queryCopy.trim();
+  // return an object with an array of fragment strings, as well as the query/mutation
+  // separated from the fragments
+  // const result = {
+  //   fragArray: fragments,
+  //   strippedString: queryCopy,
+  // };
+  console.log('queryCopy', queryCopy);
+  console.log('FRAGMENTS', fragments);
+  
+  const fragmentObj = {};
+
+  //! TODO: OPTIMIZE, SHOULD NOT NEED TO ITERATE THROUGH WHOLE QUERY STRING TO FIND THE ONE WORD NAME OF THE FRAGMENT. MAYBE WHILE STRING INDEX< INDEX OF '{' ?
+  // store each fragment name with its corresponding fields in fragmentObj
+  fragments.forEach((fragment) => {
+    let index = fragment.indexOf('{');
+    let words = fragment.split(' ');
+    let fragmentFields = fragment.slice(index + 1, str.length - 1);
+
+    fragmentObj[words[1]] = fragmentFields;
+  });
+
+  const fragmentObjKeys = Object.keys(fragmentObj);
+
+  fragmentObjKeys.forEach((fragment) => {
+    queryCopy = queryCopy.replaceAll(`...${fragment}`, fragmentObj[fragment]);
+  });
+
+
+  console.log('NEW STRING', queryCopy);
+  // console.log('DESTRUCTURE QUERYCOPY', destructureQueries(queryCopy));
+}
+
+
 
 export default destructureQueries;
