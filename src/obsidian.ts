@@ -63,7 +63,7 @@ export async function ObsidianRouter<T>({
         if (useCache) {
           // Send query off to be destructured and found in Redis if possible //
           const obsidianReturn = await cache.read(body.query);
-         
+          console.log("retrieved from cache", obsidianReturn);
           if (obsidianReturn) {
             response.status = 200;
             response.body = obsidianReturn;

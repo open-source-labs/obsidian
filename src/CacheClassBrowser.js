@@ -71,6 +71,7 @@ export default class Cache {
   async cacheRead(hash) {
     return this.storage[hash];
   }
+
   async cacheWrite(hash, value) {
     this.storage[hash] = value;
   }
