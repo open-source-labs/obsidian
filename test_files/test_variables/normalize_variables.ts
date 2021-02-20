@@ -161,8 +161,8 @@ export const test = {
   },
   resultObj1: {
     ROOT_QUERY: {
-      'movies(input:{genre:ACTION})': ['Movie~1', 'Movie~4'],
-      actors: ['Actor~1', 'Actor~2', 'Actor~3', 'Actor~4', 'Actor~5'],
+      'movies(input:{genre:ACTION})': ['Movie~1', 'Movie~4'],//"hero(episode:EMPIRE)": ["Hero~1"]              OR      /"hero": ["Hero~1", "Hero~2"]  
+      actors: ['Actor~1', 'Actor~2', 'Actor~3', 'Actor~4', 'Actor~5'],//"hero(episode:JEDI)": ["Hero~2"]
     },
     'Movie~1': {
       id: '1',
@@ -305,5 +305,57 @@ export const test = {
       firstName: 'Gary',
       favHobby: 'climbing',
     },
+  },
+  aliasTestQueryObj:{
+    queries: [
+      {
+        __typename: 'meta',
+        name: 'hero',
+        alias: 'empireHero',
+        arguments: '(episode:EMPIRE)',
+        fields: { 
+          __typename: 'meta',
+          name: 'scalar', 
+          id: 'scalar'}
+      },
+      {
+        __typename: 'meta',
+        name: 'hero',
+        alias: 'jediHero',
+        arguments: '(episode:JEDI)',
+        fields: { 
+          __typename: 'meta',
+          name: 'scalar', 
+          id: 'scalar'}
+      }
+    ]
+  },
+  aliasTestResult:{
+    data: {
+      empireHero: {
+        __typename: 'Hero',
+        id:'1',
+        name: 'Luke Skywalker'
+      },
+      jediHero: {
+        __typename: 'Hero',
+        id:'2',
+        name: "R2-D2",
+      }
+    }
+  },
+  aliasTestRootHash: {
+    "Hero~1": {
+      id: "1",
+      name: "Luke Skywalker",
+    },
+    "Hero~2": {
+      id: "2",
+      name: "R2-D2",
+    },
+    ROOT_QUERY: {
+      "hero(episode:EMPIRE)": "Hero~1",
+      "hero(episode:JEDI)": "Hero~2",
+    }
   },
 };

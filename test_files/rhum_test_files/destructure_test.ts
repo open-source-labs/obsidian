@@ -23,7 +23,9 @@ Rhum.testPlan('destructure.ts', () => {
       Rhum.asserts.assertEquals(test.createQueriesObjResultsData, results);
     });
     Rhum.testCase('findQueryFields test', () => {
+      console.log(test.findQueryFieldsTestData);
       const results = findQueryFields(test.findQueryFieldsTestData);
+      console.log(results);
       Rhum.asserts.assertEquals(test.findQueryFieldsResultData, results);
     });
     Rhum.testCase('findClosingBrace test', () => {
@@ -46,6 +48,13 @@ Rhum.testPlan('destructure.ts', () => {
     Rhum.testCase('destructure multi query - input / non input', () => {
       const result = destructureQueries(test.ALL_ACTION_MOVIES_AND_ALL_ACTORS);
       Rhum.asserts.assertEquals(test.allActionActorsTestResult, result);
+    });
+  });
+
+  Rhum.testSuite('destructure alias query tests', () => {
+    Rhum.testCase('destructure multi alias query - input / non input', () => {
+      const result = destructureQueries(test.newAliasTestQuery);
+      Rhum.asserts.assertEquals(test.newAliasTestResult, result);
     });
   });
 });
