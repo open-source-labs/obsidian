@@ -62,6 +62,7 @@ export function findQueryStrings(queryStrings) {
   }
   return result;
 }
+
 // helper function to create a queries object from an array of query strings
 export function createQueriesObj(arrayOfQueryStrings, typePropName) {
   // define a new empty result object
@@ -76,6 +77,7 @@ export function createQueriesObj(arrayOfQueryStrings, typePropName) {
     // push the finished query object into the queries/mutations array on the result object
     queriesObj[typePropName].push(queryObj);
   });
+
   return queriesObj;
 }
 // helper function that returns an object with a query string split into multiple parts
@@ -88,12 +90,35 @@ export function splitUpQueryStr(queryStr) {
   // checks to see if there are no arguments
   if (argsStartIndex === -1 || firstBraceIndex < argsStartIndex) {
     queryObj.name = queryStr.substring(0, firstBraceIndex).trim();
+    // // Checks if there is an alias
+    if (queryObj.name.includes(':')) {
+      // sets index of alias marker :
+      const aliasIndex = queryObj.name.indexOf(':');
+      // sets alias
+      queryObj.alias = queryObj.name.substring(0, aliasIndex).trim();
+      // shortens name to exclude alias
+      queryObj.name = queryObj.name
+        .substring(aliasIndex + 1, firstBraceIndex)
+        .trim();
+    }
     queryObj.arguments = '';
     queryObj.fields = queryStr.substring(firstBraceIndex);
+
     return queryObj;
   }
   // finds the query name string and assigns it
   queryObj.name = queryStr.substring(0, argsStartIndex).trim();
+  // Checks if there is an alias
+  if (queryObj.name.includes(':')) {
+    // sets index of alias marker :
+    const aliasIndex = queryObj.name.indexOf(':');
+    // sets alias
+    queryObj.alias = queryObj.name.substring(0, aliasIndex).trim();
+    // shortens name to exclude alias
+    queryObj.name = queryObj.name
+      .substring(aliasIndex + 1, firstBraceIndex)
+      .trim();
+  }
   // begin iterating through the queryString at the beginning of the arguments
   for (let i = argsStartIndex; i < queryStr.length; i += 1) {
     const char = queryStr[i];
@@ -108,6 +133,7 @@ export function splitUpQueryStr(queryStr) {
       if (argsString === '()') argsString = '';
       queryObj.arguments = argsString;
       queryObj.fields = queryStr.substring(i + 1).trim();
+
       return queryObj;
     }
   }
@@ -142,6 +168,7 @@ export function findQueryFields(fieldsStr) {
     // finding a non-whitespace character after the end of fieldname indicates the field is scalar or meta
     if (char.match(/\S/) && foundEndOfFieldName) {
       fieldsObj[fieldCache] = fieldCache === '__typename' ? 'meta' : 'scalar';
+
       fieldCache = '';
       foundEndOfFieldName = false;
     }
@@ -150,6 +177,7 @@ export function findQueryFields(fieldsStr) {
     // adds current non-whitespace character in fieldCache
     if (char.match(/\S/)) fieldCache += char;
   }
+
   return fieldsObj;
 }
 

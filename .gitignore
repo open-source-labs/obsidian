@@ -1,3 +1,5 @@
 dump.rdb
 .DS_Store
 .env
+server.tsx
+server2.tsx

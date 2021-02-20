@@ -47,7 +47,7 @@ export const test = {
         }
       }
     }
-    }
+    
       `,
 
   allActorsTestResult: {
@@ -218,4 +218,70 @@ export const test = {
   }`,
 
   findClosingBraceResultData: 90,
+
+  findTwoActorsAlias: `
+  query TwoActors {
+    harrisonActor: actors(id: 00) {
+            firstName
+        lastName
+        films {
+          __typename
+          id
+          title
+        }
+    }
+    hammelActor: actors(id: 01) {
+            firstName
+        lastName
+        films {
+          __typename
+          id
+          title
+        }
+    }
+  }
+  `,
+  findTwoActorsAliasTestResult: {
+    queries: [
+      {
+        name: "actors",
+        alias: "harrisonActor",
+        arguments: "(id:00)",
+        fields: { firstName: "scalar", lastName: "scalar", films: { __typename: 'meta', id: 'scalar', title: 'scalar' } }
+      },
+      {
+        name: "actors",
+        alias: "hammelActor",
+        arguments: "(id:01)",
+        fields: { firstName: "scalar", lastName: "scalar", films: { __typename: 'meta', id: 'scalar', title: 'scalar' } }
+      }
+    ]
+  },
+
+  newAliasTestQuery: `
+  query twoHeros {
+    empireHero: hero(episode: EMPIRE) {
+      name
+    }
+    jediHero: hero(episode: JEDI) {
+      name
+    }
+  }`,
+
+  newAliasTestResult:{
+    queries: [
+      {
+        name: "hero",
+        alias: "empireHero",
+        arguments: "(episode:EMPIRE)",
+        fields: { name: "scalar" }
+      },
+      {
+        name: "hero",
+        alias: "jediHero",
+        arguments: "(episode:JEDI)",
+        fields: { name: "scalar" }
+      }
+    ]
+  }
 };

@@ -12,6 +12,15 @@ Rhum.testPlan('normalize.ts', () => {
       }
     );
   });
+  Rhum.testSuite('normalizeAliasTestSuite', () => {
+    Rhum.testCase(
+      'expected result to equal object with ROOT_QUERY and hash:value pairs',
+      async () => {
+        const result = normalizeResult(test.aliasTestQueryObj, test.aliasTestResult);
+        Rhum.asserts.assertEquals(result, test.aliasTestRootHash);
+      }
+    );
+  });
 });
 
 Rhum.run();

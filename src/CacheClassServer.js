@@ -44,12 +44,14 @@ export class Cache {
       if (rootQuery[queryHash]) {
         // get the hashs to populate from the existent query in the cache
         const arrayHashes = rootQuery[queryHash];
+        // Determines responseObject property labels - use alias if applicable, otherwise use name
+        const respObjProp = queries[query].alias ?? queries[query].name;
         // invoke populateAllHashes and add data objects to the response object for each input query
-        responseObject[queries[query].name] = await this.populateAllHashes(
+        responseObject[respObjProp] = await this.populateAllHashes(
           arrayHashes,
           queries[query].fields
         );
-        if (!responseObject[queries[query].name]) return undefined;
+        if (!responseObject[respObjProp]) return undefined;
 
         // no match with ROOT_QUERY return null or ...
       } else {
@@ -84,7 +86,6 @@ export class Cache {
   // cache read/write helper methods
   async cacheRead(hash) {
     // returns value from either object cache or   cache || 'DELETED' || undefined
-
     if (this.context === 'client') {
       return this.storage[hash];
     } else {
@@ -112,6 +113,7 @@ export class Cache {
     } else {
       value = JSON.stringify(value);
       await redis.setex(hash, 30, value);
+      let hashedQuery = await redis.get(hash);
     }
   }
   async cacheDelete(hash) {

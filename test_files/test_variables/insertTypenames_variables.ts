@@ -71,4 +71,16 @@ export const test = {
     '{ __typename id title genre actors { id firstName lastName } }',
   fieldsStrOutput:
     '{ __typename id title genre actors { __typename  id firstName lastName } }',
+
+  newAliasTestQuery: `
+    query twoHeros {
+      empireHero: hero(episode: EMPIRE) {
+        name
+      }
+      jediHero: hero(episode: JEDI) {
+        name
+      }
+    }`,
+
+  newAliasTestResult: `query twoHeros { empireHero: hero(episode: EMPIRE) { __typename  name } jediHero: hero(episode: JEDI) { __typename  name } }`,
 };

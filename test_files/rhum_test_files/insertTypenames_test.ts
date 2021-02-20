@@ -56,5 +56,15 @@ Rhum.testPlan('insertTypenames.js', () => {
       }
     );
   });
+
+  Rhum.testSuite('insertTypenames()', () => {
+    Rhum.testCase(
+      'should add __typenames meta field to graphql alias query',
+      () => {
+        const result = insertTypenames(test.newAliasTestQuery);
+        Rhum.asserts.assertEquals(result, test.newAliasTestResult);
+      }
+    );
+  });
 });
 Rhum.run();
