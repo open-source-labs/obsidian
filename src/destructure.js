@@ -15,8 +15,12 @@
 export function destructureQueries(queryOperationStr) {
   // check if query has fragments
   if (queryOperationStr.indexOf('fragment') !== -1) {
-    // reassigns query string to replace fragment references with fragment fields 
-    queryOperationStr = destructureQueriesWithFragments(queryOperationStr)
+    // reassigns query string to replace fragment references with fragment fields
+    console.log('BEFORE', queryOperationStr);
+
+    queryOperationStr = destructureQueriesWithFragments(queryOperationStr);
+    console.log('**********************************************');
+    console.log('AFTER', queryOperationStr);
   }
 
   // ignore operation name by finding the beginning of the query strings
@@ -31,6 +35,11 @@ export function destructureQueries(queryOperationStr) {
       : 'queries';
   // create a queries object from array of query strings
   const queriesObj = createQueriesObj(arrayOfQueryStrings, typePropName);
+  console.log(
+    'FINAL QUERIES OBJECT------------------------------------>',
+    queriesObj
+  );
+  console.log("ACTORS",queriesObj.queries[0].fields.actors)
   return queriesObj;
 }
 
@@ -208,8 +217,6 @@ export function destructureQueriesWithFragments(queryOperationStr) {
     fragments.push(fragment);
     let newStr = queryCopy.replace(fragment, '');
 
-  
-
     return newStr;
   };
   // keep calling helper function as long as 'fragment' is found in the string
@@ -227,7 +234,7 @@ export function destructureQueriesWithFragments(queryOperationStr) {
   // };
   console.log('queryCopy', queryCopy);
   console.log('FRAGMENTS', fragments);
-  
+
   const fragmentObj = {};
 
   //! TODO: OPTIMIZE, SHOULD NOT NEED TO ITERATE THROUGH WHOLE QUERY STRING TO FIND THE ONE WORD NAME OF THE FRAGMENT. MAYBE WHILE STRING INDEX< INDEX OF '{' ?
@@ -235,7 +242,7 @@ export function destructureQueriesWithFragments(queryOperationStr) {
   fragments.forEach((fragment) => {
     let index = fragment.indexOf('{');
     let words = fragment.split(' ');
-    let fragmentFields = fragment.slice(index + 1, str.length - 1);
+    let fragmentFields = fragment.slice(index + 1, fragment.length - 1);
 
     fragmentObj[words[1]] = fragmentFields;
   });
@@ -246,11 +253,9 @@ export function destructureQueriesWithFragments(queryOperationStr) {
     queryCopy = queryCopy.replaceAll(`...${fragment}`, fragmentObj[fragment]);
   });
 
-
   console.log('NEW STRING', queryCopy);
   // console.log('DESTRUCTURE QUERYCOPY', destructureQueries(queryCopy));
+  return queryCopy;
 }
-
-
 
 export default destructureQueries;
