@@ -223,24 +223,9 @@ export const test = {
   query TwoActors {
     harrisonActor: actors(id: 00) {
             firstName
-        lastName
-        films {
-          __typename
-          id
-          title
-        }
-    }
-    hammelActor: actors(id: 01) {
-            firstName
-        lastName
-        films {
-          __typename
-          id
-          title
-        }
-    }
-  }
-  `,
+        lastName`,
+        
+
   findTwoActorsAliasTestResult: {
     queries: [
       {
@@ -283,5 +268,129 @@ export const test = {
         fields: { name: "scalar" }
       }
     ]
+        },
+
+fragmentTestData: `query {
+          movies(input: { genre: ACTION }) {
+            __typename
+            id
+          ...titleAndGenre
+         }
+            actors {
+              id
+              films {
+                __typename
+                id
+                title
+              }   
+          ...firstAndLast
+         }
+        }
+        fragment titleAndGenre on Movie {
+          title
+          genre
+        }
+        fragment firstAndLast on Actors {
+          firstName
+          lastName
+        }` ,
+
+  fragmentResultData:  {
+    queries: [
+      {
+        name: "movies",
+        arguments: "(input:{genre:ACTION})",
+        fields: { __typename: "meta", id: "scalar", title: "scalar", genre: "scalar" }
+      },
+      {
+        name: "actors",
+        arguments: "",
+        fields: { id: "scalar", films: { __typename: 'meta', id: 'scalar', title: 'scalar' }, firstName: "scalar", lastName: "scalar" }
+      }
+    ]
+  },
+
+  fragmentTestData2: `query {
+    movies(input: { genre: ACTION }) {
+      __typename
+      id
+      actors {
+        id
+        films {
+          __typename
+          id
+          title
+        }   
+    ...firstAndLast
+   }
+    ...titleAndGenre
+   }
+      
+  }
+  fragment titleAndGenre on Movie {
+    title
+    genre
+  }
+  fragment firstAndLast on Actors {
+    firstName
+    lastName
+  }` ,
+
+  fragmentResultData2:  {
+    queries: [
+      {
+        name: "movies",
+        arguments: "(input:{genre:ACTION})",
+        fields: { __typename: "meta", id: "scalar", title: "scalar", genre: "scalar" , actors:{
+          id: "scalar",
+          films: { __typename: "meta", id: "scalar", title: "scalar" },
+          firstName: "scalar",
+          lastName: "scalar"
+        }}
+      },     
+    ]
+  },
+
+  fragmentTestData3:`
+  query AllActionMovies {
+    movies(input: { genre: ACTION }) {
+      __typename
+      id
+      ...titleAndGenre
+      actors {
+        id
+        ...firstAndLast
+      }
+    }  
+  }
+  fragment titleAndGenre on Movie {
+    title
+    genre
+  }
+  fragment firstAndLast on Actors {
+    firstName
+    lastName
+  }`,
+  
+  fragmentResultData3: {
+    queries: [
+      {
+        name: 'movies',
+        arguments: '(input:{genre:ACTION})',
+        fields: {
+          __typename: 'meta',
+          id: 'scalar',
+          title: 'scalar',
+          genre: 'scalar',
+          actors: {
+            id: 'scalar',
+            firstName: 'scalar',
+            lastName: 'scalar',
+          },
+        },
+      },
+    ],
   }
 };
+
+
