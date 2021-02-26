@@ -172,28 +172,29 @@ export const test = {
   `,
   aliasQueryString: `
 {
-  empireHero: getHero(episode: "empire") {
-      __typename
-    name
-    id
-  }
   jediHero: getHero(episode: "jedi") {
       __typename
       id
 name
-}
+}  empireHero: getHero(episode: "empire") {
+      __typename
+    name
+    id
+  }
+
 }`,
 aliasResObj:{
   data: {
       empireHero: {
           __typename: "Hero",
+          id: 1,
           name: "Luke Skywalker",
-          id: 1
+
       },
       jediHero: {
           __typename: "Hero",
           id: 2,
-          name: "R2-D2"
+          name: "R2-D2",
       }
   }
 },
