@@ -50,8 +50,9 @@ export async function ObsidianRouter<T>({
 
   // clear redis cache when restarting the server
   cache.cacheClear();
- 
+
   await router.post(path, async (ctx: any) => {
+    var t0 = performance.now();
     const { response, request } = ctx;
     if (request.hasBody) {
       try {
@@ -63,10 +64,16 @@ export async function ObsidianRouter<T>({
         if (useCache) {
           // Send query off to be destructured and found in Redis if possible //
           const obsidianReturn = await cache.read(body.query);
-          console.log("retrieved from cache", obsidianReturn);
+          console.log('retrieved from cache', obsidianReturn);
           if (obsidianReturn) {
             response.status = 200;
             response.body = obsidianReturn;
+            var t1 = performance.now();
+            console.log(
+              'Obsidian retrieved data from cache and took ' +
+                (t1 - t0) +
+                ' milliseconds.'
+            );
             return;
           }
         }
@@ -87,6 +94,10 @@ export async function ObsidianRouter<T>({
         // Normalize response and store in cache //
         if (useCache && toNormalize && !result.errors)
           cache.write(body.query, result, false);
+        var t1 = performance.now();
+        console.log(
+          'Obsidian received new data and took ' + (t1 - t0) + ' milliseconds.'
+        );
         return;
       } catch (error) {
         response.status = 200;
