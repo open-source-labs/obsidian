@@ -13,6 +13,7 @@
  */
 // this function will destructure a query/mutation operation string into a query/mutation operation object
 export function destructureQueries(queryOperationStr) {
+  queryOperationStr = queryOperationStr.replace(/,/gm, '');
   // check if query has fragments
   if (queryOperationStr.indexOf('fragment') !== -1) {
     // reassigns query string to replace fragment references with fragment fields

@@ -30,12 +30,14 @@ export default class Cache {
       if (rootQuery[queryHash]) {
         // get the hashs to populate from the existent query in the cache
         const arrayHashes = rootQuery[queryHash];
+        // Determines responseObject property labels - use alias if applicable, otherwise use name
+        const respObjProp = queries[query].alias ?? queries[query].name;
         // invoke populateAllHashes and add data objects to the response object for each input query
-        responseObject[queries[query].name] = await this.populateAllHashes(
+        responseObject[respObjProp] = await this.populateAllHashes(
           arrayHashes,
           queries[query].fields
         );
-        if (!responseObject[queries[query].name]) return undefined;
+        if (!responseObject[respObjProp]) return undefined;
 
         // no match with ROOT_QUERY return null or ...
       } else {
@@ -60,7 +62,6 @@ export default class Cache {
         await this.cacheWrite(hash, resFromNormalize[hash]);
       }
     }
-    return;
   }
 
   gc() {
@@ -75,9 +76,11 @@ export default class Cache {
   async cacheWrite(hash, value) {
     this.storage[hash] = value;
   }
+
   async cacheDelete(hash) {
     delete this.storage[hash];
   }
+
   async cacheClear() {
     this.storage = { ROOT_QUERY: {}, ROOT_MUTATION: {} };
   }
@@ -88,16 +91,16 @@ export default class Cache {
   }
 
   writeWholeQuery(queryStr, respObj) {
-    let hash = queryStr.replace(/\s/g, '');
+    const hash = queryStr.replace(/\s/g, '');
     this.cacheWrite(ROOT_QUERY[hash], respObj);
     return respObj;
   }
 
   readWholeQuery(queryStr) {
-    let hash = queryStr.replace(/\s/g, '');
+    const hash = queryStr.replace(/\s/g, '');
     const root = this.cacheRead('ROOT_QUERY');
     if (root[hash]) return { data: root[hash] };
-    else return undefined;
+    return undefined;
   }
 
   // specialized helper methods
@@ -117,7 +120,8 @@ export default class Cache {
           // for each field in the fields input query, add the corresponding value from the cache if the field is not another array of hashs
           if (readVal[field] === undefined && field !== '__typename') {
             return undefined;
-          } else if (typeof fields[field] !== 'object') {
+          }
+          if (typeof fields[field] !== 'object') {
             // add the typename for the type
             if (field === '__typename') {
               dataObj[field] = typeName;
@@ -149,7 +153,8 @@ export default class Cache {
         if (readVal[field] === 'DELETED') continue;
         if (!readVal[field] && field !== '__typename') {
           return undefined;
-        } else if (typeof fields[field] !== 'object') {
+        }
+        if (typeof fields[field] !== 'object') {
           // add the typename for the type
           if (field === '__typename') {
             dataObj[field] = typeName;
