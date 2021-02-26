@@ -170,4 +170,46 @@ export const test = {
    }
   }
   `,
+  aliasQueryString: `
+{
+  empireHero: getHero(episode: "empire") {
+      __typename
+    name
+    id
+  }
+  jediHero: getHero(episode: "jedi") {
+      __typename
+      id
+name
+}
+}`,
+aliasResObj:{
+  data: {
+      empireHero: {
+          __typename: "Hero",
+          name: "Luke Skywalker",
+          id: 1
+      },
+      jediHero: {
+          __typename: "Hero",
+          id: 2,
+          name: "R2-D2"
+      }
+  }
+},
+  aliasCache: {
+    ROOT_QUERY: {
+      'getHero(episode:"empire")': "Hero~1",
+      'getHero(episode:"jedi")': "Hero~2",
+    },
+    ROOT_MUTATION: {},
+    "Hero~1": {
+      id: 1,
+      name: "Luke Skywalker",
+    },
+    "Hero~2": {
+      id: 2,
+      name: "R2-D2",
+    },
+  },
 };
