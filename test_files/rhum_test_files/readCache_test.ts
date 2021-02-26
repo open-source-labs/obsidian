@@ -48,6 +48,16 @@ Rhum.testPlan('read method on Cache class', () => {
         Rhum.asserts.assertEquals(result, test.multipleQueriesResObj);
       }
     );
+    Rhum.testCase(
+      "should accept alias queries",
+      async () => {
+        const cache = new Cache(test.aliasCache);
+        // await console.log('cache', cache)
+        const result = await cache.read(test.aliasQueryString);
+        // await console.log('result', result)
+        Rhum.asserts.assertEquals(result, test.aliasResObj);
+      }
+    );
   });
 
   Rhum.testSuite('populateAllHashes()', () => {
