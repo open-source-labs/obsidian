@@ -112,7 +112,7 @@ export class Cache {
       this.storage[hash] = value;
     } else {
       value = JSON.stringify(value);
-      await redis.setex(hash, 30, value);
+      await redis.setex(hash, 6000, value);
       let hashedQuery = await redis.get(hash);
     }
   }
@@ -164,6 +164,8 @@ export class Cache {
       return allHashesFromQuery.reduce(async (acc, hash) => {
         // for each hash from the input query, build the response object
         const readVal = await this.cacheRead(hash);
+        // return undefine if hash has been garbage collected
+        if (readVal === undefined) return undefined
         if (readVal === 'DELETED') return acc;
         const dataObj = {};
         for (const field in fields) {
@@ -185,11 +187,18 @@ export class Cache {
             if (dataObj[field] === undefined) return undefined;
           }
         }
-        // acc is an array of response object for each hash
-        const resolvedProm = await Promise.resolve(acc);
-        resolvedProm.push(dataObj);
-        return resolvedProm;
+        // acc is an array within a Response object for each hash
+        try{
+          const resolvedProm = await Promise.resolve(acc)
+          resolvedProm.push(dataObj);
+          return resolvedProm;
+        } catch (error){
+          return undefined
+        }
+      
       }, []);
+
+      
     }
     // Case where allHashesFromQuery has only one hash and is not an array but a single string
     const hash = allHashesFromQuery;
