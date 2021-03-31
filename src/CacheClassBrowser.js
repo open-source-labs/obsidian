@@ -44,7 +44,9 @@ export default class Cache {
         return undefined;
       }
     }
-    return { data: responseObject };
+    return {
+      data: responseObject
+    };
   }
 
   async write(queryStr, respObj, deleteFlag) {
@@ -66,7 +68,76 @@ export default class Cache {
 
   gc() {
     // garbageCollection;  garbage collection: removes any inaccessible hashes from the cache
+    const badHashes = getBadHashes();
+    const goodHashes = rootQueryCleaner(badHashes);
+    const goodHashes2 = getGoodHashes(badHashes, goodHashes);
+    removeInaccessibleHashes(badHashes, goodHashes2);
   }
+
+  // remove hashes that are flagged for deletion and store records of them in a set badHashes for removal inside root queries
+  getBadHashes() {
+    const badHashes = new Set();
+    for (let key in this.storage) {
+      if (key === 'ROOT_QUERY' || key === 'ROOT_MUTATION') continue;
+      if (this.storage[key] === 'DELETED') {
+        badHashes.add(key);
+        delete this.storage[key];
+      }
+    }
+    return badHashes;
+  }
+
+  // go through root queries, remove all instances of bad hashes, add remaining hashes into goodHashes set
+  rootQueryCleaner(badHashes) {
+    const goodHashes = new Set();
+      const rootQuery = this.storage['ROOT_QUERY'];
+      for (let key in rootQuery) {
+        if (Array.isArray(rootQuery[key])) {
+          rootQuery[key] = rootQuery[key].filter(x => !badHashes.has(x));
+          if (rootQuery[key].length === 0) delete rootQuery[key];
+          for (let el of rootQuery[key]) goodHashes.add(el);
+        } else (badHashes.has(rootQuery[key])) ? delete rootQuery[key] : goodHashes.add(rootQuery[key]);
+      }
+      return goodHashes;
+    }
+
+  // Go through the cache, check good hashes for any nested hashes and add them to goodHashes set
+  getGoodHashes(badHashes, goodHashes) {
+      for (let key in this.storage) {
+        if (key === 'ROOT_QUERY' || key === 'ROOT_MUTATION') continue;
+        for (let i in this.storage[key]) {
+          if (Array.isArray(this.storage[key][i])) {
+            for (let el of this.storage[key][i]) {
+              if (el.includes('~') && !badHashes.has(el)) {
+                goodHashes.add(el);
+              }
+            }
+          } else if (typeof this.storage[key][i] === 'string') {
+            if (this.storage[key][i].includes('~') && !badHashes.has(this.storage[key][i])) {
+              goodHashes.add(this.storage[key][i]);
+            }
+          }
+        }
+      }
+      return goodHashes;
+    }
+
+  // Remove inaccessible hashes by checking if they are in goodhashes set or not
+  removeInaccessibleHashes(badHashes, goodHashes) {
+      for (let key in this.storage) {
+        if (key === 'ROOT_QUERY' || key === 'ROOT_MUTATION') continue;
+        if (!goodHashes.has(key)) delete this.storage[key];
+        for (let i in this.storage[key]) {
+          if (Array.isArray(this.storage[key][i])) {
+            this.storage[key][i] = this.storage[key][i].filter(x => !badHashes.has(x));
+          } else if (typeof this.storage[key][i] === 'string') {
+            if (this.storage[key][i].includes('~') && badHashes.has(this.storage[key][i])) {
+              delete this.storage[key][i];
+            }
+          }
+        }
+      }
+    }
 
   // cache read/write helper methods
   async cacheRead(hash) {
@@ -82,7 +153,10 @@ export default class Cache {
   }
 
   async cacheClear() {
-    this.storage = { ROOT_QUERY: {}, ROOT_MUTATION: {} };
+    this.storage = {
+      ROOT_QUERY: {},
+      ROOT_MUTATION: {}
+    };
   }
 
   // functionality to stop polling
@@ -99,7 +173,9 @@ export default class Cache {
   readWholeQuery(queryStr) {
     const hash = queryStr.replace(/\s/g, '');
     const root = this.cacheRead('ROOT_QUERY');
-    if (root[hash]) return { data: root[hash] };
+    if (root[hash]) return {
+      data: root[hash]
+    };
     return undefined;
   }
 
