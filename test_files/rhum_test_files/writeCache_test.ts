@@ -38,7 +38,7 @@ Rhum.testPlan('write method on Cache class', () => {
         cache.write(test.queryStrTwo, test.respObj);
         Rhum.asserts.assertEquals(test.originalCache, cache.storage);
       }
-    );
+    )
     // Rhum.testCase(
     //   'alias test case',
     //   async () => {   
