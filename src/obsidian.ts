@@ -71,6 +71,7 @@ export async function ObsidianRouter<T>({
           }
         }
 
+        // if not in cache, it will fetch a new response from database
         const result = await (graphql as any)(
           schema,
           body.query,
