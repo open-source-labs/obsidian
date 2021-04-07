@@ -11,22 +11,23 @@
 import LFUCache from '../../src/lfuBrowserCache.js';
 import { Rhum } from 'https://deno.land/x/rhum@v1.1.4/mod.ts';
 import { test } from '../test_variables/lfuBrowserCache_variables.ts';
+import normalizeResult from '../../src/normalize.js';
 
 Rhum.testPlan('LFU Browser Cache Testing', () => {
   Rhum.testSuite('write/read nested data object', () => {
-    for (let key of test.nestedObj.keys) {
-      Rhum.testCase(
-        'should store a nested data object into LFUCache and read the stored un-nested data objects by calling their hashes',
-        async () => {
-          const cache = new LFUCache(10);
-          await cache.write(test.nestedObj.queryStr, test.nestedObj.respObj);
-          Rhum.asserts.assertEquals(
+    Rhum.testCase(
+      'should store a nested data object into LFUCache and read the stored un-nested data objects by calling their hashes',
+      async () => {
+        const cache = new LFUCache(10);
+        await cache.write(test.nestedObj.queryStr, test.nestedObj.respObj);
+        for (let key in test.nestedObj.expectedCache) {
+          await Rhum.asserts.assertEquals(
             cache.get(key),
             test.nestedObj.expectedCache[key]
           );
         }
-      );
-    }
+      }
+    );
   });
   Rhum.testSuite('LFU cache evict the proper items', () => {
     Rhum.testCase(
@@ -34,17 +35,16 @@ Rhum.testPlan('LFU Browser Cache Testing', () => {
       async () => {
         const cache = new LFUCache(5);
         await cache.write(test.LFUObj.queryStr1, test.LFUObj.respObj1);
-        // Rhum.asserts.assertEquals(
-        //   cache.get('Actor~1'),
-        //   test.expectedCache['Actor~1']
-        // );
-        await console.log(cache);
+        await Rhum.asserts.assertEquals(
+          cache.get('Actor~1'),
+          test.LFUObj.expectedCache1['Actor~1']
+        );
         await cache.get('Actor~2');
         await cache.get('Actor~3');
         await cache.get('Actor~4');
         await cache.get('Actor~5');
         await cache.write(test.LFUObj.queryStr2, test.LFUObj.respObj2);
-        // Rhum.asserts.assertEquals(cache.get('Actor~1'), undefined);
+        Rhum.asserts.assertEquals(cache.get('Actor~1'), undefined);
       }
     );
   });

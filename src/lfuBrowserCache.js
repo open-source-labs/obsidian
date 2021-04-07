@@ -153,7 +153,7 @@ LFUCache.prototype.write = async function (queryStr, respObj, deleteFlag) {
   for (const hash in resFromNormalize) {
     const resp = await this.get(hash);
     if (hash === 'ROOT_QUERY' || hash === 'ROOT_MUTATION') {
-      this[hash] = resFromNormalize[hash];
+      this[hash] = Object.assign(this[hash], resFromNormalize[hash]);
     } else if (resFromNormalize[hash] === 'DELETED') {
       // Should we delete directly or do we still need to flag as DELETED
       await this.put(hash, 'DELETED');
@@ -206,16 +206,9 @@ LFUCache.prototype.populateAllHashes = async function (
       // for each hash from the input query, build the response object
       const readVal = await this.get(hash);
       if (readVal === 'DELETED') return acc;
+      if (!readVal) return undefined;
       const dataObj = {};
       for (const field in fields) {
-        console.log(
-          '\n\n🚀 ~ file: lfuBrowserCache.js ~ line 213 ~ resFromNormalize[hash]',
-          resFromNormalize[hash]
-        );
-        console.log(
-          '\n\n🚀 ~ file: lfuBrowserCache.js ~ line 214 ~ resFromNormalize[hash]',
-          resFromNormalize[hash]
-        );
         if (readVal[field] === 'DELETED') continue;
         // for each field in the fields input query, add the corresponding value from the cache if the field is not another array of hashs
         if (readVal[field] === undefined && field !== '__typename') {

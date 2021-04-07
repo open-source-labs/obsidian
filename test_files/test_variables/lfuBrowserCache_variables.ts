@@ -1,6 +1,6 @@
 export const test: { [index: string]: any } = {
   nestedObj: {
-    queryStr: `query movie1 { 
+    queryStr: `query movie { 
       Movie(id:1) {
       __typename
       id
@@ -13,7 +13,6 @@ export const test: { [index: string]: any } = {
       }
     }}`,
     rootQuery: { 'Movie(id:1)': ['Movie~1'] }, // recheck this line, should include actors
-    keys: ['Movie~1', 'Actor~1', 'Actor~2'],
     expectedCache: {
       'Movie~1': {
         title: 'Indiana Jones and the Last Crusade',
@@ -59,18 +58,20 @@ export const test: { [index: string]: any } = {
     },
   },
   LFUObj: {
-    queryStr1: `query Actors(movieID:1) { 
+    queryStr1: `{
+      Actors(movieID:1) { 
         __typename
         id
         firstName
         lastName
-    }`,
-    queryStr2: `query Actors(movieID:2) { 
+    }}`,
+    queryStr2: `{
+      Actors(movieID:2) { 
       __typename
       id
       firstName
       lastName
-  }`,
+  }}`,
     respObj1: {
       data: {
         Actors: [
