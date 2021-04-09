@@ -12,7 +12,7 @@ export const test: { [index: string]: any } = {
         lastName
       }
     }}`,
-    rootQuery: { 'Movie(id:1)': ['Movie~1'] }, // recheck this line, should include actors
+    rootQuery: { 'Movie(id:1)': ['Movie~1'] },
     expectedCache: {
       'Movie~1': {
         title: 'Indiana Jones and the Last Crusade',
@@ -37,7 +37,6 @@ export const test: { [index: string]: any } = {
             __typename: 'Movie',
             id: '1',
             title: 'Indiana Jones and the Last Crusade',
-            // actors: ['Actor~1', 'Actor~2'],
             actors: [
               {
                 __typename: 'Actor',

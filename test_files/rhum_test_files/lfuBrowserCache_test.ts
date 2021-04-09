@@ -20,7 +20,7 @@ Rhum.testPlan('LFU Browser Cache Testing', () => {
       async () => {
         const cache = new LFUCache(10);
         await cache.write(test.nestedObj.queryStr, test.nestedObj.respObj);
-        for (let key in test.nestedObj.expectedCache) {
+        for (let key of Object.keys(test.nestedObj.expectedCache)) {
           await Rhum.asserts.assertEquals(
             cache.get(key),
             test.nestedObj.expectedCache[key]

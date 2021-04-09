@@ -57,8 +57,8 @@ export default function LFUCache(capacity) {
 }
 
 /**
- * @param {number} key
- * @return {number}
+ * @param {string} key
+ * @return {object}
  */
 LFUCache.prototype.get = function (key) {
   let node = this.nodeHash.get(key);
@@ -76,8 +76,8 @@ LFUCache.prototype.get = function (key) {
 };
 
 /**
- * @param {number} key
- * @param {number} value
+ * @param {string} key
+ * @param {object} value
  * @return {void}
  */
 LFUCache.prototype.put = function (key, value) {
