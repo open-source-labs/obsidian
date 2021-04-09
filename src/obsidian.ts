@@ -56,8 +56,15 @@ export async function ObsidianRouter<T>({
   cache.cacheClear();
 
   // set redis configurations
-  cache.configSet("maxmemory-policy", policy);
-  cache.configSet("maxmemory", maxmemory);
+
+  if(policy || maxmemory){
+    console.log("inside if")
+    cache.configSet("maxmemory-policy", policy);
+    cache.configSet("maxmemory", maxmemory);
+  }
+  
+  
+
   
   await router.post(path, async (ctx: any) => {
     const { response, request } = ctx;
