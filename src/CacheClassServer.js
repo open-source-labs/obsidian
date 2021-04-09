@@ -1,7 +1,7 @@
 import normalizeResult from './normalize.js';
 import destructureQueries from './destructure.js';
 import 'https://deno.land/x/dotenv/load.ts';
-import { connect } from 'https://denopkg.com/keroxp/deno-redis/mod.ts';
+import { connect } from 'https://deno.land/x/redis/mod.ts';
 
 let redis;
 const context = window.Deno ? 'server' : 'client';
@@ -26,6 +26,11 @@ export class Cache {
     this.context = window.Deno ? 'server' : 'client';
   }
 
+  // set cache configurations
+  async configSet(parameter, value) {
+    return await redis.configSet(parameter, value)
+  }
+  
   // Main functionality methods
   async read(queryStr) {
     if (typeof queryStr !== 'string')

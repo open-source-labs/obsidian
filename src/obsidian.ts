@@ -21,6 +21,8 @@ export interface ObsidianRouterOptions<T> {
   usePlayground?: boolean;
   useCache?: boolean;
   redisPort?: number;
+  policy?: string;
+  maxmemory?: string;
 }
 
 export interface ResolversProps {
@@ -41,6 +43,8 @@ export async function ObsidianRouter<T>({
   usePlayground = false,
   useCache = true,
   redisPort = 6379,
+  policy,
+  maxmemory,
 }: ObsidianRouterOptions<T>): Promise<T> {
   redisPortExport = redisPort;
   const router = new Router();
@@ -50,7 +54,11 @@ export async function ObsidianRouter<T>({
 
   // clear redis cache when restarting the server
   cache.cacheClear();
- 
+
+  // set redis configurations
+  cache.configSet("maxmemory-policy", policy);
+  cache.configSet("maxmemory", maxmemory);
+  
   await router.post(path, async (ctx: any) => {
     const { response, request } = ctx;
     if (request.hasBody) {

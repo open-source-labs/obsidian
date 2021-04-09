@@ -86,8 +86,6 @@ export default function normalizeResult(queryObj, resultObj, deleteFlag) {
 
 // creates the hashes for query requests and stores the reference hash that will be stored in result
 function createRootQuery(queryObjArr, resultObj) {
-  console.log("*********************")
-    console.log(resultObj)
   const output = {};
   queryObjArr.forEach((query) => {
     // if query has an alias declare it
