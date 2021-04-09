@@ -27,7 +27,6 @@ export class Cache {
   }
 
   insertIntoRedis() {
-    // console.log('i am called');
     for (let key in this.storage) {
       redis.set(key, JSON.stringify(this.storage[key]));
     }
