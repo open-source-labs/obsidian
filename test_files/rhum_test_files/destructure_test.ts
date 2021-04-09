@@ -20,13 +20,10 @@ Rhum.testPlan('destructure.ts', () => {
         test.createQueriesObjTestData,
         'queries'
       );
-      console.log('RESULTS', results)
       Rhum.asserts.assertEquals(test.createQueriesObjResultsData, results);
     });
     Rhum.testCase('findQueryFields test', () => {
-      console.log(test.findQueryFieldsTestData);
       const results = findQueryFields(test.findQueryFieldsTestData);
-      console.log(results);
       Rhum.asserts.assertEquals(test.findQueryFieldsResultData, results);
     });
     Rhum.testCase('findClosingBrace test', () => {
@@ -59,14 +56,17 @@ Rhum.testPlan('destructure.ts', () => {
       Rhum.asserts.assertEquals(test.newAliasTestResult, result);
     });
   });
-  
+
   Rhum.testSuite('destructure fragment tests', () => {
-    Rhum.testCase('destructure fragment tests - results in two seperate queries', () => {
-      const result = destructureQueries(test.fragmentTestData);
-      Rhum.asserts.assertEquals(test.fragmentResultData, result);
-    });
+    Rhum.testCase(
+      'destructure fragment tests - results in two seperate queries',
+      () => {
+        const result = destructureQueries(test.fragmentTestData);
+        Rhum.asserts.assertEquals(test.fragmentResultData, result);
+      }
+    );
     Rhum.testCase('destructure fragment tests - results in one query', () => {
-      const result = destructureQueries(test.fragmentTestData2);   
+      const result = destructureQueries(test.fragmentTestData2);
       Rhum.asserts.assertEquals(test.fragmentResultData2, result);
     });
     Rhum.testCase('destructure fragment tests - nested fragments', () => {

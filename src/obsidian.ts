@@ -48,7 +48,13 @@ export async function ObsidianRouter<T>({
   const router = new Router();
 
   const schema = makeExecutableSchema({ typeDefs, resolvers });
-  const cache = new LFUCache(50);
+
+  // If using LFU Browser Caching, the following cache line needs to be uncommented.
+  // const cache = new LFUCache(50);
+
+  // If using Redis caching, the following lines need to be uncommented.
+  const cache = new Cache();
+  cache.insertIntoRedis();
 
   // clear redis cache when restarting the server
   cache.cacheClear();
