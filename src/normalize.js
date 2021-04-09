@@ -81,6 +81,7 @@ export default function normalizeResult(queryObj, resultObj, deleteFlag) {
       }
     }
   }
+
   return result;
 }
 
@@ -116,7 +117,6 @@ function createRootQuery(queryObjArr, resultObj) {
       output[queryHash] = result.__typename + '~' + id;
     }
   });
-
   return output;
 }
 

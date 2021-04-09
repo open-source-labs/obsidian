@@ -1,7 +1,9 @@
 import { graphql } from 'https://cdn.pika.dev/graphql@15.0.0';
 import { renderPlaygroundPage } from 'https://deno.land/x/oak_graphql@0.6.2/graphql-playground-html/render-playground-html.ts';
 import { makeExecutableSchema } from 'https://deno.land/x/oak_graphql@0.6.2/graphql-tools/schema/makeExecutableSchema.ts';
+import LFUCache from './lfuBrowserCache.js';
 import { Cache } from './CacheClassServer.js';
+
 interface Constructable<T> {
   new (...args: any): T & OakRouter;
 }
@@ -46,6 +48,11 @@ export async function ObsidianRouter<T>({
   const router = new Router();
 
   const schema = makeExecutableSchema({ typeDefs, resolvers });
+
+  // If using LFU Browser Caching, the following cache line needs to be uncommented.
+  // const cache = new LFUCache(50);
+
+  // If using Redis caching, the following lines need to be uncommented.
   const cache = new Cache();
   cache.insertIntoRedis();
 

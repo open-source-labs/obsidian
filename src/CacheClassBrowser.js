@@ -2,11 +2,12 @@ import normalizeResult from './normalize.js';
 import destructureQueries from './destructure.js';
 
 export default class Cache {
-  constructor(
-    initialCache = {
+  
+    constructor(
+      initialCache = {
       ROOT_QUERY: {},
       ROOT_MUTATION: {},
-    }
+     }
   ) {
     this.storage = initialCache;
     this.context = 'client';
