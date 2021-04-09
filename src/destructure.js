@@ -267,5 +267,3 @@ export function destructureQueriesWithFragments(queryOperationStr) {
 
   return queryCopy;
 }
-
-export default destructureQueries;
