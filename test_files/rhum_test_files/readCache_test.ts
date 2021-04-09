@@ -2,7 +2,7 @@
  * NOTES:
  * 1.This file will test the read method on the Cache class functionalities:
  * Should return a graphql response object if all required values are found in the cache.
- * Should return undefined if any field is missing value  in the cache.
+ * Should return u;ndefined if any field is missing value  in the cache.
  * Should accept multiple queries in one query operation.
  * Should ignore the elements with a 'DELETE' value and not throw a cache miss if asked for in the query string
  * 2. This file will test populateAllHashes functionalities:

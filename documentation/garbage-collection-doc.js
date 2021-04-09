@@ -22,7 +22,7 @@ class Cache {
  *    - remove any hash reference that is a member of the deleted hash Set
  *    - for any hash reference that has not been deleted
  *       - add that hash to a Set of accessible hashes
- *       - recrusively trace that hash and continue removing any deleted hash references and updating the Set of accesible hashes
+ *       - recursively trace that hash and continue removing any deleted hash references and updating the Set of accesible hashes
  *  4. remove any hashes that are not a member of the accessible hash Set
  */
 
@@ -85,7 +85,8 @@ const cacheAfterGC = {
     'favoriteMovie(id:2)': 'Movie~2',
     "addMovie(input: {title: 'The Fugitive', releaseYear: 1993, genre: ACTION })":
       'Movie~5',
-    'deleteMovie(id:4)': 'Movie~4',
+    // 'deleteMovie(id:4)': 'Movie~4', // mistake?
+    'deleteMovie(id:3)': 'Movie~3',
   },
 
   'Movie~1': {

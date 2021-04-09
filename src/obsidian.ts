@@ -47,6 +47,7 @@ export async function ObsidianRouter<T>({
 
   const schema = makeExecutableSchema({ typeDefs, resolvers });
   const cache = new Cache();
+  cache.insertIntoRedis();
 
   // clear redis cache when restarting the server
   cache.cacheClear();
