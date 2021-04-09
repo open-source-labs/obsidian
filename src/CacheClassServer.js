@@ -27,15 +27,12 @@ export class Cache {
   }
 
   insertIntoRedis() {
-    // console.log('i am called');
     for (let key in this.storage) {
       redis.set(key, JSON.stringify(this.storage[key]));
     }
   }
 
-  pullOutCache() {
-    
-  }
+  pullOutCache() {}
 
   // Main functionality methods
   async read(queryStr) {
@@ -114,54 +111,65 @@ export class Cache {
   // go through root queries, remove all instances of bad hashes, add remaining hashes into goodHashes set
   rootQueryCleaner(badHashes) {
     const goodHashes = new Set();
-      const rootQuery = this.storage['ROOT_QUERY'];
-      for (let key in rootQuery) {
-        if (Array.isArray(rootQuery[key])) {
-          rootQuery[key] = rootQuery[key].filter(x => !badHashes.has(x));
-          if (rootQuery[key].length === 0) delete rootQuery[key];
-          for (let el of rootQuery[key]) goodHashes.add(el);
-        } else (badHashes.has(rootQuery[key])) ? delete rootQuery[key] : goodHashes.add(rootQuery[key]);
-      }
-      return goodHashes;
+    const rootQuery = this.storage['ROOT_QUERY'];
+    for (let key in rootQuery) {
+      if (Array.isArray(rootQuery[key])) {
+        rootQuery[key] = rootQuery[key].filter((x) => !badHashes.has(x));
+        if (rootQuery[key].length === 0) delete rootQuery[key];
+        for (let el of rootQuery[key]) goodHashes.add(el);
+      } else
+        badHashes.has(rootQuery[key])
+          ? delete rootQuery[key]
+          : goodHashes.add(rootQuery[key]);
     }
+    return goodHashes;
+  }
 
   // Go through the cache, check good hashes for any nested hashes and add them to goodHashes set
   getGoodHashes(badHashes, goodHashes) {
-      for (let key in this.storage) {
-        if (key === 'ROOT_QUERY' || key === 'ROOT_MUTATION') continue;
-        for (let i in this.storage[key]) {
-          if (Array.isArray(this.storage[key][i])) {
-            for (let el of this.storage[key][i]) {
-              if (el.includes('~') && !badHashes.has(el)) {
-                goodHashes.add(el);
-              }
+    for (let key in this.storage) {
+      if (key === 'ROOT_QUERY' || key === 'ROOT_MUTATION') continue;
+      for (let i in this.storage[key]) {
+        if (Array.isArray(this.storage[key][i])) {
+          for (let el of this.storage[key][i]) {
+            if (el.includes('~') && !badHashes.has(el)) {
+              goodHashes.add(el);
             }
-          } else if (typeof this.storage[key][i] === 'string') {
-            if (this.storage[key][i].includes('~') && !badHashes.has(this.storage[key][i])) {
-              goodHashes.add(this.storage[key][i]);
-            }
+          }
+        } else if (typeof this.storage[key][i] === 'string') {
+          if (
+            this.storage[key][i].includes('~') &&
+            !badHashes.has(this.storage[key][i])
+          ) {
+            goodHashes.add(this.storage[key][i]);
           }
         }
       }
-      return goodHashes;
     }
+    return goodHashes;
+  }
 
   // Remove inaccessible hashes by checking if they are in goodhashes set or not
   removeInaccessibleHashes(badHashes, goodHashes) {
-      for (let key in this.storage) {
-        if (key === 'ROOT_QUERY' || key === 'ROOT_MUTATION') continue;
-        if (!goodHashes.has(key)) delete this.storage[key];
-        for (let i in this.storage[key]) {
-          if (Array.isArray(this.storage[key][i])) {
-            this.storage[key][i] = this.storage[key][i].filter(x => !badHashes.has(x));
-          } else if (typeof this.storage[key][i] === 'string') {
-            if (this.storage[key][i].includes('~') && badHashes.has(this.storage[key][i])) {
-              delete this.storage[key][i];
-            }
+    for (let key in this.storage) {
+      if (key === 'ROOT_QUERY' || key === 'ROOT_MUTATION') continue;
+      if (!goodHashes.has(key)) delete this.storage[key];
+      for (let i in this.storage[key]) {
+        if (Array.isArray(this.storage[key][i])) {
+          this.storage[key][i] = this.storage[key][i].filter(
+            (x) => !badHashes.has(x)
+          );
+        } else if (typeof this.storage[key][i] === 'string') {
+          if (
+            this.storage[key][i].includes('~') &&
+            badHashes.has(this.storage[key][i])
+          ) {
+            delete this.storage[key][i];
           }
         }
       }
     }
+  }
 
   // cache read/write helper methods
   async cacheRead(hash) {
@@ -245,7 +253,7 @@ export class Cache {
         // for each hash from the input query, build the response object
         const readVal = await this.cacheRead(hash);
         // return undefine if hash has been garbage collected
-        if (readVal === undefined) return undefined
+        if (readVal === undefined) return undefined;
         if (readVal === 'DELETED') return acc;
         const dataObj = {};
         for (const field in fields) {
@@ -268,17 +276,14 @@ export class Cache {
           }
         }
         // acc is an array within a Response object for each hash
-        try{
-          const resolvedProm = await Promise.resolve(acc)
+        try {
+          const resolvedProm = await Promise.resolve(acc);
           resolvedProm.push(dataObj);
           return resolvedProm;
-        } catch (error){
-          return undefined
+        } catch (error) {
+          return undefined;
         }
-      
       }, []);
-
-      
     }
     // Case where allHashesFromQuery has only one hash and is not an array but a single string
     const hash = allHashesFromQuery;
