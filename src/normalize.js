@@ -1,7 +1,6 @@
 // Normalizes responses using the query object from destructure and the response object from
 // the graphql request
-// export default function normalizeResult(queryObj, resultObj, deleteFlag) {
-var normalizeResult = function (queryObj, resultObj, deleteFlag) {
+export default function normalizeResult(queryObj, resultObj, deleteFlag) {
   // Object to hold normalized obj
   const result = {};
 
@@ -91,13 +90,11 @@ function createRootQuery(queryObjArr, resultObj) {
   const output = {};
   queryObjArr.forEach((query) => {
     // if query has an alias declare it
-    // const alias = query.alias ?? null;
-    const alias = (query.alias) ? query.alias : null;
+    const alias = query.alias ?? null;
     const name = query.name;
     const args = query.arguments;
     const queryHash = name + args;
-    // const result = resultObj.data[alias] ?? resultObj.data[name];
-    const result = (resultObj.data[alias]) ? resultObj.data[alias] : resultObj.data[name];
+    const result = resultObj.data[alias] ?? resultObj.data[name];
     // iterate thru the array of current query response
     // and store the hash of that response in an array
 
