@@ -97,7 +97,7 @@ function createRootQuery(queryObjArr, resultObj) {
     const result = resultObj.data[alias] ?? resultObj.data[name];
     // iterate thru the array of current query response
     // and store the hash of that response in an array
-
+    
     if (Array.isArray(result)) {
       const arrOfHashes = [];
       result.forEach((obj) => {

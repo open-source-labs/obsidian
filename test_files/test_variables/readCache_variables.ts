@@ -90,11 +90,13 @@ export const test = {
   fieldsComplete: { __typename: 'meta', id: 'scalar', firstName: 'scalar' },
   singularQueryResObj: {
     data: {
-      actor: {
-        __typename: 'Actor',
-        id: '1',
-        firstName: 'Harrison',
-      },
+      actor: [
+        {
+          __typename: 'Actor',
+          id: '1',
+          firstName: 'Harrison',
+        },
+      ],
     },
   },
   multipleQueriesResObj: {
@@ -183,34 +185,33 @@ name
   }
 
 }`,
-aliasResObj:{
-  data: {
+  aliasResObj: {
+    data: {
       empireHero: {
-          __typename: "Hero",
-          id: 1,
-          name: "Luke Skywalker",
-
+        __typename: 'Hero',
+        id: 1,
+        name: 'Luke Skywalker',
       },
       jediHero: {
-          __typename: "Hero",
-          id: 2,
-          name: "R2-D2",
-      }
-  }
-},
+        __typename: 'Hero',
+        id: 2,
+        name: 'R2-D2',
+      },
+    },
+  },
   aliasCache: {
     ROOT_QUERY: {
-      'getHero(episode:"empire")': "Hero~1",
-      'getHero(episode:"jedi")': "Hero~2",
+      'getHero(episode:"empire")': 'Hero~1',
+      'getHero(episode:"jedi")': 'Hero~2',
     },
     ROOT_MUTATION: {},
-    "Hero~1": {
+    'Hero~1': {
       id: 1,
-      name: "Luke Skywalker",
+      name: 'Luke Skywalker',
     },
-    "Hero~2": {
+    'Hero~2': {
       id: 2,
-      name: "R2-D2",
+      name: 'R2-D2',
     },
   },
 };
