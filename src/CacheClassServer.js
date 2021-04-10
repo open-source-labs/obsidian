@@ -76,7 +76,6 @@ export class Cache {
         await this.cacheWrite(hash, resFromNormalize[hash]);
       }
     }
-    return;
   }
 
   // cache read/write helper methods
@@ -138,16 +137,16 @@ export class Cache {
   }
 
   writeWholeQuery(queryStr, respObj) {
-    let hash = queryStr.replace(/\s/g, '');
+    const hash = queryStr.replace(/\s/g, '');
     this.cacheWrite(ROOT_QUERY[hash], respObj);
     return respObj;
   }
 
   readWholeQuery(queryStr) {
-    let hash = queryStr.replace(/\s/g, '');
+    const hash = queryStr.replace(/\s/g, '');
     const root = this.cacheRead('ROOT_QUERY');
     if (root[hash]) return { data: root[hash] };
-    else return undefined;
+    return undefined;
   }
 
   // specialized helper methods
