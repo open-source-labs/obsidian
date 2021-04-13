@@ -197,32 +197,5 @@ export class Cache {
         }
       }, []);
     }
-    // Case where allHashesFromQuery has only one hash and is not an array but a single string
-    const hash = allHashesFromQuery;
-    const readVal = await this.cacheRead(hash);
-    if (readVal !== 'DELETED') {
-      // include the typename for each hash
-      const hyphenIdx = hash.indexOf('~');
-      const typeName = hash.slice(0, hyphenIdx);
-      const dataObj = {};
-      for (const field in fields) {
-        if (readVal[field] === 'DELETED') continue;
-        if (!readVal[field] && field !== '__typename') {
-          return undefined;
-        } else if (typeof fields[field] !== 'object') {
-          // add the typename for the type
-          if (field === '__typename') {
-            dataObj[field] = typeName;
-          } else dataObj[field] = readVal[field];
-        } else {
-          dataObj[field] = await this.populateAllHashes(
-            readVal[field],
-            fields[field]
-          );
-          if (dataObj[field] === undefined) return undefined;
-        }
-      }
-      return dataObj;
-    }
   }
 }
