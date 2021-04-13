@@ -28,9 +28,9 @@ export class Cache {
 
   // set cache configurations
   async configSet(parameter, value) {
-    return await redis.configSet(parameter, value)
+    return await redis.configSet(parameter, value);
   }
-  
+
   // Main functionality methods
   async read(queryStr) {
     if (typeof queryStr !== 'string')

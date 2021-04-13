@@ -1,7 +1,7 @@
 export const test = {
   cache: {
     ROOT_QUERY: {
-      'actor(id:1)': 'Actor~1',
+      'actor(id:1)': ['Actor~1'],
       movies: ['Movie~1', 'Movie~2', 'Movie~3', 'Movie~4'],
       actors: ['Actor~1', 'Actor~2', 'Actor~3', 'Actor~4'],
       'movies(input:{genre:ACTION})': ['Movie~1', 'Movie~4', 'Movie~5'],

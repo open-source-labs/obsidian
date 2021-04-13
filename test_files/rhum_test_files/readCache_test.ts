@@ -17,7 +17,7 @@ import { test } from '../test_variables/readCache_variables.ts';
 Rhum.testPlan('read method on Cache class', () => {
   Rhum.testSuite('read()', () => {
     Rhum.testCase(
-      'should return a graphql response object if all required values are found in the cache',
+      '\n *** \n readCache_test \n should return a graphql response object if all required values are found in the cache',
       async () => {
         const cache = new Cache(test.cache);
         const result = await cache.read(test.singularInputQuery);
