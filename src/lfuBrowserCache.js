@@ -197,54 +197,20 @@ LFUCache.prototype.populateAllHashes = async function (
   allHashesFromQuery,
   fields
 ) {
-  if (Array.isArray(allHashesFromQuery)) {
-    // include the hashname for each hash
-    if (!allHashesFromQuery.length) return [];
-    const hyphenIdx = allHashesFromQuery[0].indexOf('~');
-    const typeName = allHashesFromQuery[0].slice(0, hyphenIdx);
-    return allHashesFromQuery.reduce(async (acc, hash) => {
-      // for each hash from the input query, build the response object
-      const readVal = await this.get(hash);
-      if (readVal === 'DELETED') return acc;
-      if (!readVal) return undefined;
-      const dataObj = {};
-      for (const field in fields) {
-        if (readVal[field] === 'DELETED') continue;
-        // for each field in the fields input query, add the corresponding value from the cache if the field is not another array of hashs
-        if (readVal[field] === undefined && field !== '__typename') {
-          return undefined;
-        }
-        if (typeof fields[field] !== 'object') {
-          // add the typename for the type
-          if (field === '__typename') {
-            dataObj[field] = typeName;
-          } else dataObj[field] = readVal[field];
-        } else {
-          // case where the field from the input query is an array of hashes, recursively invoke populateAllHashes
-          dataObj[field] = await this.populateAllHashes(
-            readVal[field],
-            fields[field]
-          );
-          if (dataObj[field] === undefined) return undefined;
-        }
-      }
-      // acc is an array of response object for each hash
-      const resolvedProm = await Promise.resolve(acc);
-      resolvedProm.push(dataObj);
-      return resolvedProm;
-    }, []);
-  }
-  // Case where allHashesFromQuery has only one hash and is not an array but a single string
-  const hash = allHashesFromQuery;
-  const readVal = await this.get(hash);
-  if (readVal !== 'DELETED') {
-    // include the typename for each hash
-    const hyphenIdx = hash.indexOf('~');
-    const typeName = hash.slice(0, hyphenIdx);
+  // include the hashname for each hash
+  if (!allHashesFromQuery.length) return [];
+  const hyphenIdx = allHashesFromQuery[0].indexOf('~');
+  const typeName = allHashesFromQuery[0].slice(0, hyphenIdx);
+  return allHashesFromQuery.reduce(async (acc, hash) => {
+    // for each hash from the input query, build the response object
+    const readVal = await this.get(hash);
+    if (readVal === 'DELETED') return acc;
+    if (!readVal) return undefined;
     const dataObj = {};
     for (const field in fields) {
       if (readVal[field] === 'DELETED') continue;
-      if (!readVal[field] && field !== '__typename') {
+      // for each field in the fields input query, add the corresponding value from the cache if the field is not another array of hashs
+      if (readVal[field] === undefined && field !== '__typename') {
         return undefined;
       }
       if (typeof fields[field] !== 'object') {
@@ -253,6 +219,7 @@ LFUCache.prototype.populateAllHashes = async function (
           dataObj[field] = typeName;
         } else dataObj[field] = readVal[field];
       } else {
+        // case where the field from the input query is an array of hashes, recursively invoke populateAllHashes
         dataObj[field] = await this.populateAllHashes(
           readVal[field],
           fields[field]
@@ -260,6 +227,9 @@ LFUCache.prototype.populateAllHashes = async function (
         if (dataObj[field] === undefined) return undefined;
       }
     }
-    return dataObj;
-  }
+    // acc is an array of response object for each hash
+    const resolvedProm = await Promise.resolve(acc);
+    resolvedProm.push(dataObj);
+    return resolvedProm;
+  }, []);
 };

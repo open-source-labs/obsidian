@@ -1,7 +1,7 @@
 import normalizeResult from './normalize.js';
 import destructureQueries from './destructure.js';
 import 'https://deno.land/x/dotenv/load.ts';
-import { connect } from 'https://denopkg.com/keroxp/deno-redis/mod.ts';
+import { connect } from 'https://deno.land/x/redis/mod.ts';
 
 let redis;
 const context = window.Deno ? 'server' : 'client';
@@ -24,6 +24,11 @@ export class Cache {
   ) {
     this.storage = initialCache;
     this.context = window.Deno ? 'server' : 'client';
+  }
+
+  // set cache configurations
+  async configSet(parameter, value) {
+    return await redis.configSet(parameter, value);
   }
 
   // Main functionality methods
@@ -76,7 +81,6 @@ export class Cache {
         await this.cacheWrite(hash, resFromNormalize[hash]);
       }
     }
-    return;
   }
 
   // cache read/write helper methods
@@ -138,72 +142,35 @@ export class Cache {
   }
 
   writeWholeQuery(queryStr, respObj) {
-    let hash = queryStr.replace(/\s/g, '');
+    const hash = queryStr.replace(/\s/g, '');
     this.cacheWrite(ROOT_QUERY[hash], respObj);
     return respObj;
   }
 
   readWholeQuery(queryStr) {
-    let hash = queryStr.replace(/\s/g, '');
+    const hash = queryStr.replace(/\s/g, '');
     const root = this.cacheRead('ROOT_QUERY');
     if (root[hash]) return { data: root[hash] };
-    else return undefined;
+    return undefined;
   }
 
   // specialized helper methods
   async populateAllHashes(allHashesFromQuery, fields) {
-    if (Array.isArray(allHashesFromQuery)) {
-      // include the hashname for each hash
-      if (!allHashesFromQuery.length) return [];
-      const hyphenIdx = allHashesFromQuery[0].indexOf('~');
-      const typeName = allHashesFromQuery[0].slice(0, hyphenIdx);
-      return allHashesFromQuery.reduce(async (acc, hash) => {
-        // for each hash from the input query, build the response object
-        const readVal = await this.cacheRead(hash);
-        // return undefine if hash has been garbage collected
-        if (readVal === undefined) return undefined;
-        if (readVal === 'DELETED') return acc;
-        const dataObj = {};
-        for (const field in fields) {
-          if (readVal[field] === 'DELETED') continue;
-          // for each field in the fields input query, add the corresponding value from the cache if the field is not another array of hashs
-          if (readVal[field] === undefined && field !== '__typename') {
-            return undefined;
-          } else if (typeof fields[field] !== 'object') {
-            // add the typename for the type
-            if (field === '__typename') {
-              dataObj[field] = typeName;
-            } else dataObj[field] = readVal[field];
-          } else {
-            // case where the field from the input query is an array of hashes, recursively invoke populateAllHashes
-            dataObj[field] = await this.populateAllHashes(
-              readVal[field],
-              fields[field]
-            );
-            if (dataObj[field] === undefined) return undefined;
-          }
-        }
-        // acc is an array within a Response object for each hash
-        try {
-          const resolvedProm = await Promise.resolve(acc);
-          resolvedProm.push(dataObj);
-          return resolvedProm;
-        } catch (error) {
-          return undefined;
-        }
-      }, []);
-    }
-    // Case where allHashesFromQuery has only one hash and is not an array but a single string
-    const hash = allHashesFromQuery;
-    const readVal = await this.cacheRead(hash);
-    if (readVal !== 'DELETED') {
-      // include the typename for each hash
-      const hyphenIdx = hash.indexOf('~');
-      const typeName = hash.slice(0, hyphenIdx);
+    // include the hashname for each hash
+    if (!allHashesFromQuery.length) return [];
+    const hyphenIdx = allHashesFromQuery[0].indexOf('~');
+    const typeName = allHashesFromQuery[0].slice(0, hyphenIdx);
+    return allHashesFromQuery.reduce(async (acc, hash) => {
+      // for each hash from the input query, build the response object
+      const readVal = await this.cacheRead(hash);
+      // return undefine if hash has been garbage collected
+      if (readVal === undefined) return undefined;
+      if (readVal === 'DELETED') return acc;
       const dataObj = {};
       for (const field in fields) {
         if (readVal[field] === 'DELETED') continue;
-        if (!readVal[field] && field !== '__typename') {
+        // for each field in the fields input query, add the corresponding value from the cache if the field is not another array of hashs
+        if (readVal[field] === undefined && field !== '__typename') {
           return undefined;
         } else if (typeof fields[field] !== 'object') {
           // add the typename for the type
@@ -211,6 +178,7 @@ export class Cache {
             dataObj[field] = typeName;
           } else dataObj[field] = readVal[field];
         } else {
+          // case where the field from the input query is an array of hashes, recursively invoke populateAllHashes
           dataObj[field] = await this.populateAllHashes(
             readVal[field],
             fields[field]
@@ -218,7 +186,14 @@ export class Cache {
           if (dataObj[field] === undefined) return undefined;
         }
       }
-      return dataObj;
-    }
+      // acc is an array within a Response object for each hash
+      try {
+        const resolvedProm = await Promise.resolve(acc);
+        resolvedProm.push(dataObj);
+        return resolvedProm;
+      } catch (error) {
+        return undefined;
+      }
+    }, []);
   }
 }

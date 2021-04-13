@@ -3,10 +3,10 @@ import destructureQueries from './destructure.js';
 
 export default class Cache {
   constructor(
-      initialCache = {
+    initialCache = {
       ROOT_QUERY: {},
       ROOT_MUTATION: {},
-     }
+    }
   ) {
     this.storage = initialCache;
     this.context = 'client';
@@ -44,9 +44,7 @@ export default class Cache {
         return undefined;
       }
     }
-    return {
-      data: responseObject
-    };
+    return { data: responseObject };
   }
 
   async write(queryStr, respObj, deleteFlag) {
@@ -90,54 +88,65 @@ export default class Cache {
   // go through root queries, remove all instances of bad hashes, add remaining hashes into goodHashes set
   rootQueryCleaner(badHashes) {
     const goodHashes = new Set();
-      const rootQuery = this.storage['ROOT_QUERY'];
-      for (let key in rootQuery) {
-        if (Array.isArray(rootQuery[key])) {
-          rootQuery[key] = rootQuery[key].filter(x => !badHashes.has(x));
-          if (rootQuery[key].length === 0) delete rootQuery[key];
-          for (let el of rootQuery[key]) goodHashes.add(el);
-        } else (badHashes.has(rootQuery[key])) ? delete rootQuery[key] : goodHashes.add(rootQuery[key]);
-      }
-      return goodHashes;
+    const rootQuery = this.storage['ROOT_QUERY'];
+    for (let key in rootQuery) {
+      if (Array.isArray(rootQuery[key])) {
+        rootQuery[key] = rootQuery[key].filter((x) => !badHashes.has(x));
+        if (rootQuery[key].length === 0) delete rootQuery[key];
+        for (let el of rootQuery[key]) goodHashes.add(el);
+      } else
+        badHashes.has(rootQuery[key])
+          ? delete rootQuery[key]
+          : goodHashes.add(rootQuery[key]);
     }
+    return goodHashes;
+  }
 
   // Go through the cache, check good hashes for any nested hashes and add them to goodHashes set
   getGoodHashes(badHashes, goodHashes) {
-      for (let key in this.storage) {
-        if (key === 'ROOT_QUERY' || key === 'ROOT_MUTATION') continue;
-        for (let i in this.storage[key]) {
-          if (Array.isArray(this.storage[key][i])) {
-            for (let el of this.storage[key][i]) {
-              if (el.includes('~') && !badHashes.has(el)) {
-                goodHashes.add(el);
-              }
+    for (let key in this.storage) {
+      if (key === 'ROOT_QUERY' || key === 'ROOT_MUTATION') continue;
+      for (let i in this.storage[key]) {
+        if (Array.isArray(this.storage[key][i])) {
+          for (let el of this.storage[key][i]) {
+            if (el.includes('~') && !badHashes.has(el)) {
+              goodHashes.add(el);
             }
-          } else if (typeof this.storage[key][i] === 'string') {
-            if (this.storage[key][i].includes('~') && !badHashes.has(this.storage[key][i])) {
-              goodHashes.add(this.storage[key][i]);
-            }
+          }
+        } else if (typeof this.storage[key][i] === 'string') {
+          if (
+            this.storage[key][i].includes('~') &&
+            !badHashes.has(this.storage[key][i])
+          ) {
+            goodHashes.add(this.storage[key][i]);
           }
         }
       }
-      return goodHashes;
     }
+    return goodHashes;
+  }
 
   // Remove inaccessible hashes by checking if they are in goodhashes set or not
   removeInaccessibleHashes(badHashes, goodHashes) {
-      for (let key in this.storage) {
-        if (key === 'ROOT_QUERY' || key === 'ROOT_MUTATION') continue;
-        if (!goodHashes.has(key)) delete this.storage[key];
-        for (let i in this.storage[key]) {
-          if (Array.isArray(this.storage[key][i])) {
-            this.storage[key][i] = this.storage[key][i].filter(x => !badHashes.has(x));
-          } else if (typeof this.storage[key][i] === 'string') {
-            if (this.storage[key][i].includes('~') && badHashes.has(this.storage[key][i])) {
-              delete this.storage[key][i];
-            }
+    for (let key in this.storage) {
+      if (key === 'ROOT_QUERY' || key === 'ROOT_MUTATION') continue;
+      if (!goodHashes.has(key)) delete this.storage[key];
+      for (let i in this.storage[key]) {
+        if (Array.isArray(this.storage[key][i])) {
+          this.storage[key][i] = this.storage[key][i].filter(
+            (x) => !badHashes.has(x)
+          );
+        } else if (typeof this.storage[key][i] === 'string') {
+          if (
+            this.storage[key][i].includes('~') &&
+            badHashes.has(this.storage[key][i])
+          ) {
+            delete this.storage[key][i];
           }
         }
       }
     }
+  }
 
   // cache read/write helper methods
   async cacheRead(hash) {
@@ -155,7 +164,7 @@ export default class Cache {
   async cacheClear() {
     this.storage = {
       ROOT_QUERY: {},
-      ROOT_MUTATION: {}
+      ROOT_MUTATION: {},
     };
   }
 
@@ -173,69 +182,35 @@ export default class Cache {
   readWholeQuery(queryStr) {
     const hash = queryStr.replace(/\s/g, '');
     const root = this.cacheRead('ROOT_QUERY');
-    if (root[hash]) return {
-      data: root[hash]
-    };
+    if (root[hash]) return { data: root[hash] };
     return undefined;
   }
 
   // specialized helper methods
   async populateAllHashes(allHashesFromQuery, fields) {
-    if (Array.isArray(allHashesFromQuery)) {
-      // include the hashname for each hash
-      if (!allHashesFromQuery.length) return [];
-      const hyphenIdx = allHashesFromQuery[0].indexOf('~');
-      const typeName = allHashesFromQuery[0].slice(0, hyphenIdx);
-      return allHashesFromQuery.reduce(async (acc, hash) => {
-        // for each hash from the input query, build the response object
-        const readVal = await this.cacheRead(hash);
-        if (readVal === 'DELETED') return acc;
-        const dataObj = {};
-        for (const field in fields) {
-          if (readVal[field] === 'DELETED') continue;
-          // for each field in the fields input query, add the corresponding value from the cache if the field is not another array of hashs
-          if (readVal[field] === undefined && field !== '__typename') {
-            return undefined;
-          }
-          if (typeof fields[field] !== 'object') {
-            // add the typename for the type
-            if (field === '__typename') {
-              dataObj[field] = typeName;
-            } else dataObj[field] = readVal[field];
-          } else {
-            // case where the field from the input query is an array of hashes, recursively invoke populateAllHashes
-            dataObj[field] = await this.populateAllHashes(
-              readVal[field],
-              fields[field]
-            );
-            if (dataObj[field] === undefined) return undefined;
-          }
-        }
-        // acc is an array of response object for each hash
-        const resolvedProm = await Promise.resolve(acc);
-        resolvedProm.push(dataObj);
-        return resolvedProm;
-      }, []);
-    }
-    // Case where allHashesFromQuery has only one hash and is not an array but a single string
-    const hash = allHashesFromQuery;
-    const readVal = await this.cacheRead(hash);
-    if (readVal !== 'DELETED') {
-      // include the typename for each hash
-      const hyphenIdx = hash.indexOf('~');
-      const typeName = hash.slice(0, hyphenIdx);
+    // include the hashname for each hash
+    if (!allHashesFromQuery.length) return [];
+    const hyphenIdx = allHashesFromQuery[0].indexOf('~');
+    const typeName = allHashesFromQuery[0].slice(0, hyphenIdx);
+    return allHashesFromQuery.reduce(async (acc, hash) => {
+      // for each hash from the input query, build the response object
+      const readVal = await this.cacheRead(hash);
+      // return undefine if hash has been garbage collected
+      if (readVal === undefined) return undefined;
+      if (readVal === 'DELETED') return acc;
       const dataObj = {};
       for (const field in fields) {
         if (readVal[field] === 'DELETED') continue;
-        if (!readVal[field] && field !== '__typename') {
+        // for each field in the fields input query, add the corresponding value from the cache if the field is not another array of hashs
+        if (readVal[field] === undefined && field !== '__typename') {
           return undefined;
-        }
-        if (typeof fields[field] !== 'object') {
+        } else if (typeof fields[field] !== 'object') {
           // add the typename for the type
           if (field === '__typename') {
             dataObj[field] = typeName;
           } else dataObj[field] = readVal[field];
         } else {
+          // case where the field from the input query is an array of hashes, recursively invoke populateAllHashes
           dataObj[field] = await this.populateAllHashes(
             readVal[field],
             fields[field]
@@ -243,7 +218,14 @@ export default class Cache {
           if (dataObj[field] === undefined) return undefined;
         }
       }
-      return dataObj;
-    }
+      // acc is an array within a Response object for each hash
+      try {
+        const resolvedProm = await Promise.resolve(acc);
+        resolvedProm.push(dataObj);
+        return resolvedProm;
+      } catch (error) {
+        return undefined;
+      }
+    }, []);
   }
 }
