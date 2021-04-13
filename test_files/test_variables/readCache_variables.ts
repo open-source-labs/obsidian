@@ -187,22 +187,26 @@ name
 }`,
   aliasResObj: {
     data: {
-      empireHero: {
-        __typename: 'Hero',
-        id: 1,
-        name: 'Luke Skywalker',
-      },
-      jediHero: {
-        __typename: 'Hero',
-        id: 2,
-        name: 'R2-D2',
-      },
+      empireHero: [
+        {
+          __typename: 'Hero',
+          id: 1,
+          name: 'Luke Skywalker',
+        },
+      ],
+      jediHero: [
+        {
+          __typename: 'Hero',
+          id: 2,
+          name: 'R2-D2',
+        },
+      ],
     },
   },
   aliasCache: {
     ROOT_QUERY: {
-      'getHero(episode:"empire")': 'Hero~1',
-      'getHero(episode:"jedi")': 'Hero~2',
+      'getHero(episode:"empire")': ['Hero~1'],
+      'getHero(episode:"jedi")': ['Hero~2'],
     },
     ROOT_MUTATION: {},
     'Hero~1': {

@@ -61,7 +61,7 @@ Rhum.testPlan('read method on Cache class', () => {
       async () => {
         const cache = new Cache(test.cache);
         const result = await cache.populateAllHashes(
-          'Actor~1',
+          ['Actor~1'],
           test.fieldsUndefined
         );
         Rhum.asserts.assertEquals(result, undefined);
@@ -72,14 +72,16 @@ Rhum.testPlan('read method on Cache class', () => {
       async () => {
         const cache = new Cache(test.cache);
         const result = await cache.populateAllHashes(
-          'Actor~1',
+          ['Actor~1'],
           test.fieldsComplete
         );
-        Rhum.asserts.assertEquals(result, {
-          __typename: 'Actor',
-          id: '1',
-          firstName: 'Harrison',
-        });
+        Rhum.asserts.assertEquals(result, [
+          {
+            __typename: 'Actor',
+            id: '1',
+            firstName: 'Harrison',
+          },
+        ]);
       }
     );
   });
