@@ -1,7 +1,9 @@
 import { graphql } from 'https://cdn.pika.dev/graphql@15.0.0';
 import { renderPlaygroundPage } from 'https://deno.land/x/oak_graphql@0.6.2/graphql-playground-html/render-playground-html.ts';
 import { makeExecutableSchema } from 'https://deno.land/x/oak_graphql@0.6.2/graphql-tools/schema/makeExecutableSchema.ts';
+import LFUCache from './lfuBrowserCache.js';
 import { Cache } from './CacheClassServer.js';
+
 interface Constructable<T> {
   new (...args: any): T & OakRouter;
 }
@@ -21,6 +23,8 @@ export interface ObsidianRouterOptions<T> {
   usePlayground?: boolean;
   useCache?: boolean;
   redisPort?: number;
+  policy?: string;
+  maxmemory?: string;
 }
 
 export interface ResolversProps {
@@ -41,17 +45,33 @@ export async function ObsidianRouter<T>({
   usePlayground = false,
   useCache = true,
   redisPort = 6379,
+  policy,
+  maxmemory,
 }: ObsidianRouterOptions<T>): Promise<T> {
   redisPortExport = redisPort;
   const router = new Router();
 
   const schema = makeExecutableSchema({ typeDefs, resolvers });
+
+  // If using LFU Browser Caching, the following cache line needs to be uncommented.
+  // const cache = new LFUCache(50);
+
+  // If using Redis caching, the following lines need to be uncommented.
   const cache = new Cache();
 
   // clear redis cache when restarting the server
   cache.cacheClear();
- 
+
+  // set redis configurations
+
+  if (policy || maxmemory) {
+    console.log('inside if');
+    cache.configSet('maxmemory-policy', policy);
+    cache.configSet('maxmemory', maxmemory);
+  }
+
   await router.post(path, async (ctx: any) => {
+    var t0 = performance.now();
     const { response, request } = ctx;
     if (request.hasBody) {
       try {
@@ -63,14 +83,21 @@ export async function ObsidianRouter<T>({
         if (useCache) {
           // Send query off to be destructured and found in Redis if possible //
           const obsidianReturn = await cache.read(body.query);
-         
+          console.log('retrieved from cache', obsidianReturn);
           if (obsidianReturn) {
             response.status = 200;
             response.body = obsidianReturn;
+            var t1 = performance.now();
+            console.log(
+              'Obsidian retrieved data from cache and took ' +
+                (t1 - t0) +
+                ' milliseconds.'
+            );
             return;
           }
         }
 
+        // if not in cache, it will fetch a new response from database
         const result = await (graphql as any)(
           schema,
           body.query,
@@ -87,6 +114,10 @@ export async function ObsidianRouter<T>({
         // Normalize response and store in cache //
         if (useCache && toNormalize && !result.errors)
           cache.write(body.query, result, false);
+        var t1 = performance.now();
+        console.log(
+          'Obsidian received new data and took ' + (t1 - t0) + ' milliseconds.'
+        );
         return;
       } catch (error) {
         response.status = 200;

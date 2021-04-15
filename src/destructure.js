@@ -4,7 +4,7 @@
  * 2. We won't worry about arguments on fields for now
  * 3. We won't worry about aliases for now
  * 4. We won't worry about handling directives for now
- * 5. We wont' worry about fragments for now
+ * 5. We won't worry about fragments for now
  * 6. This function will assume that everything passed in can be a query or a mutation (not both).
  * 7. We won't handle variables for now, but we may very well find we need to
  * 8. We will handle only the meta field "__typename" for now
@@ -13,6 +13,13 @@
  */
 // this function will destructure a query/mutation operation string into a query/mutation operation object
 export function destructureQueries(queryOperationStr) {
+  queryOperationStr = queryOperationStr.replace(/,/gm, '');
+  // check if query has fragments
+  if (queryOperationStr.indexOf('fragment') !== -1) {
+    // reassigns query string to replace fragment references with fragment fields
+    queryOperationStr = destructureQueriesWithFragments(queryOperationStr);
+  }
+
   // ignore operation name by finding the beginning of the query strings
   const startIndex = queryOperationStr.indexOf('{');
   const queryStrings = queryOperationStr.substring(startIndex).trim();
@@ -25,6 +32,7 @@ export function destructureQueries(queryOperationStr) {
       : 'queries';
   // create a queries object from array of query strings
   const queriesObj = createQueriesObj(arrayOfQueryStrings, typePropName);
+
   return queriesObj;
 }
 
@@ -62,6 +70,7 @@ export function findQueryStrings(queryStrings) {
   }
   return result;
 }
+
 // helper function to create a queries object from an array of query strings
 export function createQueriesObj(arrayOfQueryStrings, typePropName) {
   // define a new empty result object
@@ -76,6 +85,7 @@ export function createQueriesObj(arrayOfQueryStrings, typePropName) {
     // push the finished query object into the queries/mutations array on the result object
     queriesObj[typePropName].push(queryObj);
   });
+
   return queriesObj;
 }
 // helper function that returns an object with a query string split into multiple parts
@@ -88,12 +98,35 @@ export function splitUpQueryStr(queryStr) {
   // checks to see if there are no arguments
   if (argsStartIndex === -1 || firstBraceIndex < argsStartIndex) {
     queryObj.name = queryStr.substring(0, firstBraceIndex).trim();
+    // // Checks if there is an alias
+    if (queryObj.name.includes(':')) {
+      // sets index of alias marker :
+      const aliasIndex = queryObj.name.indexOf(':');
+      // sets alias
+      queryObj.alias = queryObj.name.substring(0, aliasIndex).trim();
+      // shortens name to exclude alias
+      queryObj.name = queryObj.name
+        .substring(aliasIndex + 1, firstBraceIndex)
+        .trim();
+    }
     queryObj.arguments = '';
     queryObj.fields = queryStr.substring(firstBraceIndex);
+
     return queryObj;
   }
   // finds the query name string and assigns it
   queryObj.name = queryStr.substring(0, argsStartIndex).trim();
+  // Checks if there is an alias
+  if (queryObj.name.includes(':')) {
+    // sets index of alias marker :
+    const aliasIndex = queryObj.name.indexOf(':');
+    // sets alias
+    queryObj.alias = queryObj.name.substring(0, aliasIndex).trim();
+    // shortens name to exclude alias
+    queryObj.name = queryObj.name
+      .substring(aliasIndex + 1, firstBraceIndex)
+      .trim();
+  }
   // begin iterating through the queryString at the beginning of the arguments
   for (let i = argsStartIndex; i < queryStr.length; i += 1) {
     const char = queryStr[i];
@@ -108,6 +141,7 @@ export function splitUpQueryStr(queryStr) {
       if (argsString === '()') argsString = '';
       queryObj.arguments = argsString;
       queryObj.fields = queryStr.substring(i + 1).trim();
+
       return queryObj;
     }
   }
@@ -142,6 +176,7 @@ export function findQueryFields(fieldsStr) {
     // finding a non-whitespace character after the end of fieldname indicates the field is scalar or meta
     if (char.match(/\S/) && foundEndOfFieldName) {
       fieldsObj[fieldCache] = fieldCache === '__typename' ? 'meta' : 'scalar';
+
       fieldCache = '';
       foundEndOfFieldName = false;
     }
@@ -150,6 +185,7 @@ export function findQueryFields(fieldsStr) {
     // adds current non-whitespace character in fieldCache
     if (char.match(/\S/)) fieldCache += char;
   }
+
   return fieldsObj;
 }
 
@@ -163,6 +199,73 @@ export function findClosingBrace(str, index) {
     if (char === '{') bracePairs += 1;
     if (char === '}') bracePairs -= 1;
   }
+}
+
+// helper function to find fragments
+export function destructureQueriesWithFragments(queryOperationStr) {
+  // create a copy of the input to mutate
+  let queryCopy = queryOperationStr;
+  // declare an array to hold all fragments
+  const fragments = [];
+  // helper function to separate fragment from query/mutation
+  const separateFragments = (queryCopy) => {
+    let startFragIndex = queryCopy.indexOf('fragment');
+    let startFragCurly = queryCopy.indexOf('{', startFragIndex);
+    let endFragCurly;
+    const stack = ['{'];
+    const curlsAndParens = {
+      '}': '{',
+      ')': '(',
+    };
+    for (let i = startFragCurly + 1; i < queryCopy.length; i++) {
+      let char = queryCopy[i];
+      if (char === '{' || char === '(') {
+        stack.push(char);
+      }
+      if (char === '}' || char === ')') {
+        let topOfStack = stack[stack.length - 1];
+        if (topOfStack === curlsAndParens[char]) stack.pop();
+      }
+      if (!stack[0]) {
+        endFragCurly = i;
+        break;
+      }
+    }
+
+    let fragment = queryCopy.slice(startFragIndex, endFragCurly + 1);
+
+    fragments.push(fragment);
+    let newStr = queryCopy.replace(fragment, '');
+
+    return newStr;
+  };
+  // keep calling helper function as long as 'fragment' is found in the string
+  //! TODO: indices for one time loop instead of recursion
+  while (queryCopy.indexOf('fragment') !== -1) {
+    queryCopy = separateFragments(queryCopy);
+  }
+
+  queryCopy = queryCopy.trim();
+
+  const fragmentObj = {};
+
+  //! TODO: OPTIMIZE, SHOULD NOT NEED TO ITERATE THROUGH WHOLE QUERY STRING TO FIND THE ONE WORD NAME OF THE FRAGMENT. MAYBE WHILE STRING INDEX< INDEX OF '{' ?
+  // store each fragment name with its corresponding fields in fragmentObj
+  fragments.forEach((fragment) => {
+    let index = fragment.indexOf('{');
+    let words = fragment.split(' ');
+    let fragmentFields = fragment.slice(index + 1, fragment.length - 1);
+
+    fragmentObj[words[1]] = fragmentFields;
+  });
+
+  const fragmentObjKeys = Object.keys(fragmentObj);
+
+  fragmentObjKeys.forEach((fragment) => {
+    queryCopy = queryCopy.replaceAll(`...${fragment}`, fragmentObj[fragment]);
+  });
+
+  return queryCopy;
 }
 
 export default destructureQueries;

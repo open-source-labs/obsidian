@@ -189,4 +189,33 @@ export const test = {
       films: ['Movie~1'],
     },
   },
+  aliasQuery: `
+    query twoHeros {
+    jediHero: getHero(episode: "jedi") {
+          __typename
+          id
+          name
+   }
+      empireHero: getHero(episode: "empire") {
+          __typename
+          id
+          name
+      }
+    }
+  `,
+  aliasResponse: 
+  {
+    "data": {
+        "jediHero": {
+            "__typename": "Hero",
+            "id": 2,
+            "name": "R2-D2",
+        },
+        "empireHero": {
+            "__typename": "Hero",
+            "id": 1,
+            "name": "Luke Skywalker",
+        }
+    }
+},
 };

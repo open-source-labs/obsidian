@@ -9,6 +9,7 @@
  */
 
 import Cache from '../../src/CacheClassBrowser.js';
+import { Cache as CacheServer } from '../../src/CacheClassServer.js';
 import { Rhum } from 'https://deno.land/x/rhum@v1.1.4/mod.ts';
 import { test } from '../test_variables/writeCache_variables.ts';
 
@@ -38,6 +39,17 @@ Rhum.testPlan('write method on Cache class', () => {
         Rhum.asserts.assertEquals(test.originalCache, cache.storage);
       }
     );
+    // The following test requires the redis server to be started to test functionality.
+    //
+    // Rhum.testCase(
+    //   'alias test case',
+    //   async () => {
+    //     const cache = new CacheServer(test.originalCache);
+    //     await cache.write(test.aliasQuery, test.aliasResponse);
+    //     await console.log(cache.storage);
+    //     Rhum.asserts.assertEquals(cache.storage, test.originalCache);
+    //   }
+    // );
   });
 });
 Rhum.run();

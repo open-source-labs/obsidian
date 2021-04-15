@@ -32,6 +32,7 @@ export function insertTypenames(queryOperationStr) {
   }
   return newQueryStr;
 }
+
 // helper function to add typenames to fieldsStr where needed
 export function addTypenamesToFieldsStr(fieldsStr) {
   let newFieldsStr = fieldsStr;
@@ -62,6 +63,7 @@ export function addTypenamesToFieldsStr(fieldsStr) {
   }
   return newFieldsStr;
 }
+
 // helper function to find the partner closing brace
 export function findClosingBrace(str, index) {
   let bracePairs = 0;

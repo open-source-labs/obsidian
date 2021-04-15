@@ -42,10 +42,36 @@ Rhum.testPlan('destructure.ts', () => {
       Rhum.asserts.assertEquals(test.allActionTestResult, result);
     });
   });
+
   Rhum.testSuite('destructure multi query tests', () => {
     Rhum.testCase('destructure multi query - input / non input', () => {
       const result = destructureQueries(test.ALL_ACTION_MOVIES_AND_ALL_ACTORS);
       Rhum.asserts.assertEquals(test.allActionActorsTestResult, result);
+    });
+  });
+
+  Rhum.testSuite('destructure alias query tests', () => {
+    Rhum.testCase('destructure multi alias query - input / non input', () => {
+      const result = destructureQueries(test.newAliasTestQuery);
+      Rhum.asserts.assertEquals(test.newAliasTestResult, result);
+    });
+  });
+
+  Rhum.testSuite('destructure fragment tests', () => {
+    Rhum.testCase(
+      'destructure fragment tests - results in two seperate queries',
+      () => {
+        const result = destructureQueries(test.fragmentTestData);
+        Rhum.asserts.assertEquals(test.fragmentResultData, result);
+      }
+    );
+    Rhum.testCase('destructure fragment tests - results in one query', () => {
+      const result = destructureQueries(test.fragmentTestData2);
+      Rhum.asserts.assertEquals(test.fragmentResultData2, result);
+    });
+    Rhum.testCase('destructure fragment tests - nested fragments', () => {
+      const result = destructureQueries(test.fragmentTestData3);
+      Rhum.asserts.assertEquals(test.fragmentResultData3, result);
     });
   });
 });

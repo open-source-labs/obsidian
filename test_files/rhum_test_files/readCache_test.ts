@@ -2,7 +2,7 @@
  * NOTES:
  * 1.This file will test the read method on the Cache class functionalities:
  * Should return a graphql response object if all required values are found in the cache.
- * Should return undefined if any field is missing value  in the cache.
+ * Should return u;ndefined if any field is missing value  in the cache.
  * Should accept multiple queries in one query operation.
  * Should ignore the elements with a 'DELETE' value and not throw a cache miss if asked for in the query string
  * 2. This file will test populateAllHashes functionalities:
@@ -17,7 +17,7 @@ import { test } from '../test_variables/readCache_variables.ts';
 Rhum.testPlan('read method on Cache class', () => {
   Rhum.testSuite('read()', () => {
     Rhum.testCase(
-      'should return a graphql response object if all required values are found in the cache',
+      '\n *** \n readCache_test \n should return a graphql response object if all required values are found in the cache',
       async () => {
         const cache = new Cache(test.cache);
         const result = await cache.read(test.singularInputQuery);
@@ -48,6 +48,11 @@ Rhum.testPlan('read method on Cache class', () => {
         Rhum.asserts.assertEquals(result, test.multipleQueriesResObj);
       }
     );
+    Rhum.testCase('should accept alias queries', async () => {
+      const cache = new Cache(test.aliasCache);
+      const result = await cache.read(test.aliasQueryString);
+      Rhum.asserts.assertEquals(result, test.aliasResObj);
+    });
   });
 
   Rhum.testSuite('populateAllHashes()', () => {
@@ -56,7 +61,7 @@ Rhum.testPlan('read method on Cache class', () => {
       async () => {
         const cache = new Cache(test.cache);
         const result = await cache.populateAllHashes(
-          'Actor~1',
+          ['Actor~1'],
           test.fieldsUndefined
         );
         Rhum.asserts.assertEquals(result, undefined);
@@ -67,14 +72,16 @@ Rhum.testPlan('read method on Cache class', () => {
       async () => {
         const cache = new Cache(test.cache);
         const result = await cache.populateAllHashes(
-          'Actor~1',
+          ['Actor~1'],
           test.fieldsComplete
         );
-        Rhum.asserts.assertEquals(result, {
-          __typename: 'Actor',
-          id: '1',
-          firstName: 'Harrison',
-        });
+        Rhum.asserts.assertEquals(result, [
+          {
+            __typename: 'Actor',
+            id: '1',
+            firstName: 'Harrison',
+          },
+        ]);
       }
     );
   });

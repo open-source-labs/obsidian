@@ -21,28 +21,13 @@ export default function normalizeResult(queryObj, resultObj, deleteFlag) {
       //iterates thru the array of objects and stores the hash in the result object with 'DELETE' as value
       obj.forEach((ele) => {
         const mutationKeys = Object.keys(ele);
-        const id =
-          ele[mutationKeys[0]].id ||
-          ele[mutationKeys[0]].ID ||
-          ele[mutationKeys[0]]._id ||
-          ele[mutationKeys[0]]._ID ||
-          ele[mutationKeys[0]].Id ||
-          ele[mutationKeys[0]]._Id;
-        const hash = ele[mutationKeys[0]].__typename + '~' + id;
+        const hash = labelId(ele[mutationKeys[0]]);
         result[hash] = 'DELETED';
       });
     } else {
       //else stores the hash in the result object with the value 'DELETE'
       const mutationKeys = Object.keys(obj);
-
-      const id =
-        obj[mutationKeys[0]].id ||
-        obj[mutationKeys[0]].ID ||
-        obj[mutationKeys[0]]._id ||
-        obj[mutationKeys[0]]._ID ||
-        obj[mutationKeys[0]].Id ||
-        obj[mutationKeys[0]]._Id;
-      const hash = obj[mutationKeys[0]].__typename + '~' + id;
+      const hash = labelId(obj[mutationKeys[0]]);
       result[hash] = 'DELETED';
     }
   }
@@ -85,46 +70,36 @@ export default function normalizeResult(queryObj, resultObj, deleteFlag) {
   return result;
 }
 
-// creates the hashes for query requests and stores the reference has that will be stored in result
+// creates the hashes for query requests and stores the reference hash that will be stored in result
 function createRootQuery(queryObjArr, resultObj) {
   const output = {};
   queryObjArr.forEach((query) => {
+    // if query has an alias declare it
+    const alias = query.alias ?? null;
     const name = query.name;
     const args = query.arguments;
     const queryHash = name + args;
-
+    const result = resultObj.data[alias] ?? resultObj.data[name];
     // iterate thru the array of current query response
     // and store the hash of that response in an array
-    const result = resultObj.data[name];
+
     if (Array.isArray(result)) {
       const arrOfHashes = [];
       result.forEach((obj) => {
-        const id = obj.id || obj.ID || obj._id || obj._ID || obj.Id || obj._Id;
-        arrOfHashes.push(obj.__typename + '~' + id);
+        arrOfHashes.push(labelId(obj));
       });
       //store the array of hashes associated with the queryHash
       output[queryHash] = arrOfHashes;
     } else {
-      const id =
-        result.id ||
-        result.ID ||
-        result._id ||
-        result._ID ||
-        result.Id ||
-        result._Id;
-      output[queryHash] = result.__typename + '~' + id;
+      output[queryHash] = [labelId(result)];
     }
   });
-
   return output;
 }
 
 //returns a hash value pair of each response obj passed in
 function createHash(obj, output = {}) {
-  const id = obj.id || obj.ID || obj._id || obj._ID || obj.Id || obj._Id;
-  //create hash
-  const hash = obj.__typename + '~' + id;
-
+  const hash = labelId(obj);
   //if output doesnt have a key of hash create a new obj with that hash key
   if (!output[hash]) output[hash] = {};
   // iterate thru the fields in the current obj and check whether the current field
@@ -135,14 +110,7 @@ function createHash(obj, output = {}) {
     if (!Array.isArray(obj[field])) {
       //check whether current field is an object
       if (typeof obj[field] === 'object' && obj[field] !== null) {
-        const id =
-          obj[field].id ||
-          obj[field].ID ||
-          obj[field]._id ||
-          obj[field]._ID ||
-          obj[field].Id ||
-          obj[field]._Id;
-        output[hash][field] = obj[field].__typename + '~' + id;
+        output[hash][field] = labelId(obj[field]);
         output = createHash(obj[field], output);
       } else {
         output[hash][field] = obj[field];
@@ -154,8 +122,7 @@ function createHash(obj, output = {}) {
     else {
       output[hash][field] = [];
       obj[field].forEach((obj) => {
-        const id = obj.id || obj.ID || obj._id || obj._ID || obj.Id || obj._Id;
-        const arrayHash = obj.__typename + '~' + id;
+        const arrayHash = labelId(obj);
         output[hash][field].push(arrayHash);
         output = createHash(obj, output);
       });
@@ -163,4 +130,9 @@ function createHash(obj, output = {}) {
     }
   }
   return output;
+}
+
+function labelId(obj) {
+  const id = obj.id || obj.ID || obj._id || obj._ID || obj.Id || obj._Id;
+  return obj.__typename + '~' + id;
 }

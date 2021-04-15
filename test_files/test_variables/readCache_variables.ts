@@ -1,7 +1,7 @@
 export const test = {
   cache: {
     ROOT_QUERY: {
-      'actor(id:1)': 'Actor~1',
+      'actor(id:1)': ['Actor~1'],
       movies: ['Movie~1', 'Movie~2', 'Movie~3', 'Movie~4'],
       actors: ['Actor~1', 'Actor~2', 'Actor~3', 'Actor~4'],
       'movies(input:{genre:ACTION})': ['Movie~1', 'Movie~4', 'Movie~5'],
@@ -90,11 +90,13 @@ export const test = {
   fieldsComplete: { __typename: 'meta', id: 'scalar', firstName: 'scalar' },
   singularQueryResObj: {
     data: {
-      actor: {
-        __typename: 'Actor',
-        id: '1',
-        firstName: 'Harrison',
-      },
+      actor: [
+        {
+          __typename: 'Actor',
+          id: '1',
+          firstName: 'Harrison',
+        },
+      ],
     },
   },
   multipleQueriesResObj: {
@@ -170,4 +172,50 @@ export const test = {
    }
   }
   `,
+  aliasQueryString: `
+{
+  jediHero: getHero(episode: "jedi") {
+      __typename
+      id
+name
+}  empireHero: getHero(episode: "empire") {
+      __typename
+    name
+    id
+  }
+
+}`,
+  aliasResObj: {
+    data: {
+      empireHero: [
+        {
+          __typename: 'Hero',
+          id: 1,
+          name: 'Luke Skywalker',
+        },
+      ],
+      jediHero: [
+        {
+          __typename: 'Hero',
+          id: 2,
+          name: 'R2-D2',
+        },
+      ],
+    },
+  },
+  aliasCache: {
+    ROOT_QUERY: {
+      'getHero(episode:"empire")': ['Hero~1'],
+      'getHero(episode:"jedi")': ['Hero~2'],
+    },
+    ROOT_MUTATION: {},
+    'Hero~1': {
+      id: 1,
+      name: 'Luke Skywalker',
+    },
+    'Hero~2': {
+      id: 2,
+      name: 'R2-D2',
+    },
+  },
 };
