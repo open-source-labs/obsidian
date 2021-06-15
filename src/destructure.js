@@ -13,7 +13,8 @@
  */
 // this function will destructure a query/mutation operation string into a query/mutation operation object
 export function destructureQueries(queryOperationStr, queryOperationVars) {
-  queryOperationStr = queryOperationStr.replace(/,/gm, '');
+  // console.log('RAW QUERY STRING: ', queryOperationStr);
+  // queryOperationStr = queryOperationStr.replace(/,/gm, '');
   // check if query has fragments
   if (queryOperationStr.indexOf('fragment') !== -1) {
     // reassigns query string to replace fragment references with fragment fields
@@ -157,10 +158,28 @@ export function splitUpQueryStr(queryStr, queryVars) {
   }
 }
 
+/*
+query Test($movieId: ID, $title: String) {
+    getMovie(id: $movieId, title: $title ) {
+        id
+        title
+        releaseYear
+    }
+}
+Query Arg String:  (id:$movieIdtitle:$title)
+*/
+
 // helper function to manipulate query args string by replacing variables
 export function replaceQueryVariables(queryArgs, variables) {
+  console.log('Variables object: ', variables);
   let varStartIndex;
   let varEndIndex;
+
+  console.log('Query Arg String: ', queryArgs);
+
+  // Query Arg String:  (id:$movieId,title:$title)
+  // After replacing:  (id:2,title:$title)
+  // output: (id:2, title:"Movie-2")
 
   for (let i = 0; i < queryArgs.length; i += 1) {
     const char = queryArgs[i];
@@ -171,16 +190,23 @@ export function replaceQueryVariables(queryArgs, variables) {
     // !!!!!! "variables" not necessary here !!!!!!!
     if (varStartIndex && varEndIndex && variables) {
       const varName = queryArgs.slice(varStartIndex + 1, varEndIndex);
+      // (id: $movieId, title: $title )
       const varValue = variables[varName];
 
       if (varValue) {
-        queryArgs = queryArgs.replace(varName, varValue).replace('$', '');
+        queryArgs = queryArgs.replace('$' + varName, varValue);
+        i -= varName.length - varValue.length;
+        // (id:$movieId,title:$title)   i = 11
+        // (id:2,title:$title)   i = 4
+        // varName - varValue
       }
 
       varStartIndex = undefined;
       varEndIndex = undefined;
     }
   }
+  // queryArgs = queryArgs.replace(/[$]/ig, '');
+  console.log('After replacing: ', queryArgs);
   return queryArgs;
 }
 
