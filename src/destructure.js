@@ -12,7 +12,7 @@
  *
  */
 // this function will destructure a query/mutation operation string into a query/mutation operation object
-export function destructureQueries(queryOperationStr) {
+export function destructureQueries(queryOperationStr, queryOperationVars) {
   queryOperationStr = queryOperationStr.replace(/,/gm, '');
   // check if query has fragments
   if (queryOperationStr.indexOf('fragment') !== -1) {
@@ -31,7 +31,13 @@ export function destructureQueries(queryOperationStr) {
       ? 'mutations'
       : 'queries';
   // create a queries object from array of query strings
-  const queriesObj = createQueriesObj(arrayOfQueryStrings, typePropName);
+  const queriesObj = createQueriesObj(
+    arrayOfQueryStrings,
+    queryOperationVars,
+    typePropName
+  );
+
+  console.log('QUERY OBJECT: =================\n', queriesObj);
 
   return queriesObj;
 }
@@ -72,14 +78,14 @@ export function findQueryStrings(queryStrings) {
 }
 
 // helper function to create a queries object from an array of query strings
-export function createQueriesObj(arrayOfQueryStrings, typePropName) {
+export function createQueriesObj(arrayOfQueryStrings, queryVars, typePropName) {
   // define a new empty result object
   const queriesObj = {};
   queriesObj[typePropName] = [];
   // for each query string
   arrayOfQueryStrings.forEach((queryStr) => {
     // split the query string into multiple parts
-    const queryObj = splitUpQueryStr(queryStr);
+    const queryObj = splitUpQueryStr(queryStr, queryVars);
     // recursively convert the fields string to a fields object and update the fields property
     queryObj.fields = findQueryFields(queryObj.fields);
     // push the finished query object into the queries/mutations array on the result object
@@ -89,7 +95,7 @@ export function createQueriesObj(arrayOfQueryStrings, typePropName) {
   return queriesObj;
 }
 // helper function that returns an object with a query string split into multiple parts
-export function splitUpQueryStr(queryStr) {
+export function splitUpQueryStr(queryStr, queryVars) {
   // creates new queryObj
   const queryObj = {};
   let parensPairs = 0;
@@ -139,12 +145,43 @@ export function splitUpQueryStr(queryStr) {
       argsString = argsString.replace(/\s/g, '');
       // handles edge case where ther are no arguments inside the argument parens pair.
       if (argsString === '()') argsString = '';
+      // TBD: call replaceQueryVariables()
+      if (queryVars) {
+        argsString = replaceQueryVariables(argsString, queryVars);
+      }
+
       queryObj.arguments = argsString;
       queryObj.fields = queryStr.substring(i + 1).trim();
-
       return queryObj;
     }
   }
+}
+
+// helper function to manipulate query args string by replacing variables
+export function replaceQueryVariables(queryArgs, variables) {
+  let varStartIndex;
+  let varEndIndex;
+
+  for (let i = 0; i < queryArgs.length; i += 1) {
+    const char = queryArgs[i];
+
+    if (char === '$') varStartIndex = i;
+    if (char === ',' || char === ')') varEndIndex = i;
+
+    // !!!!!! "variables" not necessary here !!!!!!!
+    if (varStartIndex && varEndIndex && variables) {
+      const varName = queryArgs.slice(varStartIndex + 1, varEndIndex);
+      const varValue = variables[varName];
+
+      if (varValue) {
+        queryArgs = queryArgs.replace(varName, varValue).replace('$', '');
+      }
+
+      varStartIndex = undefined;
+      varEndIndex = undefined;
+    }
+  }
+  return queryArgs;
 }
 
 // helper function to recursively convert the fields string to a fields object

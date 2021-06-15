@@ -32,11 +32,11 @@ export class Cache {
   }
 
   // Main functionality methods
-  async read(queryStr) {
+  async read(queryStr, queryVars) {
     if (typeof queryStr !== 'string')
       throw TypeError('input should be a string');
     // destructure the query string into an object
-    const queries = destructureQueries(queryStr).queries;
+    const queries = destructureQueries(queryStr, queryVars).queries;
     // breaks out of function if queryStr is a mutation
     if (!queries) return undefined;
     const responseObject = {};
@@ -45,6 +45,7 @@ export class Cache {
       // get the entire str query from the name input query and arguments
       const queryHash = queries[query].name.concat(queries[query].arguments);
       const rootQuery = await this.cacheRead('ROOT_QUERY');
+      console.log('CACHE: \n\n', this.storage);
       // match in ROOT_QUERY
       if (rootQuery[queryHash]) {
         // get the hashs to populate from the existent query in the cache
