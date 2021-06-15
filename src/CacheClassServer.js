@@ -67,8 +67,8 @@ export class Cache {
     return { data: responseObject };
   }
 
-  async write(queryStr, respObj, deleteFlag) {
-    const queryObj = destructureQueries(queryStr);
+  async write(queryStr, queryVars, respObj, deleteFlag) {
+    const queryObj = destructureQueries(queryStr, queryVars);
     const resFromNormalize = normalizeResult(queryObj, respObj, deleteFlag);
     // update the original cache with same reference
     for (const hash in resFromNormalize) {
