@@ -9,16 +9,25 @@
  * 7. We won't handle variables for now, but we may very well find we need to
  * 8. We will handle only the meta field "__typename" for now
  * 9. What edge cases as far as field/query names do we have to worry about: special characters, apostrophes, etc???
+ * 10. Directives-implementation don't handle fragment inclusion
  *
  */
+
 // this function will destructure a query/mutation operation string into a query/mutation operation object
 export function destructureQueries(queryOperationStr, queryOperationVars) {
-  // console.log('RAW QUERY STRING: ', queryOperationStr);
-  // queryOperationStr = queryOperationStr.replace(/,/gm, '');
   // check if query has fragments
   if (queryOperationStr.indexOf('fragment') !== -1) {
     // reassigns query string to replace fragment references with fragment fields
     queryOperationStr = destructureQueriesWithFragments(queryOperationStr);
+  }
+
+  // check if query has directives
+  if (queryOperationStr.indexOf('@') !== -1) {
+    // reassigns query string to handle directives
+    queryOperationStr = destructureQueriesWithDirectives(
+      queryOperationStr,
+      queryOperationVars
+    );
   }
 
   // ignore operation name by finding the beginning of the query strings
@@ -34,8 +43,8 @@ export function destructureQueries(queryOperationStr, queryOperationVars) {
   // create a queries object from array of query strings
   const queriesObj = createQueriesObj(
     arrayOfQueryStrings,
-    queryOperationVars,
-    typePropName
+    typePropName,
+    queryOperationVars
   );
 
   console.log('QUERY OBJECT: =================\n', queriesObj);
@@ -79,7 +88,7 @@ export function findQueryStrings(queryStrings) {
 }
 
 // helper function to create a queries object from an array of query strings
-export function createQueriesObj(arrayOfQueryStrings, queryVars, typePropName) {
+export function createQueriesObj(arrayOfQueryStrings, typePropName, queryVars) {
   // define a new empty result object
   const queriesObj = {};
   queriesObj[typePropName] = [];
@@ -159,14 +168,14 @@ export function splitUpQueryStr(queryStr, queryVars) {
 }
 
 /*
-query Test($movieId: ID, $title: String) {
-    getMovie(id: $movieId, title: $title ) {
-        id
-        title
-        releaseYear
+query Hero($episode: Episode, $withFriends: Boolean!) {
+  hero(episode: $episode) {
+    name
+    friends @include(if: $withFriends) {
+      name
     }
+  }
 }
-Query Arg String:  (id:$movieIdtitle:$title)
 */
 
 // helper function to manipulate query args string by replacing variables
@@ -324,6 +333,42 @@ export function destructureQueriesWithFragments(queryOperationStr) {
   });
 
   return queryCopy;
+}
+
+export function destructureQueriesWithDirectives(queryStr, queryVars) {
+  /*
+  query Hero($episode: Episode, $withFriends: Boolean!) {
+    hero(episode: $episode) {
+      name
+      friends @include(if: true) {
+        name
+      }
+    }
+  }
+*/
+  const startIndex = queryStr.indexOf('{');
+
+  let argStartIndex;
+  let argEndIndex;
+
+  for (let i = startIndex; i < queryStr.length; i += 1) {
+    const char = queryStr[i];
+
+    if (char === '(') argStartIndex = i;
+    if (char === ')') argEndIndex = i;
+
+    if (argStartIndex && argEndIndex) {
+      const oldQueryArgs = queryStr.slice(argStartIndex, argEndIndex + 1);
+      const newQueryArgs = replaceQueryVariables(oldQueryArgs, queryVars);
+
+      queryStr = queryStr.replace(oldQueryArgs, newQueryArgs);
+
+      argStartIndex = undefined;
+      argEndIndex = undefined;
+    }
+  }
+
+  return queryStr;
 }
 
 export default destructureQueries;
