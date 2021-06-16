@@ -171,11 +171,8 @@ Query Arg String:  (id:$movieIdtitle:$title)
 
 // helper function to manipulate query args string by replacing variables
 export function replaceQueryVariables(queryArgs, variables) {
-  console.log('Variables object: ', variables);
   let varStartIndex;
   let varEndIndex;
-
-  console.log('Query Arg String: ', queryArgs);
 
   // Query Arg String:  (id:$movieId,title:$title)
   // After replacing:  (id:2,title:$title)
@@ -205,8 +202,6 @@ export function replaceQueryVariables(queryArgs, variables) {
       varEndIndex = undefined;
     }
   }
-  // queryArgs = queryArgs.replace(/[$]/ig, '');
-  console.log('After replacing: ', queryArgs);
   return queryArgs;
 }
 
