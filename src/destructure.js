@@ -15,6 +15,13 @@
 
 // this function will destructure a query/mutation operation string into a query/mutation operation object
 export function destructureQueries(queryOperationStr, queryOperationVars) {
+  queryOperationStr = queryOperationStr.replace(/\s+/g, ' ').trim();
+
+  // console.log('QUERY STR WITH REGEX: ', queryOperationStr);
+
+  // query Hero($movieId: ID, $withRel: Boolean!) { getMovie(id: $movieId) { id
+  // releaseYear @include(if: $withRel) title } }
+
   // check if query has fragments
   if (queryOperationStr.indexOf('fragment') !== -1) {
     // reassigns query string to replace fragment references with fragment fields
@@ -199,7 +206,7 @@ export function replaceQueryVariables(queryArgs, variables) {
       // (id: $movieId, title: $title )
       const varValue = variables[varName];
 
-      if (varValue) {
+      if (varValue !== undefined) {
         queryArgs = queryArgs.replace('$' + varName, varValue);
         i -= varName.length - varValue.length;
         // (id:$movieId,title:$title)   i = 11
@@ -346,7 +353,7 @@ export function destructureQueriesWithDirectives(queryStr, queryVars) {
     }
   }
 */
-  const startIndex = queryStr.indexOf('{');
+  let startIndex = queryStr.indexOf('{');
 
   let argStartIndex;
   let argEndIndex;
@@ -368,7 +375,101 @@ export function destructureQueriesWithDirectives(queryStr, queryVars) {
     }
   }
 
+  console.log('queryStr after replacing: ', queryStr);
+
+  startIndex = queryStr.indexOf('@');
+  let includeQueryField = false;
+  let startDeleteIndex;
+  let endDeleteIndex;
+
+  // check in between @ and closing parens
+  for (let i = startIndex; i < queryStr.length; i += 1) {
+    const char = queryStr[i];
+
+    if (char === '@') {
+      startDeleteIndex = i;
+    }
+
+    if (char === ')') {
+      endDeleteIndex = i;
+    }
+
+    // if directive is true
+    if (startDeleteIndex && char === ':') {
+      if (queryStr.slice(i, i + 6).indexOf('true') !== -1) {
+        includeQueryField = true;
+      }
+    }
+
+    if (startDeleteIndex && endDeleteIndex) {
+      const directive = queryStr.slice(startDeleteIndex, endDeleteIndex + 2);
+
+      queryStr = queryStr.replace(directive, '');
+      i -= directive.length;
+
+      if (!includeQueryField) {
+        let j = i + 3;
+
+        // Delete the body of field
+        if (queryStr.slice(i, j).indexOf('{') !== -1) {
+          let numOpeningBrace = 0;
+          let numClosingBrace = 0;
+
+          while (j >= 0) {
+            if (queryStr[j--] === '{') numOpeningBrace++;
+          }
+
+          // start at the end of the queryStr and count # of closing braces..
+          let k = queryStr.length - 1;
+
+          while (numClosingBrace !== numOpeningBrace) {
+            if (queryStr[k--] === '}') numClosingBrace++;
+          }
+
+          const openingBracketIndex = i;
+          const closingBracketIndex = k + 1;
+
+          queryStr = queryStr.replace(
+            queryStr.slice(openingBracketIndex, closingBracketIndex + 1),
+            ''
+          );
+        }
+
+        // Delete the field with the directive attached to it
+        let startFieldNameIndex = i - 1;
+
+        while (queryStr[startFieldNameIndex] !== ' ') {
+          startFieldNameIndex--;
+        }
+
+        queryStr = queryStr.replace(queryStr.slice(startFieldNameIndex, i), '');
+      }
+
+      // Otherwise, remove the "directive" string, the following body {} if any,
+      // and the preceding field name
+
+      startDeleteIndex = undefined;
+      endDeleteIndex = undefined;
+    }
+  }
+
+  console.log('AFTER REPLACEMENT QUERYSTR: ', queryStr);
+
   return queryStr;
 }
 
 export default destructureQueries;
+
+// query Hero($movieId: ID, $withRel: Boolean!)
+
+// {
+//   getMovie(id: 1) {
+//     id
+//     releaseYear @include(if: true) {
+//       name {
+//         student
+//       }
+//     }
+//     title
+//   }
+// }
