@@ -3,6 +3,7 @@ import { renderPlaygroundPage } from 'https://deno.land/x/oak_graphql@0.6.2/grap
 import { makeExecutableSchema } from 'https://deno.land/x/oak_graphql@0.6.2/graphql-tools/schema/makeExecutableSchema.ts';
 import LFUCache from './lfuBrowserCache.js';
 import { Cache } from './CacheClassServer.js';
+import queryDepthLimiter from './DoSSecurity.ts';
 
 interface Constructable<T> {
   new (...args: any): T & OakRouter;
@@ -25,6 +26,7 @@ export interface ObsidianRouterOptions<T> {
   redisPort?: number;
   policy?: string;
   maxmemory?: string;
+  maxQueryDepth?: number;
 }
 
 export interface ResolversProps {
@@ -47,6 +49,7 @@ export async function ObsidianRouter<T>({
   redisPort = 6379,
   policy,
   maxmemory,
+  maxQueryDepth = 0,
 }: ObsidianRouterOptions<T>): Promise<T> {
   redisPortExport = redisPort;
   const router = new Router();
@@ -65,7 +68,7 @@ export async function ObsidianRouter<T>({
   // set redis configurations
 
   if (policy || maxmemory) {
-    console.log('inside if');
+    // console.log('inside if');
     cache.configSet('maxmemory-policy', policy);
     cache.configSet('maxmemory', maxmemory);
   }
@@ -77,6 +80,11 @@ export async function ObsidianRouter<T>({
       try {
         const contextResult = context ? await context(ctx) : undefined;
         const body = await request.body().value;
+        
+        // If a securty limit is set for maxQueryDepth, invoke queryDepthLimiter 
+        // which throws error if query depth exceeds maximum
+        if (maxQueryDepth) queryDepthLimiter(body.query, maxQueryDepth);
+        
         // Variable to block the normalization of mutations //
         let toNormalize = true;
 
@@ -90,8 +98,8 @@ export async function ObsidianRouter<T>({
             var t1 = performance.now();
             console.log(
               'Obsidian retrieved data from cache and took ' +
-                (t1 - t0) +
-                ' milliseconds.'
+              (t1 - t0) +
+              ' milliseconds.',
             );
             return;
           }
@@ -104,7 +112,7 @@ export async function ObsidianRouter<T>({
           resolvers,
           contextResult,
           body.variables || undefined,
-          body.operationName || undefined
+          body.operationName || undefined,
         );
 
         // Send database response to client //
@@ -112,11 +120,12 @@ export async function ObsidianRouter<T>({
         response.body = result;
 
         // Normalize response and store in cache //
-        if (useCache && toNormalize && !result.errors)
+        if (useCache && toNormalize && !result.errors) {
           cache.write(body.query, result, false);
+        }
         var t1 = performance.now();
         console.log(
-          'Obsidian received new data and took ' + (t1 - t0) + ' milliseconds.'
+          'Obsidian received new data and took ' + (t1 - t0) + ' milliseconds.',
         );
         return;
       } catch (error) {
@@ -129,6 +138,7 @@ export async function ObsidianRouter<T>({
             },
           ],
         };
+        console.error('Error: ', error.message);
         return;
       }
     }
