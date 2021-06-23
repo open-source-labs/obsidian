@@ -136,6 +136,7 @@ LFUCache.prototype.read = async function (queryStr) {
         arrayHashes,
         queries[query].fields
       );
+      console.log('reaches lfucache func here');
       if (!responseObject[respObjProp]) return undefined;
 
       // no match with ROOT_QUERY return null or ...

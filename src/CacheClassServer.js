@@ -37,19 +37,34 @@ export class Cache {
       throw TypeError('input should be a string');
     // destructure the query string into an object
     const queries = destructureQueries(queryStr, queryVars).queries;
+    // console.log('QUERIES from .read() after destructure: ', queries);
     // breaks out of function if queryStr is a mutation
+    // DOES IT EVER RETURN UNDEFINED THO???? <-- lol
     if (!queries) return undefined;
     const responseObject = {};
     // iterate through each query in the input queries object
     for (const query in queries) {
       // get the entire str query from the name input query and arguments
       const queryHash = queries[query].name.concat(queries[query].arguments);
+      // RETURNS {} INITIALLY, BEFORE CACHE WRITE OCCURS
       const rootQuery = await this.cacheRead('ROOT_QUERY');
-      console.log('CACHE: \n\n', this.storage);
+
       // match in ROOT_QUERY
+      console.log('ROOT QUERY: ', rootQuery);
+      console.log('\n\n');
+      console.log('QUERYHASH: ', queryHash);
+      console.log('\n\n');
+      console.log('rootQuery[queryHash]: ', rootQuery[queryHash]);
+      console.log('\n\n');
+
       if (rootQuery[queryHash]) {
         // get the hashs to populate from the existent query in the cache
+        /* 
+          - WHY IS ROOTQUERY[QUERYHASH] === UNDEFINED~2 ? ? ? ? 
+          - maybe rename to arrayOfHashes
+        */
         const arrayHashes = rootQuery[queryHash];
+        console.log('arrayHashes: ', arrayHashes);
         // Determines responseObject property labels - use alias if applicable, otherwise use name
         const respObjProp = queries[query].alias ?? queries[query].name;
         // invoke populateAllHashes and add data objects to the response object for each input query
@@ -57,6 +72,8 @@ export class Cache {
           arrayHashes,
           queries[query].fields
         );
+
+        console.log('OUTPUT OF popAllHashes: ', responseObject[respObjProp]);
         if (!responseObject[respObjProp]) return undefined;
 
         // no match with ROOT_QUERY return null or ...
@@ -88,6 +105,7 @@ export class Cache {
   async cacheRead(hash) {
     // returns value from either object cache or   cache || 'DELETED' || undefined
     if (this.context === 'client') {
+      console.log('context === client HIT');
       return this.storage[hash];
     } else {
       // logic to replace these storage keys if they have expired
@@ -102,7 +120,12 @@ export class Cache {
         }
       }
       let hashedQuery = await redis.get(hash);
+      console.log(
+        `hashedQuery from cacheRead for hash: ${hash} ==== `,
+        hashedQuery
+      );
       // if cacheRead is a miss
+      // MAYBE IF IT IS AN EMPTY OBJECT? NOT UNDEFINED????
       if (hashedQuery === undefined) return undefined;
       return JSON.parse(hashedQuery);
     }
@@ -157,13 +180,23 @@ export class Cache {
 
   // specialized helper methods
   async populateAllHashes(allHashesFromQuery, fields) {
+    console.log('popAllHashes has been invoked!!!!!!!');
+    console.log('====== allHashesFromQuery before any manipulation: ');
+    console.log(allHashesFromQuery);
     // include the hashname for each hash
     if (!allHashesFromQuery.length) return [];
     const hyphenIdx = allHashesFromQuery[0].indexOf('~');
+    // SHOULD TYPENAME EVER BE UNDEFINED??? WHERE IS THIS TYPENAME
+    // BEING SET TO UNDEFINED from ???
     const typeName = allHashesFromQuery[0].slice(0, hyphenIdx);
+
+    // fields: { id: "scalar", title: "scalar", releaseYear: { year: "scalar" } }
+
     return allHashesFromQuery.reduce(async (acc, hash) => {
+      // readVal:  { id: "1", title: "Movie-1", releaseYear: 2001 }
       // for each hash from the input query, build the response object
       const readVal = await this.cacheRead(hash);
+      console.log('readVal: ', readVal);
       // return undefine if hash has been garbage collected
       if (readVal === undefined) return undefined;
       if (readVal === 'DELETED') return acc;
@@ -172,16 +205,34 @@ export class Cache {
         if (readVal[field] === 'DELETED') continue;
         // for each field in the fields input query, add the corresponding value from the cache if the field is not another array of hashs
         if (readVal[field] === undefined && field !== '__typename') {
+          console.log('1');
           return undefined;
         } else if (typeof fields[field] !== 'object') {
+          console.log('2');
           // add the typename for the type
           if (field === '__typename') {
+            console.log('3');
             dataObj[field] = typeName;
-          } else dataObj[field] = readVal[field];
+          } else {
+            console.log('3.5', readVal[field]);
+            // console.log()
+            dataObj[field] = readVal[field];
+          }
         } else {
+          console.log('4');
           // case where the field from the input query is an array of hashes, recursively invoke populateAllHashes
+          // *PROBLEM HERE* - What does populateAllHashes here do? - What is inside releaseYear?
+          // exepected output of calling populateAllHashes: releaseYear : { year: "scalar" }
+
+          // fields:
+          // { id: "scalar", title: "scalar", releaseYear: { year: "scalar" } }
+          // readVal:
+          // { id: "1", title: "Movie-1", releaseYear: 2001 }
+
+          console.log('readVal[field]: ', readVal[field]);
+
           dataObj[field] = await this.populateAllHashes(
-            readVal[field],
+            [readVal[field]], // <------ wrong type // changed to array type
             fields[field]
           );
           if (dataObj[field] === undefined) return undefined;
@@ -198,3 +249,37 @@ export class Cache {
     }, []);
   }
 }
+
+/*
+  query Test {
+    getMovie(id: 2) {
+      title
+      releaseYear {
+        year
+      }
+    }
+  }
+*/
+
+/*
+{
+    "data": null,
+    "errors": [
+        {
+            "message": "allHashesFromQuery.reduce is not a function"    <--- comes from populateAllHashes method in cacheClassServer
+        }
+    ]
+}
+*/
+
+// TO DO:
+//  - Caching doesn't work with Directives if variable is false only
+//      - Console log the query objects
+//      - (query body from the cache needs array bracket to indicate it's retrieved from cache)
+//  - Look into cache tests:
+//      - do any of the test queries they use have nested  "bodies"
+//              - YES, but their tests passed but we know that the cache wasnt
+//                working for "nested body" queries
+
+// Directives -- skip
+// Write our own tests on Rhum

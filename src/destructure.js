@@ -15,6 +15,7 @@
 
 // this function will destructure a query/mutation operation string into a query/mutation operation object
 export function destructureQueries(queryOperationStr, queryOperationVars) {
+  console.log('================ NEW =====================');
   queryOperationStr = queryOperationStr.replace(/\s+/g, ' ').trim();
 
   // console.log('QUERY STR WITH REGEX: ', queryOperationStr);
@@ -54,7 +55,7 @@ export function destructureQueries(queryOperationStr, queryOperationVars) {
     queryOperationVars
   );
 
-  console.log('QUERY OBJECT: =================\n', queriesObj);
+  // console.log('QUERY OBJECT: =================\n', queriesObj);
 
   return queriesObj;
 }
@@ -375,8 +376,6 @@ export function destructureQueriesWithDirectives(queryStr, queryVars) {
     }
   }
 
-  console.log('queryStr after replacing: ', queryStr);
-
   startIndex = queryStr.indexOf('@');
   let includeQueryField = false;
   let startDeleteIndex;
@@ -426,7 +425,7 @@ export function destructureQueriesWithDirectives(queryStr, queryVars) {
             if (queryStr[k--] === '}') numClosingBrace++;
           }
 
-          const openingBracketIndex = i;
+          const openingBracketIndex = i - 1;
           const closingBracketIndex = k + 1;
 
           queryStr = queryStr.replace(
@@ -452,8 +451,6 @@ export function destructureQueriesWithDirectives(queryStr, queryVars) {
       endDeleteIndex = undefined;
     }
   }
-
-  console.log('AFTER REPLACEMENT QUERYSTR: ', queryStr);
 
   return queryStr;
 }
