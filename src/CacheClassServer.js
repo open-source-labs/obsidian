@@ -196,7 +196,6 @@ export class Cache {
       // readVal:  { id: "1", title: "Movie-1", releaseYear: 2001 }
       // for each hash from the input query, build the response object
       const readVal = await this.cacheRead(hash);
-      console.log('readVal: ', readVal);
       // return undefine if hash has been garbage collected
       if (readVal === undefined) return undefined;
       if (readVal === 'DELETED') return acc;
@@ -205,21 +204,15 @@ export class Cache {
         if (readVal[field] === 'DELETED') continue;
         // for each field in the fields input query, add the corresponding value from the cache if the field is not another array of hashs
         if (readVal[field] === undefined && field !== '__typename') {
-          console.log('1');
           return undefined;
         } else if (typeof fields[field] !== 'object') {
-          console.log('2');
           // add the typename for the type
           if (field === '__typename') {
-            console.log('3');
             dataObj[field] = typeName;
           } else {
-            console.log('3.5', readVal[field]);
-            // console.log()
             dataObj[field] = readVal[field];
           }
         } else {
-          console.log('4');
           // case where the field from the input query is an array of hashes, recursively invoke populateAllHashes
           // *PROBLEM HERE* - What does populateAllHashes here do? - What is inside releaseYear?
           // exepected output of calling populateAllHashes: releaseYear : { year: "scalar" }
@@ -228,8 +221,6 @@ export class Cache {
           // { id: "scalar", title: "scalar", releaseYear: { year: "scalar" } }
           // readVal:
           // { id: "1", title: "Movie-1", releaseYear: 2001 }
-
-          console.log('readVal[field]: ', readVal[field]);
 
           dataObj[field] = await this.populateAllHashes(
             [readVal[field]], // <------ wrong type // changed to array type
@@ -282,4 +273,5 @@ export class Cache {
 //                working for "nested body" queries
 
 // Directives -- skip
+// Implement skip directives
 // Write our own tests on Rhum

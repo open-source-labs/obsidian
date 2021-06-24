@@ -401,11 +401,26 @@ export function destructureQueriesWithDirectives(queryStr, queryVars) {
     }
 
     if (startDeleteIndex && endDeleteIndex) {
+      console.log('i at the start: ', queryStr.slice(i));
       const directive = queryStr.slice(startDeleteIndex, endDeleteIndex + 2);
 
       queryStr = queryStr.replace(directive, '');
+      console.log('QUERYSTR AFTER DIRECTIVE REMOVED: ', queryStr);
       i -= directive.length;
+      console.log('i after replacing directive: ', queryStr.slice(i));
 
+      /*
+    query Test ($mID: ID, $withRel: Boolean!) {
+        getMovie(id: $mID) {
+            id
+            title
+            releaseYear {
+                year
+            }
+        }
+    }
+        */
+      // If directive is false
       if (!includeQueryField) {
         let j = i + 3;
 
@@ -425,7 +440,7 @@ export function destructureQueriesWithDirectives(queryStr, queryVars) {
             if (queryStr[k--] === '}') numClosingBrace++;
           }
 
-          const openingBracketIndex = i - 1;
+          const openingBracketIndex = queryStr.indexOf('{', i);
           const closingBracketIndex = k + 1;
 
           queryStr = queryStr.replace(
@@ -441,7 +456,10 @@ export function destructureQueriesWithDirectives(queryStr, queryVars) {
           startFieldNameIndex--;
         }
 
-        queryStr = queryStr.replace(queryStr.slice(startFieldNameIndex, i), '');
+        queryStr = queryStr.replace(
+          queryStr.slice(startFieldNameIndex, i + 1),
+          ''
+        );
       }
 
       // Otherwise, remove the "directive" string, the following body {} if any,

@@ -199,6 +199,7 @@ LFUCache.prototype.populateAllHashes = async function (
   fields
 ) {
   // include the hashname for each hash
+  console.log('LFUCache.prototype.populateAllHashes ran');
   if (!allHashesFromQuery.length) return [];
   const hyphenIdx = allHashesFromQuery[0].indexOf('~');
   const typeName = allHashesFromQuery[0].slice(0, hyphenIdx);

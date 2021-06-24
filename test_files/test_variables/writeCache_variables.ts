@@ -1,6 +1,13 @@
 export const test = {
   queryStr: `
   query AllMoviesAndGetActorById  {
+    getMovie(id: 1) {
+        id
+        title
+        releaseYear {
+            year
+        }
+    }
     movies {
       __typename
       id
@@ -203,19 +210,18 @@ export const test = {
       }
     }
   `,
-  aliasResponse: 
-  {
-    "data": {
-        "jediHero": {
-            "__typename": "Hero",
-            "id": 2,
-            "name": "R2-D2",
-        },
-        "empireHero": {
-            "__typename": "Hero",
-            "id": 1,
-            "name": "Luke Skywalker",
-        }
-    }
-},
+  aliasResponse: {
+    data: {
+      jediHero: {
+        __typename: 'Hero',
+        id: 2,
+        name: 'R2-D2',
+      },
+      empireHero: {
+        __typename: 'Hero',
+        id: 1,
+        name: 'Luke Skywalker',
+      },
+    },
+  },
 };
