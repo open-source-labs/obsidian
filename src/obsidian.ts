@@ -68,7 +68,6 @@ export async function ObsidianRouter<T>({
   // set redis configurations
 
   if (policy || maxmemory) {
-    // console.log('inside if');
     cache.configSet('maxmemory-policy', policy);
     cache.configSet('maxmemory', maxmemory);
   }
