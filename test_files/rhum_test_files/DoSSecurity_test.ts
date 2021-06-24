@@ -6,11 +6,11 @@ import { test } from '../test_variables/DoSSecurity_variables.ts';
 Rhum.testPlan('DoSSecurity.ts', () => {
   Rhum.testSuite('Query depth limit NOT exceeded tests', () => {
     Rhum.testCase('Test query depth with allowable depth 2', () => {
-      const results = queryDepthLimiter(test.DEPTH_2_QUERY, 10);
+      const results = queryDepthLimiter(test.DEPTH_2_QUERY, 2);
       Rhum.asserts.assertEquals(undefined, results);
     });
     Rhum.testCase('Test mutation with allowable depth of 2', () => {
-      const results = queryDepthLimiter(test.DEPTH_2_MUTATION, 10);
+      const results = queryDepthLimiter(test.DEPTH_2_MUTATION, 2);
       Rhum.asserts.assertEquals(undefined, results);
     });
   });
