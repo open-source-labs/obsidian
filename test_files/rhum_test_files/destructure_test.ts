@@ -76,4 +76,24 @@ Rhum.testPlan('destructure.ts', () => {
   });
 });
 
+Rhum.testSuite('destructure single variable query tests', () => {
+  Rhum.testCase('destructure single variable query string', () => {
+    const result = destructureQueries(
+      test.singleVariableTestData,
+      test.singleVariableTestValue
+    );
+    Rhum.asserts.assertEquals(test.singleVariableTestResult, result);
+  });
+});
+
+Rhum.testSuite('destructure multi variable query tests', () => {
+  Rhum.testCase('destructure multi variable query', () => {
+    const result = destructureQueries(
+      test.multiVariableTestData,
+      test.multiVariableTestValue
+    );
+    Rhum.asserts.assertEquals(test.multiVariableTestResult, result);
+  });
+});
+
 Rhum.run();
