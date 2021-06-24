@@ -7,7 +7,7 @@ interface queryObj {
 }
 
 /**
- * Tests whether a queryString (string representation of query) exceeds the maximum nested depth levels (queryDephtLimit) allowable for the instance of obsidian
+ * Tests whether a queryString (string representation of query) exceeds the maximum nested depth levels (queryDepthLimit) allowable for the instance of obsidian
  * @param {*} queryString the string representation of the graphql query
  * @param {*} queryDepthLimit number representation of the maximum query depth limit.  Default 0 will return undefined. Root query doesn't count toward limit.
  * @returns boolean indicating whether the query depth exceeded maximum allowed query depth
