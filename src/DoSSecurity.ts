@@ -21,7 +21,7 @@ export default function queryDepthLimiter(queryString: string, queryDepthLimit: 
    * @param {*} depth indicates current depth level
    * @returns boolean indicating whether query depth exceeds maximum depth
    */
-  const queryDepthCheck = (qryObj: queryObj, qryDepthLim: number, depth: number = 0): boolean | undefined => {
+  const queryDepthCheck = (qryObj: queryObj, qryDepthLim: number, depth: number = 0): boolean => {
     // Base case 1: check to see if depth exceeds limit, if so, return error (true means depth limit was exceeded)
     if (depth > qryDepthLim) return true;
     // Recursive case: Iterate through values of queryObj, and check if each value is an object,
