@@ -264,9 +264,6 @@ export class Cache {
 */
 
 // TO DO:
-//  - Caching doesn't work with Directives if variable is false only
-//      - Console log the query objects
-//      - (query body from the cache needs array bracket to indicate it's retrieved from cache)
 //  - Look into cache tests:
 //      - do any of the test queries they use have nested  "bodies"
 //              - YES, but their tests passed but we know that the cache wasnt

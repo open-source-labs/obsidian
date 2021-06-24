@@ -377,9 +377,15 @@ export function destructureQueriesWithDirectives(queryStr, queryVars) {
   }
 
   startIndex = queryStr.indexOf('@');
+
   let includeQueryField = false;
   let startDeleteIndex;
   let endDeleteIndex;
+  let skipFlag;
+  //check includes or skip
+  if (queryStr[startIndex + 1] === 's') {
+    skipFlag = true;
+  }
 
   // check in between @ and closing parens
   for (let i = startIndex; i < queryStr.length; i += 1) {
@@ -393,10 +399,18 @@ export function destructureQueriesWithDirectives(queryStr, queryVars) {
       endDeleteIndex = i;
     }
 
-    // if directive is true
     if (startDeleteIndex && char === ':') {
+      // if directive is true
       if (queryStr.slice(i, i + 6).indexOf('true') !== -1) {
         includeQueryField = true;
+        if (skipFlag) {
+          includeQueryField = false;
+        }
+        // if directive is false
+      } else {
+        if (skipFlag) {
+          includeQueryField = true;
+        }
       }
     }
 
