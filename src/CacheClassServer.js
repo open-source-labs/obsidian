@@ -272,3 +272,10 @@ export class Cache {
 // Directives -- skip
 // Implement skip directives
 // Write our own tests on Rhum
+// CTORS INSTEAD OF ACTORS WITH DIRECTIVES
+// Test multiple directives
+// replace all args not just the first instance nvm
+// WRITE CACHE TESTS FAIL
+
+// * problem with multiple queries
+// * false test not working

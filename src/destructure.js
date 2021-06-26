@@ -31,11 +31,38 @@ export function destructureQueries(queryOperationStr, queryOperationVars) {
 
   // check if query has directives
   if (queryOperationStr.indexOf('@') !== -1) {
+    console.log('* * * * * * * * ORIGINAL QUERY STR: ', queryOperationStr);
     // reassigns query string to handle directives
     queryOperationStr = destructureQueriesWithDirectives(
       queryOperationStr,
       queryOperationVars
     );
+
+    // query AllActionMoviesAndAllActors ($movieGenre: String, $withActors: Boolean!) { movies(genre: $movieGenre) { __typename id title genre actors { id firstName lastName } }
+
+    // query AllActionMoviesAndAllActors ($movieGenre: String, $withActors: Boole!) {
+    //   movies(genre: ACTION) {
+    //     __typename
+    //     id
+    //     title
+    //     genre {
+    //       id
+    //       firstName
+    //       lastName
+    //     }
+    //   }
+    //   actors {
+    //     id
+    //     firstName
+    //     lastName
+    //     films {
+    //       __typename
+    //       id
+    //       title
+    //     }
+    //   }
+    // }
+    console.log('queryStr after directive destructuring: ', queryOperationStr);
   }
 
   // ignore operation name by finding the beginning of the query strings
@@ -55,7 +82,7 @@ export function destructureQueries(queryOperationStr, queryOperationVars) {
     queryOperationVars
   );
 
-  // console.log('QUERY OBJECT: =================\n', queriesObj);
+  console.log('QUERY OBJECT: =================\n', queriesObj);
 
   return queriesObj;
 }
@@ -344,16 +371,7 @@ export function destructureQueriesWithFragments(queryOperationStr) {
 }
 
 export function destructureQueriesWithDirectives(queryStr, queryVars) {
-  /*
-  query Hero($episode: Episode, $withFriends: Boolean!) {
-    hero(episode: $episode) {
-      name
-      friends @include(if: true) {
-        name
-      }
-    }
-  }
-*/
+  //find the index of the first closing brace of
   let startIndex = queryStr.indexOf('{');
 
   let argStartIndex;
@@ -370,6 +388,7 @@ export function destructureQueriesWithDirectives(queryStr, queryVars) {
       const newQueryArgs = replaceQueryVariables(oldQueryArgs, queryVars);
 
       queryStr = queryStr.replace(oldQueryArgs, newQueryArgs);
+      console.log('QUERY ARGS AFTER REPLACE: ', newQueryArgs);
 
       argStartIndex = undefined;
       argEndIndex = undefined;
@@ -378,14 +397,15 @@ export function destructureQueriesWithDirectives(queryStr, queryVars) {
 
   startIndex = queryStr.indexOf('@');
 
-  let includeQueryField = false;
-  let startDeleteIndex;
-  let endDeleteIndex;
   let skipFlag;
-  //check includes or skip
   if (queryStr[startIndex + 1] === 's') {
     skipFlag = true;
   }
+
+  let includeQueryField = false;
+  let startDeleteIndex;
+  let endDeleteIndex;
+  //check includes or skip
 
   // check in between @ and closing parens
   for (let i = startIndex; i < queryStr.length; i += 1) {
@@ -403,25 +423,15 @@ export function destructureQueriesWithDirectives(queryStr, queryVars) {
       // if directive is true
       if (queryStr.slice(i, i + 6).indexOf('true') !== -1) {
         includeQueryField = true;
-        if (skipFlag) {
-          includeQueryField = false;
-        }
-        // if directive is false
-      } else {
-        if (skipFlag) {
-          includeQueryField = true;
-        }
       }
     }
 
     if (startDeleteIndex && endDeleteIndex) {
-      console.log('i at the start: ', queryStr.slice(i));
       const directive = queryStr.slice(startDeleteIndex, endDeleteIndex + 2);
 
       queryStr = queryStr.replace(directive, '');
       console.log('QUERYSTR AFTER DIRECTIVE REMOVED: ', queryStr);
       i -= directive.length;
-      console.log('i after replacing directive: ', queryStr.slice(i));
 
       /*
     query Test ($mID: ID, $withRel: Boolean!) {
@@ -434,33 +444,42 @@ export function destructureQueriesWithDirectives(queryStr, queryVars) {
         }
     }
         */
+
+      /*
+     {
+      id
+      firstName
+      lastName
+      films {
+        __typename
+        id
+        title
+      }
+    }
+    */
       // If directive is false
       if (!includeQueryField) {
-        let j = i + 3;
+        console.log('INCLUDE WAS FALSE = = = = = = = = =');
+        let startBodyIndex = i + 2;
 
         // Delete the body of field
-        if (queryStr.slice(i, j).indexOf('{') !== -1) {
-          let numOpeningBrace = 0;
-          let numClosingBrace = 0;
 
-          while (j >= 0) {
-            if (queryStr[j--] === '{') numOpeningBrace++;
+        // REFACTOR TO LOOK FOR NEXT NON-WS CHAR
+        if (queryStr.slice(i, i + 3).indexOf('{') !== -1) {
+          i += 2;
+          let numOpeningBraces = 1;
+
+          while (numOpeningBraces) {
+            i++;
+            const char = queryStr[i];
+
+            if (char === '{') numOpeningBraces++;
+            if (char === '}') numOpeningBraces--;
           }
 
-          // start at the end of the queryStr and count # of closing braces..
-          let k = queryStr.length - 1;
-
-          while (numClosingBrace !== numOpeningBrace) {
-            if (queryStr[k--] === '}') numClosingBrace++;
-          }
-
-          const openingBracketIndex = queryStr.indexOf('{', i);
-          const closingBracketIndex = k + 1;
-
-          queryStr = queryStr.replace(
-            queryStr.slice(openingBracketIndex, closingBracketIndex + 1),
-            ''
-          );
+          // console.log('BODY TO DELETE: ', queryStr.slice(startBodyIndex, ++i));
+          const fieldBody = queryStr.slice(startBodyIndex, ++i);
+          queryStr = queryStr.replace(fieldBody, '');
         }
 
         // Delete the field with the directive attached to it
@@ -484,6 +503,7 @@ export function destructureQueriesWithDirectives(queryStr, queryVars) {
     }
   }
 
+  console.log('QUERY AFTER DIRECTIVE HANDLING: ', queryStr);
   return queryStr;
 }
 

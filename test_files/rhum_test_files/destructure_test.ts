@@ -74,25 +74,50 @@ Rhum.testPlan('destructure.ts', () => {
       Rhum.asserts.assertEquals(test.fragmentResultData3, result);
     });
   });
-});
 
-Rhum.testSuite('destructure single variable query tests', () => {
-  Rhum.testCase('destructure single variable query string', () => {
-    const result = destructureQueries(
-      test.singleVariableTestData,
-      test.singleVariableTestValue
-    );
-    Rhum.asserts.assertEquals(test.singleVariableTestResult, result);
+  // single variable test
+  Rhum.testSuite('destructure single variable query tests', () => {
+    Rhum.testCase('destructure single variable query string', () => {
+      const result = destructureQueries(
+        test.singleVariableTestData,
+        test.singleVariableTestValue
+      );
+      Rhum.asserts.assertEquals(test.singleVariableTestResult, result);
+    });
   });
-});
 
-Rhum.testSuite('destructure multi variable query tests', () => {
-  Rhum.testCase('destructure multi variable query', () => {
-    const result = destructureQueries(
-      test.multiVariableTestData,
-      test.multiVariableTestValue
-    );
-    Rhum.asserts.assertEquals(test.multiVariableTestResult, result);
+  // multi variable test
+  Rhum.testSuite('destructure multi variable query tests', () => {
+    Rhum.testCase('destructure multi variable query', () => {
+      const result = destructureQueries(
+        test.multiVariableTestData,
+        test.multiVariableTestValue
+      );
+      Rhum.asserts.assertEquals(test.multiVariableTestResult, result);
+    });
+  });
+
+  // directive test - @include: true
+  Rhum.testSuite('destructure @include directive query tests', () => {
+    Rhum.testCase('destructure @include directive (true) query', () => {
+      const result = destructureQueries(
+        test.includeDirectiveTestData,
+        test.includeDirectiveTrueValues
+      );
+      Rhum.asserts.assertEquals(test.includeDirectiveTrueResult, result);
+    });
+  });
+
+  // directive test - @include: false
+  Rhum.testSuite('destructure @include directive query tests', () => {
+    Rhum.testCase('destructure @include directive (false) query', () => {
+      const result = destructureQueries(
+        test.includeDirectiveTestData,
+        test.includeDirectiveFalseValues
+      );
+
+      Rhum.asserts.assertEquals(test.includeDirectiveFalseResult, result);
+    });
   });
 });
 
