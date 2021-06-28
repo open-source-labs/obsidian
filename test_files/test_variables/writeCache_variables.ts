@@ -1,13 +1,6 @@
 export const test = {
   queryStr: `
   query AllMoviesAndGetActorById  {
-    getMovie(id: 1) {
-        id
-        title
-        releaseYear {
-            year
-        }
-    }
     movies {
       __typename
       id

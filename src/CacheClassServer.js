@@ -84,8 +84,9 @@ export class Cache {
     return { data: responseObject };
   }
 
-  async write(queryStr, queryVars, respObj, deleteFlag) {
+  async write(queryStr, respObj, deleteFlag, queryVars) {
     const queryObj = destructureQueries(queryStr, queryVars);
+    console.log('====== QUERYOBJ ======= : ', queryObj);
     const resFromNormalize = normalizeResult(queryObj, respObj, deleteFlag);
     // update the original cache with same reference
     for (const hash in resFromNormalize) {
@@ -269,13 +270,8 @@ export class Cache {
 //              - YES, but their tests passed but we know that the cache wasnt
 //                working for "nested body" queries
 
-// Directives -- skip
+// postman try multiple directives
+// Write tests for multiple directives
 // Implement skip directives
-// Write our own tests on Rhum
-// CTORS INSTEAD OF ACTORS WITH DIRECTIVES
-// Test multiple directives
-// replace all args not just the first instance nvm
 // WRITE CACHE TESTS FAIL
-
-// * problem with multiple queries
-// * false test not working
+// CTORS INSTEAD OF ACTORS WITH DIRECTIVES??

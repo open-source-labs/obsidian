@@ -35,6 +35,8 @@ export default function normalizeResult(queryObj, resultObj, deleteFlag) {
   // creates a stringified version of query request and stores it in ROOT_QUERY key
   else if (queryObj.queries || queryObj.mutations) {
     if (queryObj.queries) {
+      console.log('LABELID 1');
+
       result['ROOT_QUERY'] = createRootQuery(queryObj.queries, resultObj);
     } else {
       result['ROOT_MUTATION'] = createRootQuery(queryObj.mutations, resultObj);
@@ -80,17 +82,26 @@ function createRootQuery(queryObjArr, resultObj) {
     const args = query.arguments;
     const queryHash = name + args;
     const result = resultObj.data[alias] ?? resultObj.data[name];
+    console.log('alias: ', alias);
+    console.log('name: ', name);
+    console.log('RESULTOBJ: ', resultObj);
+
     // iterate thru the array of current query response
     // and store the hash of that response in an array
 
     if (Array.isArray(result)) {
       const arrOfHashes = [];
       result.forEach((obj) => {
+        console.log('LABELID 2');
+
         arrOfHashes.push(labelId(obj));
       });
       //store the array of hashes associated with the queryHash
       output[queryHash] = arrOfHashes;
     } else {
+      console.log('LABELID 3');
+      console.log('RESUILT: ', result);
+
       output[queryHash] = [labelId(result)];
     }
   });
