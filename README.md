@@ -25,6 +25,8 @@
 - GraphQL query abstraction and caching in SSR React projects, improving the performance of your app
 - Normalized caching, optimizing memory management to keep your site lightweight and fast
 - Fullstack integration, leveraging client-side and server-side caching to streamline your caching strategy
+- Full support for GraphQL fragments, directives, and variables
+- Optional GraphQL DoS mitigation security module
 
 ## Overview
 
@@ -61,10 +63,10 @@ import { ObsidianRouter, gql } from 'https://deno.land/x/obsidian/mod.ts';
 
 const PORT = 8000;
 
-const app = new Application();
+const app = new Application(https://github.com/);
 
 const types = (gql as any)`
-  // Type definitions
+  // GraphQL type definitions
 `;
 
 const resolvers = {
@@ -82,7 +84,7 @@ const GraphQLRouter = await ObsidianRouter<ObsRouter>({
   redisPort: 6379,
 });
 
-const router = new Router();
+const router = new Router(https://github.com/);
 router.get('/', handlePage);
 
 function handlePage(ctx: any) {
@@ -102,7 +104,7 @@ function handlePage(ctx: any) {
   } catch (error) {
     console.error(error);
 
-app.use(GraphQLRouter.routes(), GraphQLRouter.allowedMethods());
+app.use(GraphQLRouter.routes(https://github.com/), GraphQLRouter.allowedMethods(https://github.com/));
 
 await app.listen({ port: PORT });
 ```
@@ -112,7 +114,7 @@ await app.listen({ port: PORT });
 ```javascript
 import { ObsidianWrapper } from 'https://deno.land/x/obsidian/clientMod.ts';
 
-const App = () => {
+const App = (https://github.com/) => {
   return (
     <ObsidianWrapper>
       <MovieApp />
@@ -126,8 +128,8 @@ const App = () => {
 ```javascript
 import { useObsidian, BrowserCache } from 'https://deno.land/x/obsidian/clientMod.ts';
 
-const MovieApp = () => {
-  const { query, cache, setCache } = useObsidian();
+const MovieApp = (https://github.com/) => {
+  const { query, cache, setCache } = useObsidian(https://github.com/);
   const [movies, setMovies] = (React as any).useState('');
 
   const queryStr = `query {
@@ -143,7 +145,7 @@ const MovieApp = () => {
   return (
     <h1>{movies}</h1>
     <button
-      onClick={() => {
+      onClick={(https://github.com/) => {
         query(queryStr)
         .then(resp => setMovies(resp.data))
         .then(resp => setCache(new BrowserCache(cache.storage)))
@@ -158,8 +160,8 @@ const MovieApp = () => {
 ```javascript
 import { useObsidian, BrowserCache } from 'https://deno.land/x/obsidian/clientMod.ts';
 
-const MovieApp = () => {
-  const { mutate, cache, setCache } = useObsidian();
+const MovieApp = (https://github.com/) => {
+  const { mutate, cache, setCache } = useObsidian(https://github.com/);
   const [movies, setMovies] = (React as any).useState('');
 
   const queryStr = `mutation {
@@ -175,7 +177,7 @@ const MovieApp = () => {
   return (
     <h1>{movies}</h1>
     <button
-      onClick={() => {
+      onClick={(https://github.com/) => {
         mutate(queryStr)
         .then(resp => setMovies(resp.data))
         .then(resp => setCache(new BrowserCache(cache.storage)))
@@ -193,6 +195,11 @@ const MovieApp = () => {
 
 _Lascaux_ Engineers
 
+[Kyung Lee](https://github.com/kyunglee1)
+[Justin McKay](https://github.com/justinwmckay)
+[Patrick Sullivan](https://github.com/pjmsullivan)
+[Cameron Simmons](https://github.com/cssim22)
+[Raymond Ahn](https://github.com/raymondcodes)
 [Alonso Garza](https://github.com/Alonsog66)  
 [Burak Caliskan](https://github.com/CaliskanBurak)  
 [Matt Meigs](https://github.com/mmeigs)  
