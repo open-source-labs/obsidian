@@ -12,7 +12,7 @@
  *
  */
 // this function will destructure a query/mutation operation string into a query/mutation operation object
-export function destructureQueries(queryOperationStr) {
+export default function destructureQueries(queryOperationStr) {
   queryOperationStr = queryOperationStr.replace(/,/gm, '');
   // check if query has fragments
   if (queryOperationStr.indexOf('fragment') !== -1) {
@@ -209,8 +209,8 @@ export function destructureQueriesWithFragments(queryOperationStr) {
   const fragments = [];
   // helper function to separate fragment from query/mutation
   const separateFragments = (queryCopy) => {
-    let startFragIndex = queryCopy.indexOf('fragment');
-    let startFragCurly = queryCopy.indexOf('{', startFragIndex);
+    const startFragIndex = queryCopy.indexOf('fragment');
+    const startFragCurly = queryCopy.indexOf('{', startFragIndex);
     let endFragCurly;
     const stack = ['{'];
     const curlsAndParens = {
@@ -218,12 +218,12 @@ export function destructureQueriesWithFragments(queryOperationStr) {
       ')': '(',
     };
     for (let i = startFragCurly + 1; i < queryCopy.length; i++) {
-      let char = queryCopy[i];
+      const char = queryCopy[i];
       if (char === '{' || char === '(') {
         stack.push(char);
       }
       if (char === '}' || char === ')') {
-        let topOfStack = stack[stack.length - 1];
+        const topOfStack = stack[stack.length - 1];
         if (topOfStack === curlsAndParens[char]) stack.pop();
       }
       if (!stack[0]) {
@@ -232,10 +232,10 @@ export function destructureQueriesWithFragments(queryOperationStr) {
       }
     }
 
-    let fragment = queryCopy.slice(startFragIndex, endFragCurly + 1);
+    const fragment = queryCopy.slice(startFragIndex, endFragCurly + 1);
 
     fragments.push(fragment);
-    let newStr = queryCopy.replace(fragment, '');
+    const newStr = queryCopy.replace(fragment, '');
 
     return newStr;
   };
@@ -252,9 +252,9 @@ export function destructureQueriesWithFragments(queryOperationStr) {
   //! TODO: OPTIMIZE, SHOULD NOT NEED TO ITERATE THROUGH WHOLE QUERY STRING TO FIND THE ONE WORD NAME OF THE FRAGMENT. MAYBE WHILE STRING INDEX< INDEX OF '{' ?
   // store each fragment name with its corresponding fields in fragmentObj
   fragments.forEach((fragment) => {
-    let index = fragment.indexOf('{');
-    let words = fragment.split(' ');
-    let fragmentFields = fragment.slice(index + 1, fragment.length - 1);
+    const index = fragment.indexOf('{');
+    const words = fragment.split(' ');
+    const fragmentFields = fragment.slice(index + 1, fragment.length - 1);
 
     fragmentObj[words[1]] = fragmentFields;
   });
@@ -267,5 +267,3 @@ export function destructureQueriesWithFragments(queryOperationStr) {
 
   return queryCopy;
 }
-
-export default destructureQueries;
