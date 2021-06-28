@@ -120,7 +120,7 @@ export async function ObsidianRouter<T>({
 
         // Normalize response and store in cache //
         if (useCache && toNormalize && !result.errors) {
-          cache.write(body.query, result, false);
+          cache.write(body.query, result, false, body.variables);
         }
         var t1 = performance.now();
         console.log(

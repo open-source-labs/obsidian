@@ -633,4 +633,93 @@ export const test = {
     movieGenre: 'ACTION',
     withActors: true,
   },
+
+  //
+  skipDirectiveTestData: `query AllActionMoviesAndAllActors ($movieGenre: String, $withActors: Boolean!) {
+  movies(genre: $movieGenre) {
+    __typename
+    id
+    title
+    genre
+    actors {
+      id
+      firstName
+      lastName
+    }
+  }
+  actors @include (if: $withActors) {
+    id
+    firstName
+    lastName
+    films {
+      __typename
+      id
+      title
+    }
+  }
+}`,
+
+  skipDirectiveTrueResult: {
+    queries: [
+      {
+        name: 'movies',
+        arguments: '(genre:ACTION)',
+        fields: {
+          __typename: 'meta',
+          id: 'scalar',
+          title: 'scalar',
+          genre: 'scalar',
+          actors: {
+            id: 'scalar',
+            firstName: 'scalar',
+            lastName: 'scalar',
+          },
+        },
+      },
+    ],
+  },
+
+  skipDirectiveTrueValues: {
+    movieGenre: 'ACTION',
+    withActors: false,
+  },
+
+  includeDirectiveFalseResult: {
+    queries: [
+      {
+        name: 'movies',
+        arguments: '(genre:ACTION)',
+        fields: {
+          __typename: 'meta',
+          id: 'scalar',
+          title: 'scalar',
+          genre: 'scalar',
+          actors: {
+            id: 'scalar',
+            firstName: 'scalar',
+            lastName: 'scalar',
+          },
+        },
+      },
+      {
+        name: 'actors',
+        arguments: '',
+        fields: {
+          id: 'scalar',
+          firstName: 'scalar',
+          lastName: 'scalar',
+          films: {
+            __typename: 'meta',
+            id: 'scalar',
+            title: 'scalar',
+          },
+        },
+      },
+    ],
+  },
+
+  includeDirectiveTrueValues: {
+    movieGenre: 'ACTION',
+    withActors: true,
+  },
 };

@@ -86,7 +86,6 @@ export class Cache {
 
   async write(queryStr, respObj, deleteFlag, queryVars) {
     const queryObj = destructureQueries(queryStr, queryVars);
-    console.log('====== QUERYOBJ ======= : ', queryObj);
     const resFromNormalize = normalizeResult(queryObj, respObj, deleteFlag);
     // update the original cache with same reference
     for (const hash in resFromNormalize) {
@@ -271,7 +270,10 @@ export class Cache {
 //                working for "nested body" queries
 
 // postman try multiple directives
+// multi directives doesnt work
 // Write tests for multiple directives
 // Implement skip directives
-// WRITE CACHE TESTS FAIL
+// False directive doesn't write to cache but can read
+//  -- write to cache doesn't work with variables... (Fix obsidian.ts to solve
+//  this)
 // CTORS INSTEAD OF ACTORS WITH DIRECTIVES??

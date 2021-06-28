@@ -120,4 +120,27 @@ Rhum.testPlan('destructure.ts', () => {
   });
 });
 
+// directive test - @skip: true
+Rhum.testSuite('destructure @skip directive query tests', () => {
+  Rhum.testCase('destructure @skip directive (true) query', () => {
+    const result = destructureQueries(
+      test.skipDirectiveTestData,
+      test.skipDirectiveTrueValues
+    );
+    Rhum.asserts.assertEquals(test.skipDirectiveTrueResult, result);
+  });
+});
+
+// directive test - @skip: false
+Rhum.testSuite('destructure @skip directive query tests', () => {
+  Rhum.testCase('destructure @skip directive (false) query', () => {
+    const result = destructureQueries(
+      test.skipDirectiveTestData,
+      test.skipDirectiveFalseValues
+    );
+
+    Rhum.asserts.assertEquals(test.skipDirectiveFalseResult, result);
+  });
+});
+
 Rhum.run();
