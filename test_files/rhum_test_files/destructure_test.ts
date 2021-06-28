@@ -96,7 +96,7 @@ Rhum.testPlan('destructure.ts', () => {
     });
   });
 
-  // directive test - @include: true
+  // single directive test - @include: true
   Rhum.testSuite('destructure @include directive query tests', () => {
     Rhum.testCase('destructure @include directive (true) query', () => {
       const result = destructureQueries(
@@ -107,7 +107,7 @@ Rhum.testPlan('destructure.ts', () => {
     });
   });
 
-  // directive test - @include: false
+  // single directive test - @include: false
   Rhum.testSuite('destructure @include directive query tests', () => {
     Rhum.testCase('destructure @include directive (false) query', () => {
       const result = destructureQueries(
@@ -120,7 +120,7 @@ Rhum.testPlan('destructure.ts', () => {
   });
 });
 
-// directive test - @skip: true
+// single directive test - @skip: true
 Rhum.testSuite('destructure @skip directive query tests', () => {
   Rhum.testCase('destructure @skip directive (true) query', () => {
     const result = destructureQueries(
@@ -131,7 +131,7 @@ Rhum.testSuite('destructure @skip directive query tests', () => {
   });
 });
 
-// directive test - @skip: false
+// single directive test - @skip: false
 Rhum.testSuite('destructure @skip directive query tests', () => {
   Rhum.testCase('destructure @skip directive (false) query', () => {
     const result = destructureQueries(
@@ -142,5 +142,7 @@ Rhum.testSuite('destructure @skip directive query tests', () => {
     Rhum.asserts.assertEquals(test.skipDirectiveFalseResult, result);
   });
 });
+
+// TO-DO: queries with multiple directives (not just one @include/@skip)
 
 Rhum.run();

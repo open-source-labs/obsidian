@@ -634,7 +634,6 @@ export const test = {
     withActors: true,
   },
 
-  //
   skipDirectiveTestData: `query AllActionMoviesAndAllActors ($movieGenre: String, $withActors: Boolean!) {
   movies(genre: $movieGenre) {
     __typename
@@ -647,7 +646,7 @@ export const test = {
       lastName
     }
   }
-  actors @include (if: $withActors) {
+  actors @skip (if: $withActors) {
     id
     firstName
     lastName
@@ -681,10 +680,10 @@ export const test = {
 
   skipDirectiveTrueValues: {
     movieGenre: 'ACTION',
-    withActors: false,
+    withActors: true,
   },
 
-  includeDirectiveFalseResult: {
+  skipDirectiveFalseResult: {
     queries: [
       {
         name: 'movies',
@@ -718,8 +717,8 @@ export const test = {
     ],
   },
 
-  includeDirectiveTrueValues: {
+  skipDirectiveFalseValues: {
     movieGenre: 'ACTION',
-    withActors: true,
+    withActors: false,
   },
 };

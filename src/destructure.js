@@ -1,27 +1,22 @@
 /**
  * NOTES:
  * 1. For now we will record the arguments as a string unless we come up with an alternative argument
- * 2. We won't worry about arguments on fields for now
  * 3. We won't worry about aliases for now
- * 4. We won't worry about handling directives for now
+ * 4. We won't worry about handling MULTIPLE directives for now (both @skip and
+ *    @include)
  * 5. We won't worry about fragments for now
  * 6. This function will assume that everything passed in can be a query or a mutation (not both).
- * 7. We won't handle variables for now, but we may very well find we need to
  * 8. We will handle only the meta field "__typename" for now
  * 9. What edge cases as far as field/query names do we have to worry about: special characters, apostrophes, etc???
- * 10. Directives-implementation don't handle fragment inclusion
+ * 10. Directives-implementation doesn't handle fragment inclusion
  *
  */
 
 // this function will destructure a query/mutation operation string into a query/mutation operation object
 export function destructureQueries(queryOperationStr, queryOperationVars) {
-  console.log('================ NEW =====================');
+  // Trims blocks of extra white space into a single white space for uniformity
+  // of incoming queryOperationStrings
   queryOperationStr = queryOperationStr.replace(/\s+/g, ' ').trim();
-
-  // console.log('QUERY STR WITH REGEX: ', queryOperationStr);
-
-  // query Hero($movieId: ID, $withRel: Boolean!) { getMovie(id: $movieId) { id
-  // releaseYear @include(if: $withRel) title } }
 
   // check if query has fragments
   if (queryOperationStr.indexOf('fragment') !== -1) {
@@ -31,38 +26,11 @@ export function destructureQueries(queryOperationStr, queryOperationVars) {
 
   // check if query has directives
   if (queryOperationStr.indexOf('@') !== -1) {
-    console.log('* * * * * * * * ORIGINAL QUERY STR: ', queryOperationStr);
     // reassigns query string to handle directives
     queryOperationStr = destructureQueriesWithDirectives(
       queryOperationStr,
       queryOperationVars
     );
-
-    // query AllActionMoviesAndAllActors ($movieGenre: String, $withActors: Boolean!) { movies(genre: $movieGenre) { __typename id title genre actors { id firstName lastName } }
-
-    // query AllActionMoviesAndAllActors ($movieGenre: String, $withActors: Boole!) {
-    //   movies(genre: ACTION) {
-    //     __typename
-    //     id
-    //     title
-    //     genre {
-    //       id
-    //       firstName
-    //       lastName
-    //     }
-    //   }
-    //   actors {
-    //     id
-    //     firstName
-    //     lastName
-    //     films {
-    //       __typename
-    //       id
-    //       title
-    //     }
-    //   }
-    // }
-    console.log('queryStr after directive destructuring: ', queryOperationStr);
   }
 
   // ignore operation name by finding the beginning of the query strings
@@ -81,8 +49,6 @@ export function destructureQueries(queryOperationStr, queryOperationVars) {
     typePropName,
     queryOperationVars
   );
-
-  console.log('QUERY OBJECT: =================\n', queriesObj);
 
   return queriesObj;
 }
@@ -190,7 +156,9 @@ export function splitUpQueryStr(queryStr, queryVars) {
       argsString = argsString.replace(/\s/g, '');
       // handles edge case where ther are no arguments inside the argument parens pair.
       if (argsString === '()') argsString = '';
-      // TBD: call replaceQueryVariables()
+
+      // if variables were passed in with the query, replace the variables in
+      // the argString with their values
       if (queryVars) {
         argsString = replaceQueryVariables(argsString, queryVars);
       }
@@ -202,50 +170,44 @@ export function splitUpQueryStr(queryStr, queryVars) {
   }
 }
 
-/*
-query Hero($episode: Episode, $withFriends: Boolean!) {
-  hero(episode: $episode) {
-    name
-    friends @include(if: $withFriends) {
-      name
-    }
-  }
-}
-*/
-
 // helper function to manipulate query args string by replacing variables
 export function replaceQueryVariables(queryArgs, variables) {
+  // indexes of start ($) & end of variable name
   let varStartIndex;
   let varEndIndex;
-
-  // Query Arg String:  (id:$movieId,title:$title)
-  // After replacing:  (id:2,title:$title)
-  // output: (id:2, title:"Movie-2")
 
   for (let i = 0; i < queryArgs.length; i += 1) {
     const char = queryArgs[i];
 
+    // the start of variable names are always indicated by $
     if (char === '$') varStartIndex = i;
+    // the end of variable names are always indicated by , or )
     if (char === ',' || char === ')') varEndIndex = i;
 
-    // !!!!!! "variables" not necessary here !!!!!!!
+    // if we have found the start and end positions of a variable in the query
+    // args string
     if (varStartIndex && varEndIndex && variables) {
+      // find the value of that variable by looking it up against the
+      // "variables" object
       const varName = queryArgs.slice(varStartIndex + 1, varEndIndex);
-      // (id: $movieId, title: $title )
       const varValue = variables[varName];
 
+      // if the variable was present in the "variables" object, mutate the query
+      // arg string by replacing the variable with its value
       if (varValue !== undefined) {
         queryArgs = queryArgs.replace('$' + varName, varValue);
+
+        // reset i after replacing the variable with its value
+        /* NOTE: the value of the variable COULD be bigger than the variable itself */
         i -= varName.length - varValue.length;
-        // (id:$movieId,title:$title)   i = 11
-        // (id:2,title:$title)   i = 4
-        // varName - varValue
       }
 
+      // reset start and end indexes to look for more variables
       varStartIndex = undefined;
       varEndIndex = undefined;
     }
   }
+
   return queryArgs;
 }
 
@@ -370,155 +332,146 @@ export function destructureQueriesWithFragments(queryOperationStr) {
   return queryCopy;
 }
 
+// handles query string with directives (@include, @skip) by keeping or omitting
+// fields depending on the value of the variable passed in
 export function destructureQueriesWithDirectives(queryStr, queryVars) {
-  //find the index of the first closing brace of
+  // starting point of iteration over queryStr
   let startIndex = queryStr.indexOf('{');
 
+  // the starting and ending indices of arguments in queryStr
   let argStartIndex;
   let argEndIndex;
 
+  // iterate over queryStr to replace variables in arguments
   for (let i = startIndex; i < queryStr.length; i += 1) {
     const char = queryStr[i];
 
     if (char === '(') argStartIndex = i;
     if (char === ')') argEndIndex = i;
 
+    // if the start and end positions for a query argument have been found,
+    // replace variables in that argument
     if (argStartIndex && argEndIndex) {
       const oldQueryArgs = queryStr.slice(argStartIndex, argEndIndex + 1);
       const newQueryArgs = replaceQueryVariables(oldQueryArgs, queryVars);
 
       queryStr = queryStr.replace(oldQueryArgs, newQueryArgs);
-      console.log('QUERY ARGS AFTER REPLACE: ', newQueryArgs);
 
+      // reset start and end indices to find and replace other arguments
       argStartIndex = undefined;
       argEndIndex = undefined;
     }
   }
 
+  // starting point of iteration is now the first directive (indicated by @)
   startIndex = queryStr.indexOf('@');
 
-  let skipFlag;
+  // skipFlag will indicate if the directive is @skip, otherwise @include is
+  // assumed to be the directive
+  let skipFlag = false;
+
   if (queryStr[startIndex + 1] === 's') {
     skipFlag = true;
   }
 
-  let includeQueryField = false;
+  // Boolean that indicates whether the field to which a directive is attached
+  // to should be included in or removed from the query string
+  let includeQueryField;
+
+  // start and end positions of a directive (e.g.  --> @include (if: true) <-- )
+  /* NOTE: directives (from '@' to the closest closing paren) will always be 
+    deleted from the query string, regardless of whether the value of the variable is true or false */
   let startDeleteIndex;
   let endDeleteIndex;
-  //check includes or skip
 
-  // check in between @ and closing parens
+  // delete directives from queryStr, as well as the field itself depending
+  // on the value of the variable in the directive
   for (let i = startIndex; i < queryStr.length; i += 1) {
     const char = queryStr[i];
 
     if (char === '@') {
       startDeleteIndex = i;
     }
-
     if (char === ')') {
       endDeleteIndex = i;
     }
 
+    // check value of the variable in the directive (to the right of the ':')
     if (startDeleteIndex && char === ':') {
-      // if directive is true
+      // @skip directives will do the opposite of @include directives
       if (queryStr.slice(i, i + 6).indexOf('true') !== -1) {
-        includeQueryField = true;
+        includeQueryField = skipFlag ? false : true;
+      } else {
+        includeQueryField = skipFlag ? true : false;
       }
     }
 
+    // if the start and end positions for a directive is found, delete it
+    // (from the '@' to the closest closing paren)
     if (startDeleteIndex && endDeleteIndex) {
       const directive = queryStr.slice(startDeleteIndex, endDeleteIndex + 2);
 
       queryStr = queryStr.replace(directive, '');
-      console.log('QUERYSTR AFTER DIRECTIVE REMOVED: ', queryStr);
+
+      // adjust i after deleting the directive from the queryStr
       i -= directive.length;
 
-      /*
-    query Test ($mID: ID, $withRel: Boolean!) {
-        getMovie(id: $mID) {
-            id
-            title
-            releaseYear {
-                year
-            }
-        }
-    }
-        */
-
-      /*
-     {
-      id
-      firstName
-      lastName
-      films {
-        __typename
-        id
-        title
-      }
-    }
-    */
-      // If directive is false
+      // if @include directive is false, or if @skip directive is true
       if (!includeQueryField) {
-        console.log('INCLUDE WAS FALSE = = = = = = = = =');
+        // index of the beginning of a fields body (if the field was of
+        // non-scalar type and has nested fields)
         let startBodyIndex = i + 2;
 
-        // Delete the body of field
+        // boolean indicating whether a field has nested fields (more fields
+        // within '{' and '}')
+        const hasNestedFields = queryStr.slice(i, i + 3).indexOf('{') !== -1;
 
-        // REFACTOR TO LOOK FOR NEXT NON-WS CHAR
-        if (queryStr.slice(i, i + 3).indexOf('{') !== -1) {
+        // if a field has nested fields and the @include was false/@skip was
+        // true, delete the nested fields as well
+        if (hasNestedFields) {
+          // adjust i to be pointing inside the body of the field
           i += 2;
-          let numOpeningBraces = 1;
 
-          while (numOpeningBraces) {
+          // number of opening curly braces within the body of the field
+          let numBraces = 1;
+
+          // find the corresponding closing brace for the body of the field with the directive
+          while (numBraces) {
             i++;
             const char = queryStr[i];
 
-            if (char === '{') numOpeningBraces++;
-            if (char === '}') numOpeningBraces--;
+            if (char === '{') numBraces++;
+            if (char === '}') numBraces--;
           }
 
-          // console.log('BODY TO DELETE: ', queryStr.slice(startBodyIndex, ++i));
-          const fieldBody = queryStr.slice(startBodyIndex, ++i);
+          const endBodyIndex = ++i;
+
+          // delete the body of the field
+          const fieldBody = queryStr.slice(startBodyIndex, endBodyIndex);
           queryStr = queryStr.replace(fieldBody, '');
         }
 
-        // Delete the field with the directive attached to it
+        // delete the field with the directive attached to it
         let startFieldNameIndex = i - 1;
+        const endFieldNameIndex = i + 1;
 
         while (queryStr[startFieldNameIndex] !== ' ') {
           startFieldNameIndex--;
         }
 
         queryStr = queryStr.replace(
-          queryStr.slice(startFieldNameIndex, i + 1),
+          queryStr.slice(startFieldNameIndex, endFieldNameIndex),
           ''
         );
       }
 
-      // Otherwise, remove the "directive" string, the following body {} if any,
-      // and the preceding field name
-
+      // reset start and end positions for a directive to look for more directives
       startDeleteIndex = undefined;
       endDeleteIndex = undefined;
     }
   }
 
-  console.log('QUERY AFTER DIRECTIVE HANDLING: ', queryStr);
   return queryStr;
 }
 
 export default destructureQueries;
-
-// query Hero($movieId: ID, $withRel: Boolean!)
-
-// {
-//   getMovie(id: 1) {
-//     id
-//     releaseYear @include(if: true) {
-//       name {
-//         student
-//       }
-//     }
-//     title
-//   }
-// }

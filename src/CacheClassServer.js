@@ -269,10 +269,6 @@ export class Cache {
 //              - YES, but their tests passed but we know that the cache wasnt
 //                working for "nested body" queries
 
-// postman try multiple directives
-// multi directives doesnt work
-// Write tests for multiple directives
-// Implement skip directives
 // False directive doesn't write to cache but can read
 //  -- write to cache doesn't work with variables... (Fix obsidian.ts to solve
 //  this)
