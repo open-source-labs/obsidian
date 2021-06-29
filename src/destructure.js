@@ -1,23 +1,36 @@
 /**
  * NOTES:
  * 1. For now we will record the arguments as a string unless we come up with an alternative argument
- * 2. We won't worry about arguments on fields for now
  * 3. We won't worry about aliases for now
- * 4. We won't worry about handling directives for now
+ * 4. We won't worry about handling MULTIPLE directives for now (both @skip and
+ *    @include)
  * 5. We won't worry about fragments for now
  * 6. This function will assume that everything passed in can be a query or a mutation (not both).
- * 7. We won't handle variables for now, but we may very well find we need to
  * 8. We will handle only the meta field "__typename" for now
  * 9. What edge cases as far as field/query names do we have to worry about: special characters, apostrophes, etc???
+ * 10. Directives-implementation doesn't handle fragment inclusion
  *
  */
+
 // this function will destructure a query/mutation operation string into a query/mutation operation object
-export default function destructureQueries(queryOperationStr) {
-  queryOperationStr = queryOperationStr.replace(/,/gm, '');
+export function destructureQueries(queryOperationStr, queryOperationVars) {
+  // Trims blocks of extra white space into a single white space for uniformity
+  // of incoming queryOperationStrings
+  queryOperationStr = queryOperationStr.replace(/\s+/g, ' ').trim();
+
   // check if query has fragments
   if (queryOperationStr.indexOf('fragment') !== -1) {
     // reassigns query string to replace fragment references with fragment fields
     queryOperationStr = destructureQueriesWithFragments(queryOperationStr);
+  }
+
+  // check if query has directives
+  if (queryOperationStr.indexOf('@') !== -1) {
+    // reassigns query string to handle directives
+    queryOperationStr = destructureQueriesWithDirectives(
+      queryOperationStr,
+      queryOperationVars
+    );
   }
 
   // ignore operation name by finding the beginning of the query strings
@@ -31,7 +44,11 @@ export default function destructureQueries(queryOperationStr) {
       ? 'mutations'
       : 'queries';
   // create a queries object from array of query strings
-  const queriesObj = createQueriesObj(arrayOfQueryStrings, typePropName);
+  const queriesObj = createQueriesObj(
+    arrayOfQueryStrings,
+    typePropName,
+    queryOperationVars
+  );
 
   return queriesObj;
 }
@@ -72,14 +89,14 @@ export function findQueryStrings(queryStrings) {
 }
 
 // helper function to create a queries object from an array of query strings
-export function createQueriesObj(arrayOfQueryStrings, typePropName) {
+export function createQueriesObj(arrayOfQueryStrings, typePropName, queryVars) {
   // define a new empty result object
   const queriesObj = {};
   queriesObj[typePropName] = [];
   // for each query string
   arrayOfQueryStrings.forEach((queryStr) => {
     // split the query string into multiple parts
-    const queryObj = splitUpQueryStr(queryStr);
+    const queryObj = splitUpQueryStr(queryStr, queryVars);
     // recursively convert the fields string to a fields object and update the fields property
     queryObj.fields = findQueryFields(queryObj.fields);
     // push the finished query object into the queries/mutations array on the result object
@@ -89,7 +106,7 @@ export function createQueriesObj(arrayOfQueryStrings, typePropName) {
   return queriesObj;
 }
 // helper function that returns an object with a query string split into multiple parts
-export function splitUpQueryStr(queryStr) {
+export function splitUpQueryStr(queryStr, queryVars) {
   // creates new queryObj
   const queryObj = {};
   let parensPairs = 0;
@@ -139,12 +156,59 @@ export function splitUpQueryStr(queryStr) {
       argsString = argsString.replace(/\s/g, '');
       // handles edge case where ther are no arguments inside the argument parens pair.
       if (argsString === '()') argsString = '';
+
+      // if variables were passed in with the query, replace the variables in
+      // the argString with their values
+      if (queryVars) {
+        argsString = replaceQueryVariables(argsString, queryVars);
+      }
+
       queryObj.arguments = argsString;
       queryObj.fields = queryStr.substring(i + 1).trim();
-
       return queryObj;
     }
   }
+}
+
+// helper function to manipulate query args string by replacing variables
+export function replaceQueryVariables(queryArgs, variables) {
+  // indexes of start ($) & end of variable name
+  let varStartIndex;
+  let varEndIndex;
+
+  for (let i = 0; i < queryArgs.length; i += 1) {
+    const char = queryArgs[i];
+
+    // the start of variable names are always indicated by $
+    if (char === '$') varStartIndex = i;
+    // the end of variable names are always indicated by , or )
+    if (char === ',' || char === ')') varEndIndex = i;
+
+    // if we have found the start and end positions of a variable in the query
+    // args string
+    if (varStartIndex && varEndIndex && variables) {
+      // find the value of that variable by looking it up against the
+      // "variables" object
+      const varName = queryArgs.slice(varStartIndex + 1, varEndIndex);
+      const varValue = variables[varName];
+
+      // if the variable was present in the "variables" object, mutate the query
+      // arg string by replacing the variable with its value
+      if (varValue !== undefined) {
+        queryArgs = queryArgs.replace('$' + varName, varValue);
+
+        // reset i after replacing the variable with its value
+        /* NOTE: the value of the variable COULD be bigger than the variable itself */
+        i -= varName.length - varValue.length;
+      }
+
+      // reset start and end indexes to look for more variables
+      varStartIndex = undefined;
+      varEndIndex = undefined;
+    }
+  }
+
+  return queryArgs;
 }
 
 // helper function to recursively convert the fields string to a fields object
@@ -267,3 +331,147 @@ export function destructureQueriesWithFragments(queryOperationStr) {
 
   return queryCopy;
 }
+
+// handles query string with directives (@include, @skip) by keeping or omitting
+// fields depending on the value of the variable passed in
+export function destructureQueriesWithDirectives(queryStr, queryVars) {
+  // starting point of iteration over queryStr
+  let startIndex = queryStr.indexOf('{');
+
+  // the starting and ending indices of arguments in queryStr
+  let argStartIndex;
+  let argEndIndex;
+
+  // iterate over queryStr to replace variables in arguments
+  for (let i = startIndex; i < queryStr.length; i += 1) {
+    const char = queryStr[i];
+
+    if (char === '(') argStartIndex = i;
+    if (char === ')') argEndIndex = i;
+
+    // if the start and end positions for a query argument have been found,
+    // replace variables in that argument
+    if (argStartIndex && argEndIndex) {
+      const oldQueryArgs = queryStr.slice(argStartIndex, argEndIndex + 1);
+      const newQueryArgs = replaceQueryVariables(oldQueryArgs, queryVars);
+
+      queryStr = queryStr.replace(oldQueryArgs, newQueryArgs);
+
+      // reset start and end indices to find and replace other arguments
+      argStartIndex = undefined;
+      argEndIndex = undefined;
+    }
+  }
+
+  // starting point of iteration is now the first directive (indicated by @)
+  startIndex = queryStr.indexOf('@');
+
+  // skipFlag will indicate if the directive is @skip, otherwise @include is
+  // assumed to be the directive
+  let skipFlag = false;
+
+  if (queryStr[startIndex + 1] === 's') {
+    skipFlag = true;
+  }
+
+  // Boolean that indicates whether the field to which a directive is attached
+  // to should be included in or removed from the query string
+  let includeQueryField;
+
+  // start and end positions of a directive (e.g.  --> @include (if: true) <-- )
+  /* NOTE: directives (from '@' to the closest closing paren) will always be 
+    deleted from the query string, regardless of whether the value of the variable is true or false */
+  let startDeleteIndex;
+  let endDeleteIndex;
+
+  // delete directives from queryStr, as well as the field itself depending
+  // on the value of the variable in the directive
+  for (let i = startIndex; i < queryStr.length; i += 1) {
+    const char = queryStr[i];
+
+    if (char === '@') {
+      startDeleteIndex = i;
+    }
+    if (char === ')') {
+      endDeleteIndex = i;
+    }
+
+    // check value of the variable in the directive (to the right of the ':')
+    if (startDeleteIndex && char === ':') {
+      // @skip directives will do the opposite of @include directives
+      if (queryStr.slice(i, i + 6).indexOf('true') !== -1) {
+        includeQueryField = skipFlag ? false : true;
+      } else {
+        includeQueryField = skipFlag ? true : false;
+      }
+    }
+
+    // if the start and end positions for a directive is found, delete it
+    // (from the '@' to the closest closing paren)
+    if (startDeleteIndex && endDeleteIndex) {
+      const directive = queryStr.slice(startDeleteIndex, endDeleteIndex + 2);
+
+      queryStr = queryStr.replace(directive, '');
+
+      // adjust i after deleting the directive from the queryStr
+      i -= directive.length;
+
+      // if @include directive is false, or if @skip directive is true
+      if (!includeQueryField) {
+        // index of the beginning of a fields body (if the field was of
+        // non-scalar type and has nested fields)
+        let startBodyIndex = i + 2;
+
+        // boolean indicating whether a field has nested fields (more fields
+        // within '{' and '}')
+        const hasNestedFields = queryStr.slice(i, i + 3).indexOf('{') !== -1;
+
+        // if a field has nested fields and the @include was false/@skip was
+        // true, delete the nested fields as well
+        if (hasNestedFields) {
+          // adjust i to be pointing inside the body of the field
+          i += 2;
+
+          // number of opening curly braces within the body of the field
+          let numBraces = 1;
+
+          // find the corresponding closing brace for the body of the field with the directive
+          while (numBraces) {
+            i++;
+            const char = queryStr[i];
+
+            if (char === '{') numBraces++;
+            if (char === '}') numBraces--;
+          }
+
+          const endBodyIndex = ++i;
+
+          // delete the body of the field
+          const fieldBody = queryStr.slice(startBodyIndex, endBodyIndex);
+          queryStr = queryStr.replace(fieldBody, '');
+        }
+
+        // delete the field with the directive attached to it
+        let startFieldNameIndex = i - 1;
+        const endFieldNameIndex = i + 1;
+
+        while (queryStr[startFieldNameIndex] !== ' ') {
+          startFieldNameIndex--;
+        }
+
+        queryStr = queryStr.replace(
+          queryStr.slice(startFieldNameIndex, endFieldNameIndex),
+          ''
+        );
+      }
+
+      // reset start and end positions for a directive to look for more directives
+      startDeleteIndex = undefined;
+      endDeleteIndex = undefined;
+    }
+  }
+
+  return queryStr;
+}
+
+export default destructureQueries;

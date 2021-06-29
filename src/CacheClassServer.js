@@ -32,19 +32,22 @@ export class Cache {
   }
 
   // Main functionality methods
-  async read(queryStr) {
+  async read(queryStr, queryVars) {
     if (typeof queryStr !== 'string')
       throw TypeError('input should be a string');
     // destructure the query string into an object
-    const queries = destructureQueries(queryStr).queries;
+    const queries = destructureQueries(queryStr, queryVars).queries;
+
     // breaks out of function if queryStr is a mutation
     if (!queries) return undefined;
+
     const responseObject = {};
     // iterate through each query in the input queries object
     for (const query in queries) {
       // get the entire str query from the name input query and arguments
       const queryHash = queries[query].name.concat(queries[query].arguments);
       const rootQuery = await this.cacheRead('ROOT_QUERY');
+
       // match in ROOT_QUERY
       if (rootQuery[queryHash]) {
         // get the hashs to populate from the existent query in the cache
@@ -56,6 +59,7 @@ export class Cache {
           arrayHashes,
           queries[query].fields
         );
+
         if (!responseObject[respObjProp]) return undefined;
 
         // no match with ROOT_QUERY return null or ...
@@ -66,8 +70,8 @@ export class Cache {
     return { data: responseObject };
   }
 
-  async write(queryStr, respObj, deleteFlag) {
-    const queryObj = destructureQueries(queryStr);
+  async write(queryStr, respObj, deleteFlag, queryVars) {
+    const queryObj = destructureQueries(queryStr, queryVars);
     const resFromNormalize = normalizeResult(queryObj, respObj, deleteFlag);
     // update the original cache with same reference
     for (const hash in resFromNormalize) {
@@ -85,22 +89,26 @@ export class Cache {
 
   // cache read/write helper methods
   async cacheRead(hash) {
-    // returns value from either object cache or   cache || 'DELETED' || undefined
+    // returns value from either object cache or cache || 'DELETED' || undefined
     if (this.context === 'client') {
+      console.log('context === client HIT');
       return this.storage[hash];
     } else {
       // logic to replace these storage keys if they have expired
       if (hash === 'ROOT_QUERY' || hash === 'ROOT_MUTATION') {
         const hasRootQuery = await redis.get('ROOT_QUERY');
+
         if (!hasRootQuery) {
           await redis.set('ROOT_QUERY', JSON.stringify({}));
         }
         const hasRootMutation = await redis.get('ROOT_MUTATION');
+
         if (!hasRootMutation) {
           await redis.set('ROOT_MUTATION', JSON.stringify({}));
         }
       }
       let hashedQuery = await redis.get(hash);
+
       // if cacheRead is a miss
       if (hashedQuery === undefined) return undefined;
       return JSON.parse(hashedQuery);
@@ -158,8 +166,10 @@ export class Cache {
   async populateAllHashes(allHashesFromQuery, fields) {
     // include the hashname for each hash
     if (!allHashesFromQuery.length) return [];
+
     const hyphenIdx = allHashesFromQuery[0].indexOf('~');
     const typeName = allHashesFromQuery[0].slice(0, hyphenIdx);
+
     return allHashesFromQuery.reduce(async (acc, hash) => {
       // for each hash from the input query, build the response object
       const readVal = await this.cacheRead(hash);
@@ -176,11 +186,13 @@ export class Cache {
           // add the typename for the type
           if (field === '__typename') {
             dataObj[field] = typeName;
-          } else dataObj[field] = readVal[field];
+          } else {
+            dataObj[field] = readVal[field];
+          }
         } else {
           // case where the field from the input query is an array of hashes, recursively invoke populateAllHashes
           dataObj[field] = await this.populateAllHashes(
-            readVal[field],
+            [readVal[field]],
             fields[field]
           );
           if (dataObj[field] === undefined) return undefined;
