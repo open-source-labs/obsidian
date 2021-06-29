@@ -164,7 +164,6 @@ export class Cache {
 
   // specialized helper methods
   async populateAllHashes(allHashesFromQuery, fields) {
-    console.log(allHashesFromQuery);
     // include the hashname for each hash
     if (!allHashesFromQuery.length) return [];
 
