@@ -74,7 +74,9 @@ export async function ObsidianRouter<T>({
 
   await router.post(path, async (ctx: any) => {
     var t0 = performance.now();
+
     const { response, request } = ctx;
+
     if (request.hasBody) {
       try {
         const contextResult = context ? await context(ctx) : undefined;
@@ -91,6 +93,7 @@ export async function ObsidianRouter<T>({
           // Send query off to be destructured and found in Redis if possible //
           const obsidianReturn = await cache.read(body.query, body.variables);
           console.log('Retrieved from cache: \n\t', obsidianReturn);
+
           if (obsidianReturn) {
             response.status = 200;
             response.body = obsidianReturn;
