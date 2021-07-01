@@ -195,12 +195,12 @@ const MovieApp = () => {
 
 _Lascaux_ Engineers
 
-[Kyung Lee](https://github.com/kyunglee1)
-[Justin McKay](https://github.com/justinwmckay)
-[Patrick Sullivan](https://github.com/pjmsullivan)
-[Cameron Simmons](https://github.com/cssim22)
-[Raymond Ahn](https://github.com/raymondcodes)
-[Alonso Garza](https://github.com/Alonsog66)  
+[Kyung Lee](https://github.com/kyunglee1)  
+[Justin McKay](https://github.com/justinwmckay)  
+[Patrick Sullivan](https://github.com/pjmsullivan)  
+[Cameron Simmons](https://github.com/cssim22)  
+[Raymond Ahn](https://github.com/raymondcodes)  
+[Alonso Garza](https://github.com/Alonsog66)   
 [Burak Caliskan](https://github.com/CaliskanBurak)  
 [Matt Meigs](https://github.com/mmeigs)  
 [Travis Frank](https://github.com/TravisFrankMTG/)  
