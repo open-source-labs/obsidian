@@ -3,6 +3,7 @@ import { renderPlaygroundPage } from 'https://deno.land/x/oak_graphql@0.6.2/grap
 import { makeExecutableSchema } from 'https://deno.land/x/oak_graphql@0.6.2/graphql-tools/schema/makeExecutableSchema.ts';
 import LFUCache from './lfuBrowserCache.js';
 import { Cache } from './CacheClassServer.js';
+import queryDepthLimiter from './DoSSecurity.ts';
 
 interface Constructable<T> {
   new (...args: any): T & OakRouter;
@@ -25,6 +26,7 @@ export interface ObsidianRouterOptions<T> {
   redisPort?: number;
   policy?: string;
   maxmemory?: string;
+  maxQueryDepth?: number;
 }
 
 export interface ResolversProps {
@@ -47,6 +49,7 @@ export async function ObsidianRouter<T>({
   redisPort = 6379,
   policy,
   maxmemory,
+  maxQueryDepth = 0,
 }: ObsidianRouterOptions<T>): Promise<T> {
   redisPortExport = redisPort;
   const router = new Router();
@@ -65,25 +68,32 @@ export async function ObsidianRouter<T>({
   // set redis configurations
 
   if (policy || maxmemory) {
-    console.log('inside if');
     cache.configSet('maxmemory-policy', policy);
     cache.configSet('maxmemory', maxmemory);
   }
 
   await router.post(path, async (ctx: any) => {
     var t0 = performance.now();
+
     const { response, request } = ctx;
+
     if (request.hasBody) {
       try {
         const contextResult = context ? await context(ctx) : undefined;
         const body = await request.body().value;
+
+        // If a securty limit is set for maxQueryDepth, invoke queryDepthLimiter
+        // which throws error if query depth exceeds maximum
+        if (maxQueryDepth) queryDepthLimiter(body.query, maxQueryDepth);
+
         // Variable to block the normalization of mutations //
         let toNormalize = true;
 
         if (useCache) {
           // Send query off to be destructured and found in Redis if possible //
-          const obsidianReturn = await cache.read(body.query);
-          console.log('retrieved from cache', obsidianReturn);
+          const obsidianReturn = await cache.read(body.query, body.variables);
+          console.log('Retrieved from cache: \n\t', obsidianReturn);
+
           if (obsidianReturn) {
             response.status = 200;
             response.body = obsidianReturn;
@@ -112,8 +122,9 @@ export async function ObsidianRouter<T>({
         response.body = result;
 
         // Normalize response and store in cache //
-        if (useCache && toNormalize && !result.errors)
-          cache.write(body.query, result, false);
+        if (useCache && toNormalize && !result.errors) {
+          cache.write(body.query, result, false, body.variables);
+        }
         var t1 = performance.now();
         console.log(
           'Obsidian received new data and took ' + (t1 - t0) + ' milliseconds.'
@@ -129,6 +140,7 @@ export async function ObsidianRouter<T>({
             },
           ],
         };
+        console.error('Error: ', error.message);
         return;
       }
     }

@@ -1,13 +1,18 @@
 {
+  "compileOnSave": true,
   "compilerOptions": {
     "allowJs": true,
     "target": "ES2017",
     "jsx": "react",
     "noImplicitAny": false,
-    "module": "esnext",
+    "module": "CommonJS",
     "strict": true,
+    "lib": ["dom"]
   },
-  "include":["../src"]
+  "include": ["./**/*"],
+  "exclude": [
+    "./plugins/**/*",
+    "./typings/**/*",
+    "./built/**/*" // This is what fixed it!
+  ]
 }
-
-

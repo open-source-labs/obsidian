@@ -25,6 +25,8 @@
 - GraphQL query abstraction and caching in SSR React projects, improving the performance of your app
 - Normalized caching, optimizing memory management to keep your site lightweight and fast
 - Fullstack integration, leveraging client-side and server-side caching to streamline your caching strategy
+- Support for GraphQL fragments, directives, and variables
+- Optional GraphQL DoS attack mitigation security module
 
 ## Overview
 
@@ -64,7 +66,7 @@ const PORT = 8000;
 const app = new Application();
 
 const types = (gql as any)`
-  // Type definitions
+  // GraphQL type definitions
 `;
 
 const resolvers = {
@@ -193,6 +195,11 @@ const MovieApp = () => {
 
 _Lascaux_ Engineers
 
+[Kyung Lee](https://github.com/kyunglee1)
+[Justin McKay](https://github.com/justinwmckay)
+[Patrick Sullivan](https://github.com/pjmsullivan)
+[Cameron Simmons](https://github.com/cssim22)
+[Raymond Ahn](https://github.com/raymondcodes)
 [Alonso Garza](https://github.com/Alonsog66)  
 [Burak Caliskan](https://github.com/CaliskanBurak)  
 [Matt Meigs](https://github.com/mmeigs)  
