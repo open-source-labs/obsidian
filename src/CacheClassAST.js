@@ -1,7 +1,7 @@
 /** @format */
 
-import normalizeResult from "./normalize.js";
-import destructureQueries from "./destructure.js";
+import normalizeResult from "./BigNormalize.js";
+import destructureQueries from "./BigDestructure.js";
 import "https://deno.land/x/dotenv/load.ts";
 import { connect } from "https://deno.land/x/redis/mod.ts";
 
@@ -36,11 +36,11 @@ export class Cache {
   // takes apart the input query from server turns into obj
 
   // Main functionality methods
-  async read(queryStr, queryVars) {
+  async read(queryStr) {
     if (typeof queryStr !== "string")
       throw TypeError("input should be a string");
     // destructure the query string into an object
-    const queries = destructureQueries(queryStr, queryVars).queries;
+    const queries = destructureQueries(queryStr).queries;
     //console.log("queries from cachclassServer", queries);
 
     // breaks out of function if queryStr is a mutation
@@ -94,8 +94,8 @@ export class Cache {
     //rewrites the entire root query back into a redis string
   }
 
-  async write(queryStr, respObj, deleteFlag, queryVars) {
-    const queryObj = destructureQueries(queryStr, queryVars);
+  async write(queryStr, respObj, deleteFlag) {
+    const queryObj = destructureQueries(queryStr);
     const resFromNormalize = normalizeResult(queryObj, respObj, deleteFlag);
     // console.log("\n resFromNormalize\n", resFromNormalize);
     // update the original cache with same reference

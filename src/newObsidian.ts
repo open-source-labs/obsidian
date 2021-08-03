@@ -2,8 +2,9 @@ import { graphql } from 'https://cdn.pika.dev/graphql@15.0.0';
 import { renderPlaygroundPage } from 'https://deno.land/x/oak_graphql@0.6.2/graphql-playground-html/render-playground-html.ts';
 import { makeExecutableSchema } from 'https://deno.land/x/oak_graphql@0.6.2/graphql-tools/schema/makeExecutableSchema.ts';
 import LFUCache from './lfuBrowserCache.js';
-import { Cache } from './CacheClassServer.js';
+import { Cache } from './CacheClassAST.js';
 import queryDepthLimiter from './DoSSecurity.ts';
+import {restructure} from './restructure.ts';
 
 interface Constructable<T> {
   new (...args: any): T & OakRouter;
@@ -91,6 +92,7 @@ export async function ObsidianRouter<T>({
           //then we wont have to do it anywhere later 
           // mike thinks were golden
         
+          body.query = restructure(body);
 
         // Variable to block the normalization of mutations //
         let toNormalize = true;
@@ -98,7 +100,7 @@ export async function ObsidianRouter<T>({
         if (useCache) {
           // console.log("body.query1", body.query)
           // Send query off to be destructured and found in Redis if possible //
-          const obsidianReturn = await cache.read(body.query, body.variables);
+          const obsidianReturn = await cache.read(body.query);
           // let log = await console.log("body.query2", (obsidianReturn))
           
           // console.log('Retrieved from cache: \n\t', obsidianReturn);
@@ -134,7 +136,7 @@ export async function ObsidianRouter<T>({
         // Normalize response and store in cache //
         if (useCache && toNormalize && !result.errors) {
           // console.log('Writing to cache right now', "\n body.query", body.query, "\n result", result);
-          cache.write(body.query, result, false, body.variables);
+          cache.write(body.query, result, false);
         }
         var t1 = performance.now();
         console.log(
