@@ -37,7 +37,10 @@ export class Cache {
   // Main functionality methods
   // for reading the inital query
   async read(queryStr) {
+    //ther queryStr it gets is the JSON stringified shit
     const returnedValue = await this.cacheRead(queryStr);
+    console.log(returnedValue);
+    return { data: returnedValue };
 
     /*
         if (typeof queryStr !== "string")
@@ -54,16 +57,18 @@ export class Cache {
   createBigHash(inputfromQuery) {
     let ast = gql(inputfromQuery);
     console.log("about to return whole Query String");
-    return visit(ast, { enter: OperationDefinition(inputfromQuery) });
+    let returned = visit(ast, { enter: print(ast) });
+    let thisIsDumb = print(returned);
+    return JSON.stringify(thisIsDumb);
     //return this.operationDefinition(inputfromQuery)
   }
 
-  operationDefinition(node) {
-    console.log("entering operationDefinition");
-    console.log(node.name);
-    console.log(JSON.stringify(node));
-    return JSON.stringify(node);
-  }
+  //   operationDefinition(node) {
+  //     console.log("entering operationDefinition");
+  //     console.log(node.name);
+  //     console.log(JSON.stringify(node));
+  //     return JSON.stringify(node);
+  //   }
 
   async cacheRead(hash) {
     if (this.context === "client") {
@@ -110,6 +115,16 @@ export class Cache {
       let hashedQuery = await redis.get(hash);
     }
   }
+
+  async cacheWriteList(hash, array) {
+    await redis.rpush(hash, ...array);
+  }
+
+  async cacheReadList(hash) {
+    let cachedArray = await redis.lrange(hash, 0, -1);
+    return cachedArray;
+  }
+
   async cacheDelete(hash) {
     // deletes the hash/value pair on either object cache or redis cache
     if (this.context === "client") {
