@@ -5,7 +5,7 @@
 export default function normalizeResult(queryObj, resultObj, deleteFlag) {
   // Object to hold normalized obj
   const result = {};
-
+  console.log("IN ANOTHER REALLY AWESOME HOLE");
   // checks if there is a delete mutation
   if (deleteFlag) {
     //creates the ROOT_MUTATION hash that is being deleted
