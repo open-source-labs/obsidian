@@ -46,6 +46,9 @@ export class Cache {
     // breaks out of function if queryStr is a mutation
     if (!queries) return undefined;
 
+    // Check if there are multiple operations in the query string
+    // if there are, replace quer
+
     const responseObject = {};
     // iterate through each query in the input queries object
     for (const query in queries) {

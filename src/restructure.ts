@@ -5,14 +5,15 @@ export function restructure (value:any){
 
     console.log(value);
     const variables = value.variables || {};
+    const operationName = value.operationName;
     console.log("Varivaris: ");
     console.log(variables);
     let ast = gql(value.query);
     console.log(ast);
-  
+    
     let fragments: {[key:string]:any} = {};
     let containsFrags:boolean = false;
-    
+
     const buildFragsVisitor = {
       FragmentDefinition:(node:any)=>{
         fragments[node.name.value]=node.selectionSet.selections;
@@ -81,7 +82,9 @@ export function restructure (value:any){
     
     const firstRewriteVisitor={
     ...rewriteVisitor,
-    ...rewriteVarsVistor
+    ...rewriteVarsVistor,
+    OperationDefinition:(node:any)=>{
+      if(operationName&&node.name.value!=operationName){return null}}
     };
   
     visit(ast, {leave:firstBuildVisitor});
