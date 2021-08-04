@@ -40,7 +40,11 @@ export class Cache {
     //ther queryStr it gets is the JSON stringified shit
     const returnedValue = await this.cacheRead(queryStr);
     console.log(returnedValue);
-    return { data: returnedValue };
+    if (("returnedValue", returnedValue)) {
+      return JSON.parse(returnedValue);
+    } else {
+      return undefined;
+    }
 
     /*
         if (typeof queryStr !== "string")
@@ -53,6 +57,16 @@ export class Cache {
         if (!queries) return undefined;
     */
   }
+  async write(queryStr, respObj, deleteFlag) {
+    // const queryObj = destructureQueries(queryStr);
+    // const resFromNormalize = normalizeResult(queryObj, respObj, deleteFlag);
+    // console.log("\n resFromNormalize\n", resFromNormalize);
+    // update the original cache with same reference
+
+    await this.cacheWrite(queryStr, JSON.stringify(respObj));
+  }
+
+  async newWrite(queryStr, respObj, deleteFlag) {}
 
   createBigHash(inputfromQuery) {
     let ast = gql(inputfromQuery);
@@ -62,13 +76,6 @@ export class Cache {
     return JSON.stringify(thisIsDumb);
     //return this.operationDefinition(inputfromQuery)
   }
-
-  //   operationDefinition(node) {
-  //     console.log("entering operationDefinition");
-  //     console.log(node.name);
-  //     console.log(JSON.stringify(node));
-  //     return JSON.stringify(node);
-  //   }
 
   async cacheRead(hash) {
     if (this.context === "client") {
@@ -88,19 +95,6 @@ export class Cache {
       }
       let hashedQuery = await redis.get(hash);
 
-      //   let newHash = hash;
-      //   let hashArr = [];
-      //   newHash.forEach(async (e) => {
-      //     let poobah = await redis.get(e);
-      //     console.log("poobah", poobah);
-      //     hashArr.push(poobah);
-      //     console.log("HighGrand", hashArr);
-      //     hashArr;
-      //   });
-      //   console.log("grand", await hashArr);
-      // }
-
-      // if cacheRead is a miss
       if (hashedQuery === undefined) return undefined;
       return JSON.parse(hashedQuery);
     }
