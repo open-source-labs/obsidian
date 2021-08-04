@@ -98,7 +98,7 @@ export function restructure (value:any){
     fragments={};
     visit(ast, {enter:buildFragsVisitor});
     console.log("Whiling away");
-    ast = gql(print(visit(ast,{leave:rewriteVisitor})));
+    ast = gql(print(visit(ast,{leave:firstRewriteVisitor})));
     visit(ast,{leave:checkFragmentationVisitor});
   }
   
