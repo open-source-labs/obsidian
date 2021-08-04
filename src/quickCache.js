@@ -39,7 +39,7 @@ export class Cache {
   async read(queryStr) {
     //ther queryStr it gets is the JSON stringified shit
     const returnedValue = await this.cacheRead(queryStr);
-    console.log(returnedValue);
+    //console.log(returnedValue);
     if (("returnedValue", returnedValue)) {
       return JSON.parse(returnedValue);
     } else {
@@ -70,7 +70,7 @@ export class Cache {
 
   createBigHash(inputfromQuery) {
     let ast = gql(inputfromQuery);
-    console.log("about to return whole Query String");
+    //console.log("about to return whole Query String");
     let returned = visit(ast, { enter: print(ast) });
     let thisIsDumb = print(returned);
     return JSON.stringify(thisIsDumb);

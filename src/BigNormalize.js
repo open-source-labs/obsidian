@@ -5,7 +5,7 @@
 export default function normalizeResult(queryObj, resultObj, deleteFlag) {
   // Object to hold normalized obj
   const result = {};
-  console.log("IN ANOTHER REALLY AWESOME HOLE");
+  //console.log("IN ANOTHER REALLY AWESOME HOLE");
   // checks if there is a delete mutation
   if (deleteFlag) {
     //creates the ROOT_MUTATION hash that is being deleted
@@ -102,9 +102,9 @@ function createRootQuery(queryObjArr, resultObj) {
 
 //returns a hash value pair of each response obj passed in
 function createHash(obj, output = {}) {
-  console.log("obj from normalize", obj);
+  //console.log("obj from normalize", obj);
   const hash = labelId(obj);
-  console.log("hash from normalize", hash);
+  //console.log("hash from normalize", hash);
   //if output doesnt have a key of hash create a new obj with that hash key
   if (!output[hash]) output[hash] = {};
   // iterate thru the fields in the current obj and check whether the current field

@@ -71,6 +71,9 @@ export function restructure (value:any){
       FragmentSpread:(node:any)=>{
         console.log("mic check");
         containsFrags = true;
+      },
+      Variable:(node:any)=>{
+        containsFrags = true;
       }
     }
   
@@ -106,7 +109,7 @@ export function restructure (value:any){
     //YOU figure out how to replace one node with multiple nodes without
     //leaving an array in your wake, and that doesn't involve just doing the graphQL
     //equivalent of  parse(stringify).  I dare you.  I double dog dare you.
-    console.log("BEFORE WE NUKEM");
+    //console.log("BEFORE WE NUKEM");
     console.log(print(ast));
     ast=visit(ast,{leave:clearFragVisitor})
     console.log("ALL OUT OF BUBBLEGUM:")
