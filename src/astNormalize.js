@@ -180,7 +180,7 @@ let test2 = {
           {
             id: "1",
             __typename: "Actor",
-            nickname: "BradyMcBradFace",
+            firstName: "BradyMcBradFace",
             lastName: "Pitt",
           },
           {
@@ -238,7 +238,7 @@ let test2 = {
 };
 const resultyface = await normalizeResult(test2);
 console.log("This is what we realy return", resultyface);
-const readdat = await cacheReadObject("~2~Actor");
+const readdat = await cacheReadObject("~7~Movie");
 console.log(readdat);
 //console.log(JSON.stringify(await normalizeResult(test2, ["id", "__typename"])));
 
