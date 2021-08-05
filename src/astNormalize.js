@@ -19,14 +19,15 @@ function normalizeResult(gqlResponse, idArray = ["id", "__typename"]) {
     const isHashable = uniqueArray.every((element) => keys.includes(element));
     console.log("isHashable", isHashable);
     if (isHashable) {
-      const hash = "";
+      let hash = "";
       console.log("uniqueArray before forEach", uniqueArray);
-      uniqueArray.forEach((id) => hash + id + "~");
+      uniqueArray.forEach((id) => (hash = hash + "~" + object[id]));
+      console.log("SHOULD BE UNIQUE: ", hash);
       const returnObject = {};
       keys.forEach((key) => {
-        if (!uniqueArray.includes(keys)) {
+        if (!uniqueArray.includes(key)) {
           if (Array.isArray(object[key])) {
-            returnObject[hash] = {};
+            //returnObject[hash] = {};
             console.log("returnObject[hash]", returnObject[hash]);
             returnObject[hash][key] = [];
             object[key].forEach((element) => {
@@ -35,14 +36,32 @@ function normalizeResult(gqlResponse, idArray = ["id", "__typename"]) {
               );
             });
           } else if (typeof object[key] == "object") {
-            returnObject[hash] = {};
+            //returnObject[hash] = {};
             returnObject[hash][key] = recursiveObjectHashStore(
               object[key],
               uniqueArray
             );
           } else {
-            returnObject[hash] = {};
+            console.log("CHECKIT", returnObject);
+            if (!returnObject[hash]) {
+              returnObject[hash] = {};
+            }
+
+            console.log(
+              "1returnObject[hash]",
+              returnObject,
+              "hash",
+              hash,
+              "key",
+              key
+            );
             returnObject[hash][key] = object[key];
+            console.log(
+              "2returnObject[hash]",
+              returnObject[hash],
+              "hash",
+              hash
+            );
           }
           console.log("returnObject", returnObject);
           //console.log("desired object", [...returnObject]);
@@ -50,6 +69,7 @@ function normalizeResult(gqlResponse, idArray = ["id", "__typename"]) {
           //returnObject[hash] -> is the object we eventually want to return?
         }
       });
+      console.log("Right before return line 56", returnObject);
       return returnObject;
     } else {
       //if object isn't hashable
@@ -120,12 +140,82 @@ let test1 = {
   },
 };
 
+let test2 = {
+  data: {
+    movies: [
+      {
+        id: "7",
+        __typename: "Movie",
+        title: "Ad Astra",
+        releaseYear: 2019,
+        genre: "SCIFI",
+        actors: [
+          {
+            id: "1",
+            __typename: "Actor",
+            firstName: "Brad",
+            lastName: "Pitt",
+          },
+          {
+            id: "14",
+            __typename: "Actor",
+            firstName: "Tommy Lee",
+            lastName: "Jones",
+          },
+        ],
+      },
+      {
+        id: "15",
+        __typename: "Movie",
+        title: "World War Z",
+        releaseYear: 2013,
+        genre: "SCIFI",
+        actors: [
+          {
+            id: "1",
+            __typename: "Actor",
+            firstName: "Brad",
+            lastName: "Pitt",
+          },
+        ],
+      },
+      {
+        id: "17",
+        __typename: "Movie",
+        title: "Sky Captain and the World of Tomorrow",
+        releaseYear: 2004,
+        genre: "SCIFI",
+        actors: [
+          {
+            id: "2",
+            __typename: "Actor",
+            firstName: "Angelina",
+            lastName: "Jolie",
+          },
+          {
+            id: "25",
+            __typename: "Actor",
+            firstName: "Jude",
+            lastName: "Law",
+          },
+          {
+            id: "26",
+            __typename: "Actor",
+            firstName: "Gwyneth",
+            lastName: "Paltrow",
+          },
+        ],
+      },
+    ],
+  },
+};
+
 console.log(
   "This is what we realy return",
-  normalizeResult(test1, ["id", "__typename"])
+  normalizeResult(test2, ["id", "__typename"])
 );
 
-console.log(JSON.stringify(normalizeResult(test1, ["id", "__typename"])));
+console.log(JSON.stringify(normalizeResult(test2, ["id", "__typename"])));
 
 /*
     
