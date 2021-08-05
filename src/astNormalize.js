@@ -53,49 +53,44 @@ export async function normalizeResult(
       console.log("SHOULD BE UNIQUE: ", hash);
       const returnObject = {};
       keys.forEach((key) => {
-        if (!uniqueArray.includes(key)) {
-          if (Array.isArray(object[key])) {
-            //returnObject[hash] = {};
-            console.log("returnObject[hash]", returnObject[hash]);
-            returnObject[hash][key] = [];
-            object[key].forEach((element) => {
-              returnObject[hash][key].push(
-                recursiveObjectHashStore(element, uniqueArray)
-              );
-            });
-          } else if (typeof object[key] == "object") {
-            //returnObject[hash] = {};
-            returnObject[hash][key] = recursiveObjectHashStore(
-              object[key],
-              uniqueArray
+        // if (!uniqueArray.includes(key)) {
+        if (Array.isArray(object[key])) {
+          //returnObject[hash] = {};
+          console.log("returnObject[hash]", returnObject[hash]);
+          returnObject[hash][key] = [];
+          object[key].forEach((element) => {
+            returnObject[hash][key].push(
+              recursiveObjectHashStore(element, uniqueArray)
             );
-          } else {
-            console.log("CHECKIT", returnObject);
-            if (!returnObject[hash]) {
-              returnObject[hash] = {};
-            }
-
-            console.log(
-              "1returnObject[hash]",
-              returnObject,
-              "hash",
-              hash,
-              "key",
-              key
-            );
-            returnObject[hash][key] = object[key];
-            console.log(
-              "2returnObject[hash]",
-              returnObject[hash],
-              "hash",
-              hash
-            );
+          });
+        } else if (typeof object[key] == "object") {
+          //returnObject[hash] = {};
+          returnObject[hash][key] = recursiveObjectHashStore(
+            object[key],
+            uniqueArray
+          );
+        } else {
+          console.log("CHECKIT", returnObject);
+          if (!returnObject[hash]) {
+            returnObject[hash] = {};
           }
-          console.log("returnObject", returnObject);
-          //console.log("desired object", [...returnObject]);
-          //return returnObject;
-          //returnObject[hash] -> is the object we eventually want to return?
+
+          console.log(
+            "1returnObject[hash]",
+            returnObject,
+            "hash",
+            hash,
+            "key",
+            key
+          );
+          returnObject[hash][key] = object[key];
+          console.log("2returnObject[hash]", returnObject[hash], "hash", hash);
         }
+        console.log("returnObject", returnObject);
+        //console.log("desired object", [...returnObject]);
+        //return returnObject;
+        //returnObject[hash] -> is the object we eventually want to return?
+        //}
       });
       console.log("Right before return line 56", returnObject);
 
@@ -241,9 +236,9 @@ let test2 = {
     ],
   },
 };
-const resultyface = await normalizeResult(test1, ["title"]);
+const resultyface = await normalizeResult(test2);
 console.log("This is what we realy return", resultyface);
-const readdat = await cacheReadObject("~Ad Astra");
+const readdat = await cacheReadObject("~2~Actor");
 console.log(readdat);
 //console.log(JSON.stringify(await normalizeResult(test2, ["id", "__typename"])));
 
