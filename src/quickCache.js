@@ -17,7 +17,8 @@ if (context === "server") {
     port: 6379,
   });
 }
-
+//this is being exported so we can flush db in invalidateCacheCheck
+export const redisdb = redis;
 export class Cache {
   constructor(
     initialCache = {
@@ -66,7 +67,48 @@ export class Cache {
     await this.cacheWrite(queryStr, JSON.stringify(respObj));
   }
 
-  async newWrite(queryStr, respObj, deleteFlag) {}
+  //will overwrite a list at the given hash by default
+  //if you pass a false value to overwrite, it will append the list items to the end
+
+  //Probably gonna be used in normalize currently not used 8/4/2021
+  cacheWriteList = async (hash, array, overwrite = true) => {
+    if (overwrite) {
+      await redis.del(hash);
+    }
+    array = array.map((element) => JSON.stringify(element));
+    await redis.rpush(hash, ...array);
+  };
+
+  cacheReadList = async (hash) => {
+    let cachedArray = await redis.lrange(hash, 0, -1);
+    cachedArray = cachedArray.map((element) => JSON.parse(element));
+    console.log(cachedArray);
+    return cachedArray;
+  };
+
+  cacheWriteObject = async (hash, obj) => {
+    let entries = Object.entries(obj).flat();
+    entries = entries.map((entry) => JSON.stringify(entry));
+    console.log("Entries", entries);
+    await redis.hset(hash, ...entries);
+  };
+
+  cacheReadObject = async (hash) => {
+    let objArray = await redis.hgetall(hash);
+    objArray = objArray.map((entry) => JSON.parse(entry));
+    console.log(objArray);
+
+    if (objArray.length % 2 !== 0) {
+      console.log("uneven number of keys and values in ", hash);
+      return undefined;
+    }
+    let returnObj = {};
+    for (let i = 0; i < objArray.length; i += 2) {
+      returnObj[objArray[i]] = objArray[i + 1];
+    }
+    console.log("returnObj:", returnObj);
+    return returnObj;
+  };
 
   createBigHash(inputfromQuery) {
     let ast = gql(inputfromQuery);

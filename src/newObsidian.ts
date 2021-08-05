@@ -6,6 +6,7 @@ import LFUCache from './lfuBrowserCache.js';
 import {Cache} from './quickCache.js'
 import queryDepthLimiter from './DoSSecurity.ts';
 import {restructure} from './restructure.ts';
+import {invalidateCacheCheck} from './invalidateCacheCheck.js';
 
 interface Constructable<T> {
   new (...args: any): T & OakRouter;
@@ -83,7 +84,8 @@ export async function ObsidianRouter<T>({
      
       try {
         const contextResult = context ? await context(ctx) : undefined;
-        const body = await request.body().value;
+        let body = await request.body().value;
+        console.log("the first body,", body)
 
         // If a securty limit is set for maxQueryDepth, invoke queryDepthLimiter
         // which throws error if query depth exceeds maximum
@@ -91,10 +93,13 @@ export async function ObsidianRouter<T>({
 
          // if we run restructre to get rid of variables and fragments 
           //then we wont have to do it anywhere later 
-          // mike thinks were golden
+          // mike thinks we're golden
         
-          body.query = restructure(body);
-
+          body = {query : restructure(body)};
+          console.log("Before invalidateCacheCheck");
+          console.log("typeof body.query", typeof body.query)
+          console.log("body:",body)
+          invalidateCacheCheck(body);
         // Variable to block the normalization of mutations //
         let toNormalize = true;
 
