@@ -68,7 +68,7 @@ export default function normalizeResult(queryObj, resultObj, deleteFlag) {
       }
     }
   }
-
+  console.log(result);
   return result;
 }
 

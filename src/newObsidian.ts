@@ -7,7 +7,8 @@ import {Cache} from './quickCache.js'
 import queryDepthLimiter from './DoSSecurity.ts';
 import {restructure} from './restructure.ts';
 import {invalidateCacheCheck} from './invalidateCacheCheck.js';
-
+import normalize from './Old/normalize.js'
+ 
 interface Constructable<T> {
   new (...args: any): T & OakRouter;
 }
@@ -141,7 +142,9 @@ export async function ObsidianRouter<T>({
 
         // Normalize response and store in cache //
         if (useCache && toNormalize && !result.errors) {
-          // console.log('Writing to cache right now', "\n body.query", body.query, "\n result", result);
+           console.log('Writing to cache right now', "\n body.query", body.query, "\n result", result);
+           console.log(normalize(result))
+
           cache.write(body.query, result, false);
         }
         var t1 = performance.now();

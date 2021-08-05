@@ -1,7 +1,7 @@
 import { graphql } from 'https://cdn.pika.dev/graphql@15.0.0';
 import { renderPlaygroundPage } from 'https://deno.land/x/oak_graphql@0.6.2/graphql-playground-html/render-playground-html.ts';
 import { makeExecutableSchema } from 'https://deno.land/x/oak_graphql@0.6.2/graphql-tools/schema/makeExecutableSchema.ts';
-import LFUCache from './lfuBrowserCache.js';
+import LFUCache from '../lfuBrowserCache.js';
 import { Cache } from './CacheClassServer.js';
 import queryDepthLimiter from './DoSSecurity.ts';
 
