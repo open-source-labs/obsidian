@@ -1,15 +1,15 @@
 import { gql } from "https://deno.land/x/oak_graphql/mod.ts";
 //import {concatInlineFragments, parseFragmentToInlineFragment} from "https://deno.land/x/oak_graphql/graphql-tools/utils/fragments.ts";
 import {print, visit} from "https://deno.land/x/graphql_deno/mod.ts";
-export function restructure (value:any){
+export  function restructure (value:any){
 
-    console.log(value);
+    //console.log(value);
     const variables = value.variables || {};
     const operationName = value.operationName;
-    console.log("Varivaris: ");
-    console.log(variables);
+    // console.log("Varivaris: ");
+    // console.log(variables);
     let ast = gql(value.query);
-    console.log(ast);
+   // console.log(ast);
     
     let fragments: {[key:string]:any} = {};
     let containsFrags:boolean = false;

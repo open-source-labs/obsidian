@@ -344,10 +344,10 @@ export const test = {
    }
       
   }
-  fragment titleAndGenre on Movie {
-    title
-    genre
-  }
+  // fragment titleAndGenre on Movie {
+  //   title
+  //   genre
+  // }
   fragment firstAndLast on Actors {
     firstName
     lastName
