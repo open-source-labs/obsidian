@@ -8,7 +8,8 @@ import queryDepthLimiter from './DoSSecurity.ts';
 import {restructure} from './restructure.ts';
 import {invalidateCacheCheck} from './invalidateCacheCheck.js';
 //import normalize from './Old/normalize.js'
- 
+
+
 interface Constructable<T> {
   new (...args: any): T & OakRouter;
 }
@@ -65,7 +66,7 @@ export async function ObsidianRouter<T>({
 
   // If using Redis caching, the following lines need to be uncommented.
   const cache = new Cache();
-
+  
   // clear redis cache when restarting the server
   cache.cacheClear();
 

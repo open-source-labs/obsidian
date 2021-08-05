@@ -10,6 +10,12 @@ import { redisdb } from "./quickCache.js";
 // and taking the response and pairing the resp info with hash
 
 //idArray so they can define hash nomenclature
+const cacheWriteObject = async (hash, obj) => {
+  let entries = Object.entries(obj).flat();
+  entries = entries.map((entry) => JSON.stringify(entry));
+  console.log("Entries", entries);
+  await redisdb.hset(hash, ...entries);
+};
 
 //remember to export
 function normalizeResult(gqlResponse, idArray = ["id", "__typename"]) {
@@ -70,7 +76,11 @@ function normalizeResult(gqlResponse, idArray = ["id", "__typename"]) {
         }
       });
       console.log("Right before return line 56", returnObject);
-      return returnObject;
+
+      //here is where you store it in redis to store the nested info into keys
+      cacheWriteObject(hash, Object.values(returnObject)[0]);
+      //here is where
+      return Object.keys(returnObject)[0];
     } else {
       //if object isn't hashable
       let returnObject = {};
