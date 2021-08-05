@@ -17,8 +17,30 @@ const cacheWriteObject = async (hash, obj) => {
   await redisdb.hset(hash, ...entries);
 };
 
+const cacheReadObject = async (hash) => {
+  let objArray = await redisdb.hgetall(hash);
+  objArray = objArray.map((entry) => JSON.parse(entry));
+  console.log(objArray);
+
+  if (objArray.length % 2 !== 0) {
+    console.log("uneven number of keys and values in ", hash);
+    return undefined;
+  }
+  let returnObj = {};
+  for (let i = 0; i < objArray.length; i += 2) {
+    returnObj[objArray[i]] = objArray[i + 1];
+  }
+  console.log("returnObj:", returnObj);
+  return returnObj;
+};
+
 //remember to export
-function normalizeResult(gqlResponse, idArray = ["id", "__typename"]) {
+//ur not my supervisor
+
+export async function normalizeResult(
+  gqlResponse,
+  idArray = ["id", "__typename"]
+) {
   const recursiveObjectHashStore = (object, uniqueArray) => {
     const keys = Object.keys(object);
     console.log("keys", keys);
@@ -163,7 +185,7 @@ let test2 = {
           {
             id: "1",
             __typename: "Actor",
-            firstName: "Brad",
+            nickname: "BradyMcBradFace",
             lastName: "Pitt",
           },
           {
@@ -219,13 +241,11 @@ let test2 = {
     ],
   },
 };
-
-console.log(
-  "This is what we realy return",
-  normalizeResult(test2, ["id", "__typename"])
-);
-
-console.log(JSON.stringify(normalizeResult(test2, ["id", "__typename"])));
+const resultyface = await normalizeResult(test1, ["title"]);
+console.log("This is what we realy return", resultyface);
+const readdat = await cacheReadObject("~Ad Astra");
+console.log(readdat);
+//console.log(JSON.stringify(await normalizeResult(test2, ["id", "__typename"])));
 
 /*
     
