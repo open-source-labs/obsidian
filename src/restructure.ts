@@ -13,6 +13,8 @@ export function restructure (value:any){
     
     let fragments: {[key:string]:any} = {};
     let containsFrags:boolean = false;
+    let existingFrags: {[key:string]:any}={};
+    let existingVars: {[key:string]:any}={};
 
     const buildFragsVisitor = {
       FragmentDefinition:(node:any)=>{
@@ -71,9 +73,11 @@ export function restructure (value:any){
       FragmentSpread:(node:any)=>{
         console.log("mic check");
         containsFrags = true;
+        existingFrags[node.name.value]=true
       },
       Variable:(node:any)=>{
         containsFrags = true;
+        existingVars[node.name.value]=true
       }
     }
   
@@ -103,6 +107,21 @@ export function restructure (value:any){
     console.log("Whiling away");
     ast = gql(print(visit(ast,{leave:firstRewriteVisitor})));
     visit(ast,{leave:checkFragmentationVisitor});
+    console.log("fragments:",fragments,"containsFrags:",containsFrags);
+    //if existingFrags has a key that fragments does not
+    const exfragskeys=Object.keys(existingFrags);
+    const fragskeys=Object.keys(fragments);
+    const exvarsskeys=Object.keys(existingVars);
+    const varkeys =Object.keys(variables);
+    //exfragskeys.every(key=>fragskeys.includes(key))
+    if (!exfragskeys.every(key=>fragskeys.includes(key))){
+      console.log("We should be failing out");
+      return console.log({error: 'missing fragment definitions'})
+    }
+    if (!exvarsskeys.every(key=>varkeys.includes(key))){
+      console.log("We should be failing out");
+      return console.log({error: 'missing variable definitions'})
+    }
   }
   
   
