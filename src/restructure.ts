@@ -114,5 +114,6 @@ export function restructure (value:any){
     ast=visit(ast,{leave:clearFragVisitor})
     console.log("ALL OUT OF BUBBLEGUM:")
     console.log(print(ast));
+    
   return print(ast);
 }
