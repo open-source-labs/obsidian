@@ -1,5 +1,3 @@
-/** @format */
-
 import normalizeResult from "./BigNormalize.js";
 import destructureQueries from "./BigDestructure.js";
 import "https://deno.land/x/dotenv/load.ts";
