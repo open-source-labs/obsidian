@@ -7,7 +7,7 @@ import {Cache} from './quickCache.js'
 import queryDepthLimiter from './DoSSecurity.ts';
 import {restructure} from './restructure.ts';
 import {invalidateCacheCheck} from './invalidateCacheCheck.js';
-import normalize from './Old/normalize.js'
+//import normalize from './Old/normalize.js'
  
 interface Constructable<T> {
   new (...args: any): T & OakRouter;
