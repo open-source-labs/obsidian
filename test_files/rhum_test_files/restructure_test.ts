@@ -11,43 +11,43 @@ import { print, visit } from "https://deno.land/x/graphql_deno/mod.ts";
 Rhum.testPlan("restructure.ts", () => {
   Rhum.testSuite("restructure fragment test", () => {
     // // No Fragment test 
-    // Rhum.testCase("restructure fragment test - no fragments", () => {
-    //   const result = restructure(test.fragmentTestData0);
-    //   Rhum.asserts.assertEquals(result, print(gql(test.fragmentResultData0)));
-    // });
-    // // Fragment with two seperate queries
-    // Rhum.testCase("restructure fragment test - results in two seperate queries", () => {
-    //   const result = restructure(test.fragmentTestData);
-    //   Rhum.asserts.assertEquals(result, print(gql(test.fragmentResultData)));
-    // });
+    Rhum.testCase("restructure fragment test - no fragments", () => {
+      const result = restructure(test.fragmentTestData0);
+      Rhum.asserts.assertEquals(result, print(gql(test.fragmentResultData0)));
+    });
+    // Fragment with two seperate queries
+    Rhum.testCase("restructure fragment test - results in two seperate queries", () => {
+      const result = restructure(test.fragmentTestData);
+      Rhum.asserts.assertEquals(result, print(gql(test.fragmentResultData)));
+    });
    // Fragments in One query
     Rhum.testCase('restructure fragment test - result in one query', () => {
-      const result = restructure(test.fragmentResultData2);
+      const result = restructure(test.fragmentTestData2);
       Rhum.asserts.assertEquals(result, print(gql(test.fragmentResultData2)));
     });
   //  Fragment with Nested Fragments
     Rhum.testCase('restructure fragment test - nested fragments', () => {
-      const result = restructure(test.fragmentResultData3);
+      const result = restructure(test.fragmentTestData3);
       Rhum.asserts.assertEquals(result, print(gql(test.fragmentResultData3)))
     });
-    // // Single Variable Test 
-    // Rhum.testSuite('restructure single variable query tests', () => {
-    //   Rhum.testCase('restructure single variable query string', () => {
-    //     const result = restructure(
-    //       test.singleVariableTestData,
-    //     );
-    //     Rhum.asserts.assertEquals(result, print(gql(test.singleVariableTestResult)));
-    //   })
-    // });
-    // // // Multi Variable Test 
-    // Rhum.testSuite('restructure multi variable query test', () => {
-    //   Rhum.testCase('restructure multi variable query', () => {
-    //     const result = restructure(
-    //       test.multiVariableTestData,
-    //     );
-    //     Rhum.asserts.assertEquals(result, print(gql(test.multiVariableTestResult)));
-    //   });
-    // })
+    // Single Variable Test 
+    Rhum.testSuite('restructure single variable query tests', () => {
+      Rhum.testCase('restructure single variable query string', () => {
+        const result = restructure(
+          test.singleVariableTestData,
+        );
+        Rhum.asserts.assertEquals(result, print(gql(test.singleVariableTestResult)));
+      })
+    });
+    // // Multi Variable Test 
+    Rhum.testSuite('restructure multi variable query test', () => {
+      Rhum.testCase('restructure multi variable query', () => {
+        const result = restructure(
+          test.multiVariableTestData,
+        );
+        Rhum.asserts.assertEquals(result, print(gql(test.multiVariableTestResult)));
+      });
+    })
   });
 });
 
