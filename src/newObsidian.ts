@@ -2,9 +2,10 @@ import { graphql } from 'https://cdn.pika.dev/graphql@15.0.0';
 import { renderPlaygroundPage } from 'https://deno.land/x/oak_graphql@0.6.2/graphql-playground-html/render-playground-html.ts';
 import { makeExecutableSchema } from 'https://deno.land/x/oak_graphql@0.6.2/graphql-tools/schema/makeExecutableSchema.ts';
 import LFUCache from './lfuBrowserCache.js';
-import { Cache } from './CacheClassAST.js';
+//import { Cache } from './CacheClassAST.js';
+import { Cache } from './quickCache.js';
 import queryDepthLimiter from './DoSSecurity.ts';
-import {restructure} from './restructure.ts';
+import { restructure } from './restructure.ts';
 
 interface Constructable<T> {
   new (...args: any): T & OakRouter;
@@ -39,6 +40,11 @@ export interface ResolversProps {
 // Export developer chosen port for redis database connection //
 export let redisPortExport: number = 6379;
 
+/**
+ * 
+ * @param param0 
+ * @returns 
+ */
 export async function ObsidianRouter<T>({
   Router,
   path = '/graphql',
@@ -58,12 +64,14 @@ export async function ObsidianRouter<T>({
   const schema = makeExecutableSchema({ typeDefs, resolvers });
 
   // If using LFU Browser Caching, the following cache line needs to be uncommented.
-   //const cache = new LFUCache(50);
+  //const cache = new LFUCache(50);
 
   // If using Redis caching, the following lines need to be uncommented.
+
   const cache = new Cache();
 
   // clear redis cache when restarting the server
+
   cache.cacheClear();
 
   // set redis configurations
@@ -79,7 +87,6 @@ export async function ObsidianRouter<T>({
     const { response, request } = ctx;
 
     if (request.hasBody) {
-     
       try {
         const contextResult = context ? await context(ctx) : undefined;
         const body = await request.body().value;
@@ -88,11 +95,11 @@ export async function ObsidianRouter<T>({
         // which throws error if query depth exceeds maximum
         if (maxQueryDepth) queryDepthLimiter(body.query, maxQueryDepth);
 
-         // if we run restructre to get rid of variables and fragments 
-          //then we wont have to do it anywhere later 
-          // mike thinks were golden
-        
-          body.query = restructure(body);
+        // if we run restructre to get rid of variables and fragments
+        //then we wont have to do it anywhere later
+        // mike thinks were golden
+
+        body.query = restructure(body);
 
         // Variable to block the normalization of mutations //
         let toNormalize = true;
@@ -102,7 +109,7 @@ export async function ObsidianRouter<T>({
           // Send query off to be destructured and found in Redis if possible //
           const obsidianReturn = await cache.read(body.query);
           // let log = await console.log("body.query2", (obsidianReturn))
-          
+
           // console.log('Retrieved from cache: \n\t', obsidianReturn);
 
           if (obsidianReturn) {
@@ -110,11 +117,11 @@ export async function ObsidianRouter<T>({
             response.status = 200;
             response.body = obsidianReturn;
             var t1 = performance.now();
-            console.log(
-              'Obsidian retrieved data from cache and took ' +
-                (t1 - t0) +
-                ' milliseconds.'
-            );
+            // console.log(
+            //   'Obsidian retrieved data from cache and took ' +
+            //     (t1 - t0) +
+            //     ' milliseconds.'
+            // );
             return;
           }
         }
@@ -139,9 +146,11 @@ export async function ObsidianRouter<T>({
           cache.write(body.query, result, false);
         }
         var t1 = performance.now();
-        console.log(
-          'Obsidian received new data and took ' + (t1 - t0) + ' milliseconds. and this message works'
-        );
+        // console.log(
+        //   'Obsidian received new data and took ' +
+        //     (t1 - t0) +
+        //     ' milliseconds. and this message works'
+        // );
         return;
       } catch (error) {
         response.status = 200;
