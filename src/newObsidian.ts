@@ -119,9 +119,9 @@ export async function ObsidianRouter<T>({
             response.body = obsidianReturn;
             var t1 = performance.now();
             console.log(
-              'Obsidian retrieved data from cache and took ' +
+              '%c Obsidian retrieved data from cache and took ' +
                 (t1 - t0) +
-                ' milliseconds.'
+                ' milliseconds.', "background: #222; color: #00FF00"
             );
             return;
           }
@@ -143,14 +143,14 @@ export async function ObsidianRouter<T>({
 
         // Normalize response and store in cache //
         if (useCache && toNormalize && !result.errors) {
-           console.log('Writing to cache right now', "\n body.query", body.query, "\n result", result);
+           //console.log('Writing to cache right now', "\n body.query", body.query, "\n result", result);
            //console.log(normalize(result))
 
           cache.write(body.query, result, false);
         }
         var t1 = performance.now();
         console.log(
-          'Obsidian received new data and took ' + (t1 - t0) + ' milliseconds. and this message works'
+          '%c Obsidian received new data and took ' + (t1 - t0) + ' milliseconds', 'background: #222; color: #FFFF00'
         );
         return;
       } catch (error) {

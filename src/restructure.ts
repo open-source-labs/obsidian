@@ -115,11 +115,11 @@ export function restructure (value:any){
     const varkeys =Object.keys(variables);
     //exfragskeys.every(key=>fragskeys.includes(key))
     if (!exfragskeys.every(key=>fragskeys.includes(key))){
-      console.log("We should be failing out");
+      //console.log("We should be failing out");
       return console.log({error: 'missing fragment definitions'})
     }
     if (!exvarsskeys.every(key=>varkeys.includes(key))){
-      console.log("We should be failing out");
+      //console.log("We should be failing out");
       return console.log({error: 'missing variable definitions'})
     }
   }
@@ -129,10 +129,10 @@ export function restructure (value:any){
     //leaving an array in your wake, and that doesn't involve just doing the graphQL
     //equivalent of  parse(stringify).  I dare you.  I double dog dare you.
     //console.log("BEFORE WE NUKEM");
-    console.log(print(ast));
+    //console.log(print(ast));
     ast=visit(ast,{leave:clearFragVisitor})
-    console.log("ALL OUT OF BUBBLEGUM:")
-    console.log(print(ast));
+    //console.log("ALL OUT OF BUBBLEGUM:")
+    //console.log(print(ast));
     
   return print(ast);
 }
