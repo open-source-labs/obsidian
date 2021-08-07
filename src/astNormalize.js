@@ -17,6 +17,7 @@ const cacheWriteList = async (hash, array, overwrite = true) => {
   }
   array = array.map((element) => JSON.stringify(element));
   await redisdb.rpush(hash, ...array);
+  return;
 };
 
 // const cacheReadList = async (hash) => {
@@ -26,15 +27,27 @@ const cacheWriteList = async (hash, array, overwrite = true) => {
 //   console.log(cachedArray);
 //   return cachedArray;
 // };
+const cacheReadList = async (hash) => {
+  //we gotta get the list lubed up and ready for action
+  //await redisdb.lrange(hash, 0, -1);
+  let redisList = await redisdb.lrange(hash, 0, -1);
+  console.log("CachedArray", redisList);
+  let cachedArray = redisList.map((element) => JSON.parse(element));
+  // console.log(cachedArray);
+  return cachedArray;
+};
 
 // had to change cacheReadList a bit so it completed its promise
-async function cacheReadList(hash) {
-  let redisList = await redisdb.lrange(hash, 0, -1);
-  //console.log("CachedArray", cachedArray);
-  let cachedArray = await redisList.map((element) => JSON.parse(element));
-  //console.log(cachedArray);
-  return cachedArray;
-}
+// async function cacheReadList(hash) {
+//   let redisList = () => {
+//     return redisdb.lrange(hash, 0, -1);
+//   };
+//   let pooter = await redisList();
+//   console.log("CachedArray");
+//   let cachedArray = await pooter.map((element) => JSON.parse(element));
+//   console.log(cachedArray);
+//   return cachedArray;
+// }
 
 const cacheWriteObject = async (hash, obj) => {
   let entries = Object.entries(obj).flat();
@@ -593,7 +606,7 @@ const cachePrimaryFields = async (normalizedResult, queryString) => {
   console.log("ENDDDD DADDY!");
   const expectedResultKeys = [];
   const objectOfShitToHash = {};
-  await primaryFieldsArray.forEach(async (primaryField) => {
+  primaryFieldsArray.forEach(async (primaryField) => {
     let title;
     if (primaryField.alias) {
       title = primaryField.alias.value;
@@ -611,6 +624,7 @@ const cachePrimaryFields = async (normalizedResult, queryString) => {
     console.log("AINT GOT NOTTINGHAM FOREST", hashName);
     objectOfShitToHash[hashName] = normalizedResult.data[title];
     await cacheWriteList(hashName, normalizedResult.data[title]);
+    console.log("waiting");
   });
   console.log(expectedResultKeys);
   console.log("SOOOPER USEFUL", objectOfShitToHash);
@@ -621,17 +635,41 @@ const cachePrimaryFields = async (normalizedResult, queryString) => {
 const resultyface = await normalizeResult(testsObj.resp2);
 console.log("This is what we realy return", resultyface);
 const testingCPF = await cachePrimaryFields(resultyface, testsObj.query2.query);
-console.log("--------------------------------testingCPF", testingCPF);
-const somehashes = Object.keys(testingCPF);
-const theoreticalHash2 = Object.keys(testingCPF)[0];
-console.log("theoreticalHash2", theoreticalHash2);
+//console.log("--------------------------------testingCPF", testingCPF);
+//const somehashes = Object.keys(testingCPF);
+//const theoreticalHash2 = Object.keys(testingCPF)[0];
+//console.log("theoreticalHash2", theoreticalHash2);
+// let y;
 
-let x = async () => {
-  await cacheReadList(theoreticalHash2);
-  console.log(await cacheReadList(theoreticalHash2));
-};
-x();
-console.log("this should be something", await cacheReadList(theoreticalHash2));
+// const x = async () => {
+//   // await cacheReadList(theoreticalHash2);
+//   // console.log(await cacheReadList(theoreticalHash2));
+//   y = await cacheReadList(theoreticalHash2);
+//   console.log("something", y);
+// };
+// await x();
+//let something = await cacheReadList(theoreticalHash2);
+console.log("Be Fast!");
+// await cacheReadList(theoreticalHash2);
+console.log("BE QUICK!");
+// let what = await cacheReadList(theoreticalHash2);
+// console.log("what", await what);
+//console.log("this should be something", await cacheReadList(theoreticalHash2));
+// console.log("whatwhut", await what);
+// console.log("")
+//console.log("here we go", y);
+let stoker =
+  'actors[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"film"},"value":{"kind":"IntValue","value":"1"}}]}}][{"kind":"Directive","name":{"kind":"Name","value":"include"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"if"},"value":{"kind":"BooleanValue","value":true}}]},{"kind":"Directive","name":{"kind":"Name","value":"skip"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"if"},"value":{"kind":"BooleanValue","value":false}}]}]';
+let vladimir;
+console.log(performance.now());
+console.log(await redisdb.lrange(stoker, 0, -1));
+console.log(performance.now());
+//vladimir = await redisdb.lrange(stoker, 0, -1);
+console.log(performance.now());
+//console.log("sexy drac", vladimir);
+//let renfield = await cacheReadList(stoker);
+//console.log("renny", renfield);
+//console.log("cahcereadobj stuff", await cacheReadObject("~7~Movie"));
 
 // setTimeout(() => {
 //   const exampleTest = cacheReadList(theoreticalHash2);
