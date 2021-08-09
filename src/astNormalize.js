@@ -20,13 +20,7 @@ const cacheWriteList = async (hash, array, overwrite = true) => {
   return;
 };
 
-// const cacheReadList = async (hash) => {
-//   let cachedArray = await redisdb.lrange(hash, 0, -1);
-//   //console.log("CachedArray", cachedArray);
-//   cachedArray = cachedArray.map((element) => JSON.parse(element));
-//   console.log(cachedArray);
-//   return cachedArray;
-// };
+
 const cacheReadList = async (hash) => {
   //we gotta get the list lubed up and ready for action
   //await redisdb.lrange(hash, 0, -1);
@@ -37,17 +31,6 @@ const cacheReadList = async (hash) => {
   return cachedArray;
 };
 
-// had to change cacheReadList a bit so it completed its promise
-// async function cacheReadList(hash) {
-//   let redisList = () => {
-//     return redisdb.lrange(hash, 0, -1);
-//   };
-//   let pooter = await redisList();
-//   console.log("CachedArray");
-//   let cachedArray = await pooter.map((element) => JSON.parse(element));
-//   console.log(cachedArray);
-//   return cachedArray;
-// }
 
 const cacheWriteObject = async (hash, obj) => {
   let entries = Object.entries(obj).flat();
@@ -56,8 +39,17 @@ const cacheWriteObject = async (hash, obj) => {
   await redisdb.hset(hash, ...entries);
 };
 
-const cacheReadObject = async (hash) => {
+const cacheReadObject = async (hash,field) => {
+  if(field){
+      let returnValue = await redisdb.hget(hash,JSON.stringify(field));
+      console.log("do thing",returnValue)
+      if(returnValue===undefined) return undefined;
+      return JSON.parse(returnValue);
+  }
+  else{
+
   let objArray = await redisdb.hgetall(hash);
+  if(objArray.length==0) return undefined;
   let parsedArray = objArray.map((entry) => JSON.parse(entry));
   console.log(parsedArray);
 
@@ -71,8 +63,8 @@ const cacheReadObject = async (hash) => {
   }
   console.log("returnObj:", returnObj);
   return returnObj;
+  }
 };
-
 //remember to export
 //ur not my supervisor
 
@@ -175,426 +167,8 @@ export async function normalizeResult(
     // need to move down
   };
 
-  return recursiveObjectHashStore(gqlResponse, idArray);
+  return await recursiveObjectHashStore(gqlResponse, idArray);
 }
-
-let test1 = {
-  data: {
-    movies: [
-      {
-        id: "7",
-        __typename: "Movie",
-        title: "Ad Astra",
-        releaseYear: 2019,
-        genre: "SCIFI",
-      },
-      {
-        id: "15",
-        __typename: "Movie",
-        title: "World War Z",
-        releaseYear: 2013,
-        genre: "SCIFI",
-      },
-      {
-        id: "17",
-        __typename: "Movie",
-        title: "Sky Captain and the World of Tomorrow",
-        releaseYear: 2004,
-        genre: "SCIFI",
-      },
-    ],
-  },
-};
-
-let test2 = {
-  data: {
-    movies: [
-      {
-        id: "7",
-        __typename: "Movie",
-        title: "Ad Astra",
-        releaseYear: 2019,
-        genre: "SCIFI",
-        actors: [
-          {
-            id: "1",
-            __typename: "Actor",
-            firstName: "BradyMcBradFace",
-            lastName: "Pitt",
-          },
-          {
-            id: "14",
-            __typename: "Actor",
-            firstName: "Tommy Lee",
-            lastName: "Jones",
-          },
-        ],
-      },
-      {
-        id: "15",
-        __typename: "Movie",
-        title: "World War Z",
-        releaseYear: 2013,
-        genre: "SCIFI",
-        actors: [
-          {
-            id: "1",
-            __typename: "Actor",
-            firstName: "Brad",
-            lastName: "Pitt",
-          },
-        ],
-      },
-      {
-        id: "17",
-        __typename: "Movie",
-        title: "Sky Captain and the World of Tomorrow",
-        releaseYear: 2004,
-        genre: "SCIFI",
-        actors: [
-          {
-            id: "2",
-            __typename: "Actor",
-            firstName: "Angelina",
-            lastName: "Jolie",
-          },
-          {
-            id: "25",
-            __typename: "Actor",
-            firstName: "Jude",
-            lastName: "Law",
-          },
-          {
-            id: "26",
-            __typename: "Actor",
-            firstName: "Gwyneth",
-            lastName: "Paltrow",
-          },
-        ],
-      },
-    ],
-  },
-};
-
-let test3 = {
-  data: {
-    Scifi: [
-      {
-        id: "7",
-        __typename: "Movie",
-        title: "Ad Astra",
-        releaseYear: 2019,
-        genre: "SCIFI",
-        actors: [
-          {
-            id: "1",
-            __typename: "Actor",
-            firstName: "Brad",
-            lastName: "Pitt",
-          },
-          {
-            id: "14",
-            __typename: "Actor",
-            firstName: "Tommy Lee",
-            lastName: "Jones",
-          },
-        ],
-      },
-      {
-        id: "15",
-        __typename: "Movie",
-        title: "World War Z",
-        releaseYear: 2013,
-        genre: "SCIFI",
-        actors: [
-          {
-            id: "1",
-            __typename: "Actor",
-            firstName: "Brad",
-            lastName: "Pitt",
-          },
-        ],
-      },
-      {
-        id: "17",
-        __typename: "Movie",
-        title: "Sky Captain and the World of Tomorrow",
-        releaseYear: 2004,
-        genre: "SCIFI",
-        actors: [
-          {
-            id: "2",
-            __typename: "Actor",
-            firstName: "Angelina",
-            lastName: "Jolie",
-          },
-          {
-            id: "25",
-            __typename: "Actor",
-            firstName: "Jude",
-            lastName: "Law",
-          },
-          {
-            id: "26",
-            __typename: "Actor",
-            firstName: "Gwyneth",
-            lastName: "Paltrow",
-          },
-        ],
-      },
-    ],
-    Adventure: [
-      {
-        id: "3",
-        __typename: "Movie",
-        title: "Troy",
-        releaseYear: 2004,
-        genre: "ADVENTURE",
-        actors: [
-          {
-            id: "1",
-            __typename: "Actor",
-            firstName: "Brad",
-            lastName: "Pitt",
-          },
-          {
-            id: "6",
-            __typename: "Actor",
-            firstName: "Orlando",
-            lastName: "Bloom",
-          },
-        ],
-      },
-      {
-        id: "8",
-        __typename: "Movie",
-        title: "Maleficient",
-        releaseYear: 2014,
-        genre: "ADVENTURE",
-        actors: [
-          {
-            id: "2",
-            __typename: "Actor",
-            firstName: "Angelina",
-            lastName: "Jolie",
-          },
-        ],
-      },
-      {
-        id: "9",
-        __typename: "Movie",
-        title: "Lara Croft Tomb Raider",
-        releaseYear: 2001,
-        genre: "ADVENTURE",
-        actors: [
-          {
-            id: "2",
-            __typename: "Actor",
-            firstName: "Angelina",
-            lastName: "Jolie",
-          },
-          {
-            id: "15",
-            __typename: "Actor",
-            firstName: "Daniel",
-            lastName: "Craig",
-          },
-        ],
-      },
-      {
-        id: "21",
-        __typename: "Movie",
-        title: "Beowulf",
-        releaseYear: 2007,
-        genre: "ADVENTURE",
-        actors: [
-          {
-            id: "2",
-            __typename: "Actor",
-            firstName: "Angelina",
-            lastName: "Jolie",
-          },
-          {
-            id: "24",
-            __typename: "Actor",
-            firstName: "Anthony",
-            lastName: "Hopkins",
-          },
-        ],
-      },
-    ],
-    Funky: [
-      {
-        id: "1",
-        __typename: "Actor",
-        firstName: "Brad",
-        lastName: "Pitt",
-      },
-      {
-        id: "2",
-        __typename: "Actor",
-        firstName: "Angelina",
-        lastName: "Jolie",
-      },
-      {
-        id: "3",
-        __typename: "Actor",
-        firstName: "Leonardo",
-        lastName: "Dicaprio",
-      },
-      {
-        id: "4",
-        __typename: "Actor",
-        firstName: "Edward",
-        lastName: "Norton",
-      },
-      {
-        id: "5",
-        __typename: "Actor",
-        firstName: "Helena",
-        lastName: "Bonharm Carter",
-      },
-      {
-        id: "6",
-        __typename: "Actor",
-        firstName: "Orlando",
-        lastName: "Bloom",
-      },
-      {
-        id: "7",
-        __typename: "Actor",
-        firstName: "George",
-        lastName: "Clooney",
-      },
-      {
-        id: "8",
-        __typename: "Actor",
-        firstName: "Matt",
-        lastName: "Damon",
-      },
-      {
-        id: "9",
-        __typename: "Actor",
-        firstName: "Julia",
-        lastName: "Roberts",
-      },
-      {
-        id: "10",
-        __typename: "Actor",
-        firstName: "Margot",
-        lastName: "Robbie",
-      },
-      {
-        id: "11",
-        __typename: "Actor",
-        firstName: "Jonah",
-        lastName: "Hill",
-      },
-      {
-        id: "12",
-        __typename: "Actor",
-        firstName: "Philip",
-        lastName: "Seymour Hoffman",
-      },
-      {
-        id: "13",
-        __typename: "Actor",
-        firstName: "Chris",
-        lastName: "Pratt",
-      },
-      {
-        id: "14",
-        __typename: "Actor",
-        firstName: "Tommy Lee",
-        lastName: "Jones",
-      },
-      {
-        id: "15",
-        __typename: "Actor",
-        firstName: "Daniel",
-        lastName: "Craig",
-      },
-      {
-        id: "16",
-        __typename: "Actor",
-        firstName: "James",
-        lastName: "McAvoy",
-      },
-      {
-        id: "17",
-        __typename: "Actor",
-        firstName: "Morgan",
-        lastName: "Freeman",
-      },
-      {
-        id: "18",
-        __typename: "Actor",
-        firstName: "Nicholas",
-        lastName: "Cage",
-      },
-      {
-        id: "19",
-        __typename: "Actor",
-        firstName: "Jack",
-        lastName: "Black",
-      },
-      {
-        id: "20",
-        __typename: "Actor",
-        firstName: "Dustin",
-        lastName: "Hoffman",
-      },
-      {
-        id: "21",
-        __typename: "Actor",
-        firstName: "Jackie",
-        lastName: "Chan",
-      },
-      {
-        id: "22",
-        __typename: "Actor",
-        firstName: "Seth",
-        lastName: "Rogen",
-      },
-      {
-        id: "23",
-        __typename: "Actor",
-        firstName: "Johnny",
-        lastName: "Depp",
-      },
-      {
-        id: "24",
-        __typename: "Actor",
-        firstName: "Anthony",
-        lastName: "Hopkins",
-      },
-      {
-        id: "25",
-        __typename: "Actor",
-        firstName: "Jude",
-        lastName: "Law",
-      },
-      {
-        id: "26",
-        __typename: "Actor",
-        firstName: "Gwyneth",
-        lastName: "Paltrow",
-      },
-      {
-        id: "27",
-        __typename: "Actor",
-        firstName: "Winona",
-        lastName: "Ryder",
-      },
-      {
-        id: "28",
-        __typename: "Actor",
-        firstName: "Sean",
-        lastName: "Connery",
-      },
-    ],
-  },
-};
 
 const cachePrimaryFields = async (normalizedResult, queryString) => {
   const ast = gql(queryString);
@@ -606,7 +180,7 @@ const cachePrimaryFields = async (normalizedResult, queryString) => {
   console.log("ENDDDD DADDY!");
   const expectedResultKeys = [];
   const objectOfShitToHash = {};
-  primaryFieldsArray.forEach(async (primaryField) => {
+    for (const primaryField of primaryFieldsArray) {
     let title;
     if (primaryField.alias) {
       title = primaryField.alias.value;
@@ -614,7 +188,7 @@ const cachePrimaryFields = async (normalizedResult, queryString) => {
       title = primaryField.name.value;
     }
     expectedResultKeys.push(title);
-    console.log("NARWHAL", title);
+    //console.log("NARWHAL", title);
     let hashName = "";
     hashName =
       hashName +
@@ -625,64 +199,47 @@ const cachePrimaryFields = async (normalizedResult, queryString) => {
     objectOfShitToHash[hashName] = normalizedResult.data[title];
     await cacheWriteList(hashName, normalizedResult.data[title]);
     console.log("waiting");
-  });
+  };
   console.log(expectedResultKeys);
   console.log("SOOOPER USEFUL", objectOfShitToHash);
 
   return objectOfShitToHash;
 };
 
-const resultyface = await normalizeResult(testsObj.resp2);
-console.log("This is what we realy return", resultyface);
-const testingCPF = await cachePrimaryFields(resultyface, testsObj.query2.query);
-//console.log("--------------------------------testingCPF", testingCPF);
-//const somehashes = Object.keys(testingCPF);
-//const theoreticalHash2 = Object.keys(testingCPF)[0];
-//console.log("theoreticalHash2", theoreticalHash2);
-// let y;
 
-// const x = async () => {
-//   // await cacheReadList(theoreticalHash2);
-//   // console.log(await cacheReadList(theoreticalHash2));
-//   y = await cacheReadList(theoreticalHash2);
-//   console.log("something", y);
-// };
-// await x();
-//let something = await cacheReadList(theoreticalHash2);
+const testing = async()=>{
+const putin = {
+  data: {
+    Scifi: [ "~7~Movie", "~15~Movie", "~17~Movie" ],
+    Adventure: [ "~3~Movie", "~8~Movie", "~9~Movie", "~21~Movie" ],
+    actors: [ "~1~Actor", "~2~Actor" ]
+  }
+}
+ const resultyface =  await normalizeResult(testsObj.resp2);
+console.log("This is what we really return", resultyface);
+// await cachePrimaryFields(putin, testsObj.query2.query);
+const testingCPF = await cachePrimaryFields(resultyface, testsObj.query2.query);
+
+console.log("--------------------------------testingCPF", testingCPF);
+//const somehashes = Object.keys(testingCPF);
+const theoreticalHash2 = Object.keys(testingCPF)[0];
+console.log("theoreticalHash2", theoreticalHash2);
 console.log("Be Fast!");
 // await cacheReadList(theoreticalHash2);
 console.log("BE QUICK!");
-// let what = await cacheReadList(theoreticalHash2);
-// console.log("what", await what);
-//console.log("this should be something", await cacheReadList(theoreticalHash2));
+
+console.log("this should be something", await cacheReadList(theoreticalHash2));
 // console.log("whatwhut", await what);
 // console.log("")
 //console.log("here we go", y);
 let stoker =
   'actors[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"film"},"value":{"kind":"IntValue","value":"1"}}]}}][{"kind":"Directive","name":{"kind":"Name","value":"include"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"if"},"value":{"kind":"BooleanValue","value":true}}]},{"kind":"Directive","name":{"kind":"Name","value":"skip"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"if"},"value":{"kind":"BooleanValue","value":false}}]}]';
-let vladimir;
-console.log(performance.now());
-console.log(await redisdb.lrange(stoker, 0, -1));
-console.log(performance.now());
-//vladimir = await redisdb.lrange(stoker, 0, -1);
-console.log(performance.now());
-//console.log("sexy drac", vladimir);
-//let renfield = await cacheReadList(stoker);
-//console.log("renny", renfield);
-//console.log("cahcereadobj stuff", await cacheReadObject("~7~Movie"));
+let what = await cacheReadList(stoker);
+console.log("what", await what);
+}
+const prime = async (resp,query)=>{
 
-// setTimeout(() => {
-//   const exampleTest = cacheReadList(theoreticalHash2);
-//   // setTimeout(() => {
-//   //   console.log("HEY JUDE", exampleTest);
-//   // }, 2000);
-// }, 2000);
-//console.log("parse", JSON.parse('"~1~Actor" "~2~Actor"'));
-
-//const readdat = await cacheReadObject("~7~Movie");
-//console.log(readdat);
-//console.log(JSON.stringify(await normalizeResult(test2, ["id", "__typename"])));
-
-/*
-    
-*/
+const normal = await normalizeResult(resp);
+await cachePrimaryFields(normal,query)
+}
+await prime(testsObj.resp1, testsObj.query1.query);

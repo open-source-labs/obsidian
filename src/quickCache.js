@@ -94,21 +94,31 @@ export class Cache {
     await redis.hset(hash, ...entries);
   };
 
-  cacheReadObject = async (hash) => {
-    let objArray = await redis.hgetall(hash);
-    objArray = objArray.map((entry) => JSON.parse(entry));
-    console.log(objArray);
+  cacheReadObject = async (hash,field) => {
+    if(field){
+        let returnValue = await redisdb.hget(hash,JSON.stringify(field));
+        console.log("do thing",returnValue)
+        if(returnValue===undefined) return undefined;
+        return JSON.parse(returnValue);
+    }
+    else{
 
-    if (objArray.length % 2 !== 0) {
+    let objArray = await redisdb.hgetall(hash);
+    if(objArray.length==0) return undefined;
+    let parsedArray = objArray.map((entry) => JSON.parse(entry));
+    console.log(parsedArray);
+  
+    if (parsedArray.length % 2 !== 0) {
       console.log("uneven number of keys and values in ", hash);
       return undefined;
     }
     let returnObj = {};
-    for (let i = 0; i < objArray.length; i += 2) {
-      returnObj[objArray[i]] = objArray[i + 1];
+    for (let i = 0; i < parsedArray.length; i += 2) {
+      returnObj[parsedArray[i]] = parsedArray[i + 1];
     }
     console.log("returnObj:", returnObj);
     return returnObj;
+    }
   };
 
   createBigHash(inputfromQuery) {
