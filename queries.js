@@ -39,7 +39,7 @@ testsObj.query1 = {
               lastName
                  }
              }
-        Funky: actors {
+        actors {
            id
             __typename
            firstName
@@ -77,7 +77,7 @@ testsObj.query2 = {
                 lastName
                    }
                }
-          actors (input:{film:1}) @include(if:true) @skip(if:false){
+         Funky: actors (input:{film:1}) @include(if:true) @skip(if:false){
              id
               __typename
              firstName
@@ -87,11 +87,19 @@ testsObj.query2 = {
   `,
 };
 //expected response format:
+
+/* for each primary field in OperationDefinition,
+ith-field=OperationDefinition.selectionSet.selections[i]
+
+*/
+
 // const generalResponse =
 // {
 //     data: {
-//         OperationDefinition.selectionSet.selections[0].alias.value
-//         || OperationDefinition.selectionSet.selections[0].name.value
+//         ith-field.alias.value || ith-field.name.value : response array,
+//              where the value of the array is the value at redis hash:
+//                  ith-field.name+JSON.Stringify(ith-field.arguments)+JSON.Stringify(ith-field.directives)
+//
 
 //     }
 // }

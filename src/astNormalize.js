@@ -15,11 +15,11 @@ const cacheWriteList = async (hash, array, overwrite = true) => {
   if (overwrite) {
     await redisdb.del(hash);
   }
+  console.log("____array", array);
   array = array.map((element) => JSON.stringify(element));
   await redisdb.rpush(hash, ...array);
   return;
 };
-
 
 const cacheReadList = async (hash) => {
   //we gotta get the list lubed up and ready for action
@@ -31,7 +31,6 @@ const cacheReadList = async (hash) => {
   return cachedArray;
 };
 
-
 const cacheWriteObject = async (hash, obj) => {
   let entries = Object.entries(obj).flat();
   entries = entries.map((entry) => JSON.stringify(entry));
@@ -39,30 +38,28 @@ const cacheWriteObject = async (hash, obj) => {
   await redisdb.hset(hash, ...entries);
 };
 
-const cacheReadObject = async (hash,field) => {
-  if(field){
-      let returnValue = await redisdb.hget(hash,JSON.stringify(field));
-      console.log("do thing",returnValue)
-      if(returnValue===undefined) return undefined;
-      return JSON.parse(returnValue);
-  }
-  else{
+const cacheReadObject = async (hash, field) => {
+  if (field) {
+    let returnValue = await redisdb.hget(hash, JSON.stringify(field));
+    console.log("do thing", returnValue);
+    if (returnValue === undefined) return undefined;
+    return JSON.parse(returnValue);
+  } else {
+    let objArray = await redisdb.hgetall(hash);
+    if (objArray.length == 0) return undefined;
+    let parsedArray = objArray.map((entry) => JSON.parse(entry));
+    console.log(parsedArray);
 
-  let objArray = await redisdb.hgetall(hash);
-  if(objArray.length==0) return undefined;
-  let parsedArray = objArray.map((entry) => JSON.parse(entry));
-  console.log(parsedArray);
-
-  if (parsedArray.length % 2 !== 0) {
-    console.log("uneven number of keys and values in ", hash);
-    return undefined;
-  }
-  let returnObj = {};
-  for (let i = 0; i < parsedArray.length; i += 2) {
-    returnObj[parsedArray[i]] = parsedArray[i + 1];
-  }
-  console.log("returnObj:", returnObj);
-  return returnObj;
+    if (parsedArray.length % 2 !== 0) {
+      console.log("uneven number of keys and values in ", hash);
+      return undefined;
+    }
+    let returnObj = {};
+    for (let i = 0; i < parsedArray.length; i += 2) {
+      returnObj[parsedArray[i]] = parsedArray[i + 1];
+    }
+    console.log("returnObj:", returnObj);
+    return returnObj;
   }
 };
 //remember to export
@@ -180,12 +177,13 @@ const cachePrimaryFields = async (normalizedResult, queryString) => {
   console.log("ENDDDD DADDY!");
   const expectedResultKeys = [];
   const objectOfShitToHash = {};
-    for (const primaryField of primaryFieldsArray) {
+  for (const primaryField of primaryFieldsArray) {
     let title;
     if (primaryField.alias) {
       title = primaryField.alias.value;
     } else {
       title = primaryField.name.value;
+      console.log("_____title", title);
     }
     expectedResultKeys.push(title);
     //console.log("NARWHAL", title);
@@ -197,49 +195,60 @@ const cachePrimaryFields = async (normalizedResult, queryString) => {
       JSON.stringify(primaryField.directives);
     console.log("AINT GOT NOTTINGHAM FOREST", hashName);
     objectOfShitToHash[hashName] = normalizedResult.data[title];
+    console.log(
+      "____objectOfShitToHash",
+      objectOfShitToHash,
+      "___normalized",
+      normalizedResult
+    );
+
     await cacheWriteList(hashName, normalizedResult.data[title]);
     console.log("waiting");
-  };
+  }
   console.log(expectedResultKeys);
   console.log("SOOOPER USEFUL", objectOfShitToHash);
 
   return objectOfShitToHash;
 };
 
+const testing = async () => {
+  const putin = {
+    data: {
+      Scifi: ["~7~Movie", "~15~Movie", "~17~Movie"],
+      Adventure: ["~3~Movie", "~8~Movie", "~9~Movie", "~21~Movie"],
+      actors: ["~1~Actor", "~2~Actor"],
+    },
+  };
+  const resultyface = await normalizeResult(testsObj.resp2);
+  console.log("This is what we really return", resultyface);
+  // await cachePrimaryFields(putin, testsObj.query2.query);
+  const testingCPF = await cachePrimaryFields(
+    resultyface,
+    testsObj.query2.query
+  );
 
-const testing = async()=>{
-const putin = {
-  data: {
-    Scifi: [ "~7~Movie", "~15~Movie", "~17~Movie" ],
-    Adventure: [ "~3~Movie", "~8~Movie", "~9~Movie", "~21~Movie" ],
-    actors: [ "~1~Actor", "~2~Actor" ]
-  }
-}
- const resultyface =  await normalizeResult(testsObj.resp2);
-console.log("This is what we really return", resultyface);
-// await cachePrimaryFields(putin, testsObj.query2.query);
-const testingCPF = await cachePrimaryFields(resultyface, testsObj.query2.query);
+  console.log("--------------------------------testingCPF", testingCPF);
+  //const somehashes = Object.keys(testingCPF);
+  const theoreticalHash2 = Object.keys(testingCPF)[0];
+  console.log("theoreticalHash2", theoreticalHash2);
+  console.log("Be Fast!");
+  // await cacheReadList(theoreticalHash2);
+  console.log("BE QUICK!");
 
-console.log("--------------------------------testingCPF", testingCPF);
-//const somehashes = Object.keys(testingCPF);
-const theoreticalHash2 = Object.keys(testingCPF)[0];
-console.log("theoreticalHash2", theoreticalHash2);
-console.log("Be Fast!");
-// await cacheReadList(theoreticalHash2);
-console.log("BE QUICK!");
-
-console.log("this should be something", await cacheReadList(theoreticalHash2));
-// console.log("whatwhut", await what);
-// console.log("")
-//console.log("here we go", y);
-let stoker =
-  'actors[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"film"},"value":{"kind":"IntValue","value":"1"}}]}}][{"kind":"Directive","name":{"kind":"Name","value":"include"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"if"},"value":{"kind":"BooleanValue","value":true}}]},{"kind":"Directive","name":{"kind":"Name","value":"skip"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"if"},"value":{"kind":"BooleanValue","value":false}}]}]';
-let what = await cacheReadList(stoker);
-console.log("what", await what);
-}
-const prime = async (resp,query)=>{
-
-const normal = await normalizeResult(resp);
-await cachePrimaryFields(normal,query)
-}
+  console.log(
+    "this should be something",
+    await cacheReadList(theoreticalHash2)
+  );
+  // console.log("whatwhut", await what);
+  // console.log("")
+  //console.log("here we go", y);
+  let stoker =
+    'actors[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"film"},"value":{"kind":"IntValue","value":"1"}}]}}][{"kind":"Directive","name":{"kind":"Name","value":"include"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"if"},"value":{"kind":"BooleanValue","value":true}}]},{"kind":"Directive","name":{"kind":"Name","value":"skip"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"if"},"value":{"kind":"BooleanValue","value":false}}]}]';
+  let what = await cacheReadList(stoker);
+  console.log("what", await what);
+};
+const prime = async (resp, query) => {
+  const normal = await normalizeResult(resp);
+  await cachePrimaryFields(normal, query);
+};
 await prime(testsObj.resp1, testsObj.query1.query);

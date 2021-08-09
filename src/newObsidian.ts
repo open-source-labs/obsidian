@@ -146,6 +146,7 @@ export async function ObsidianRouter<T>({
            //console.log('Writing to cache right now', "\n body.query", body.query, "\n result", result);
            //console.log(normalize(result))
 
+           //cache of whole query completely non normalized
           cache.write(body.query, result, false);
         }
         var t1 = performance.now();
