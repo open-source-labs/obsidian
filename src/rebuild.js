@@ -13,6 +13,7 @@ const cacheReadList = async (hash) => {
   //if (redisList.length===0) return undefined;
   let cachedArray = redisList.map((element) => JSON.parse(element));
   // console.log(cachedArray);
+  console.log("CachedArray2", cachedArray);
   return cachedArray;
 };
 

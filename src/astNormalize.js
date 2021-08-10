@@ -72,7 +72,9 @@ export async function normalizeResult(
 ) {
   const recursiveObjectHashStore = (object, uniqueArray, map) => {
     console.log("-+-+-+", map);
+    //const nullObj = "null";
     if (object == null) object = {};
+
     const keys = Object.keys(object);
     console.log("__Object", object);
     console.log("keys", keys);
@@ -85,19 +87,24 @@ export async function normalizeResult(
       uniqueArray.forEach((id) => (hash = hash + "~" + object[id]));
       console.log("SHOULD BE UNIQUE: ", hash);
       const returnObject = {};
+      console.log("this da map", map);
       keys.forEach((key) => {
         // if (!uniqueArray.includes(key)) {
         if (Array.isArray(object[key])) {
           //returnObject[hash] = {};
+
           console.log("returnObject[hash]", returnObject[hash]);
           returnObject[hash][map[key]] = [];
           object[key].forEach((element) => {
+            //tring to put null back in
+
             returnObject[hash][map[key]].push(
               recursiveObjectHashStore(element, uniqueArray, map)
             );
           });
         } else if (typeof object[key] == "object") {
           //returnObject[hash] = {};
+          console.log("in the pasta", map[key], object[key]);
           returnObject[hash][map[key]] = recursiveObjectHashStore(
             object[key],
             uniqueArray,
@@ -117,6 +124,7 @@ export async function normalizeResult(
             "key",
             key
           );
+          console.log("in the pasta", map[key], object[key]);
           returnObject[hash][map[key]] = object[key];
           console.log("2returnObject[hash]", returnObject[hash], "hash", hash);
         }
@@ -154,10 +162,13 @@ export async function normalizeResult(
           );
         } else {
           //returnObject = {};
+          console.log("console to beat all", object[key]);
           returnObject[map[key]] = object[key];
         }
         console.log("returnObject", returnObject);
       });
+      ////////
+
       return returnObject;
     }
     //define hash from idArray (loop through, concatenate all items into one string)
