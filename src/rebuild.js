@@ -22,6 +22,8 @@ const cacheReadObject = async (hash, field) => {
     let returnValue = await redisdb.hget(hash, JSON.stringify(field));
     if (returnValue === undefined) return undefined;
     console.log("do thing", returnValue);
+    console.log(returnValue);
+    console.log(typeof returnValue);
     return JSON.parse(returnValue);
   } else {
     let objArray = await redisdb.hgetall(hash);
@@ -44,7 +46,7 @@ const cacheReadObject = async (hash, field) => {
 
 export const rebuildFromQuery = async (restructuredQuery) => {
   let ast = gql(restructuredQuery);
-  ast = gql(print(visit(ast, { leave: rebuildInlinesVisitor })));
+  //ast = gql(print(visit(ast, { leave: rebuildInlinesVisitor })));
   console.log(
     "ast from rebuildFromQuery: ",
     ast.definitions[0].selectionSet.selections
@@ -84,11 +86,11 @@ export const rebuildFromQuery = async (restructuredQuery) => {
 const rebuildArrays = async (cachedArray, queryArray) => {
   console.log("%%%%%", queryArray);
   const returnArray = [];
-  for (const cachedObject of cachedArray) {
-    const returnObject = {};
+  for (const cachedHash of cachedArray) {
+    let returnObject = {};
     console.log(
-      "this is cachedObject in rebuildArrays outer loop: ",
-      cachedObject
+      "this is cachedHash in rebuildArrays outer loop: ",
+      cachedHash
     );
     for (const queryField of queryArray) {
       console.log("looking for inline fragments", queryField);
@@ -96,7 +98,7 @@ const rebuildArrays = async (cachedArray, queryArray) => {
       let nameyName;
       if (queryField.kind == "InlineFragment") {
         console.log("!@!@!@");
-        let __typeof = await cacheReadObject(cachedObject, "__typeof");
+        let __typeof = await cacheReadObject(cachedHash, "__typeof");
         if (__typeof == queryField.typeCondition.name.value) {
         }
       }
@@ -109,10 +111,10 @@ const rebuildArrays = async (cachedArray, queryArray) => {
       }
       console.log("__alley");
       console.log(objKey);
-      const fieldValue = await cacheReadObject(cachedObject, nameyName);
+      const fieldValue = await cacheReadObject(cachedHash, nameyName);
       console.log("stuipd");
       if (fieldValue === undefined) return undefined;
-      console.log(`In nameyname ${cachedObject}. ${nameyName} :`, fieldValue);
+      console.log(`In nameyname ${cachedHash}. ${objKey||"PROBABLY INLINE"} :`, fieldValue);
       if (Array.isArray(fieldValue)) {
         console.log(fieldValue, " should be an array");
         console.log(
@@ -136,6 +138,17 @@ const rebuildArrays = async (cachedArray, queryArray) => {
           //its not undefined because its an inline fragment
           //insert error functionality here
           console.log("this is bad");
+          console.log(returnObject);
+          //console.log(queryField);
+          if (returnObject.__typename === queryField.typeCondition.name.value){
+            console.log(queryField.selectionSet.selections);
+            console.log(cachedHash);
+            let inlines = await rebuildArrays([cachedHash],queryField.selectionSet.selections)
+            if (inlines == undefined) return undefined;
+            console.log("This the inlines:", inlines);
+            returnObject = {...returnObject, ...inlines[0]};
+            console.log("Full Blast!", returnObject)
+          }
         }
       }
     }

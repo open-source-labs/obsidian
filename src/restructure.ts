@@ -91,7 +91,19 @@ export function restructure (value:any){
     ...rewriteVisitor,
     ...rewriteVarsVistor,
     OperationDefinition:(node:any)=>{
-      if(operationName&&node.name.value!=operationName){return null}}
+      if(operationName&&node.name.value!=operationName){return null}},
+      InlineFragment:(node:any)=>{
+              return [{
+                kind: "Field",
+                alias: undefined,
+                name: { kind: "Name", value: "__typename" },
+                arguments: [],
+                directives: [],
+                selectionSet: undefined
+              },node]
+
+
+      }
     };
   
     visit(ast, {leave:firstBuildVisitor});

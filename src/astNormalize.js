@@ -71,7 +71,7 @@ export async function normalizeResult(
   idArray = ["id", "__typename"]
 ) {
   const recursiveObjectHashStore = (object, uniqueArray, map) => {
-    console.log("-+-+-+", map);
+    console.log("-+-+-+", object);
     //const nullObj = "null";
     if (object == null) object = {};
 
@@ -102,7 +102,7 @@ export async function normalizeResult(
               recursiveObjectHashStore(element, uniqueArray, map)
             );
           });
-        } else if (typeof object[key] == "object") {
+        } else if (typeof object[key] == "object" && object[key]!==null) {
           //returnObject[hash] = {};
           console.log("in the pasta", map[key], object[key]);
           returnObject[hash][map[key]] = recursiveObjectHashStore(
@@ -191,7 +191,7 @@ export const cachePrimaryFields = async (
   map
 ) => {
   let ast = gql(queryString);
-  ast = gql(print(visit(ast, { leave: rebuildInlinesVisitor })));
+  //ast = gql(print(visit(ast, { leave: rebuildInlinesVisitor })));
   console.log("WHOOOOA DADDY!");
   //console.log(ast);
   const primaryFieldsArray = ast.definitions[0].selectionSet.selections;

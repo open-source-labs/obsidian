@@ -130,6 +130,7 @@ export async function ObsidianRouter<T>({
                 (t1 - t0) +
                 ' milliseconds.', "background: #222; color: #00FF00"
             );
+            console.log(body.query);
             return;
           }
         }
