@@ -67,11 +67,16 @@ const cacheReadObject = async (hash, field) => {
 
 export async function normalizeResult(
   gqlResponse,
+  map,
   idArray = ["id", "__typename"]
 ) {
-  const recursiveObjectHashStore = (object, uniqueArray) => {
+  const recursiveObjectHashStore = (object, uniqueArray, map) => {
+    console.log("-+-+-+", map);
+    if (object == null) object = {};
     const keys = Object.keys(object);
+    console.log("__Object", object);
     console.log("keys", keys);
+    console.log("__uniqueArray", uniqueArray);
     const isHashable = uniqueArray.every((element) => keys.includes(element));
     console.log("isHashable", isHashable);
     if (isHashable) {
@@ -85,17 +90,18 @@ export async function normalizeResult(
         if (Array.isArray(object[key])) {
           //returnObject[hash] = {};
           console.log("returnObject[hash]", returnObject[hash]);
-          returnObject[hash][key] = [];
+          returnObject[hash][map[key]] = [];
           object[key].forEach((element) => {
-            returnObject[hash][key].push(
-              recursiveObjectHashStore(element, uniqueArray)
+            returnObject[hash][map[key]].push(
+              recursiveObjectHashStore(element, uniqueArray, map)
             );
           });
         } else if (typeof object[key] == "object") {
           //returnObject[hash] = {};
-          returnObject[hash][key] = recursiveObjectHashStore(
+          returnObject[hash][map[key]] = recursiveObjectHashStore(
             object[key],
-            uniqueArray
+            uniqueArray,
+            map
           );
         } else {
           console.log("CHECKIT", returnObject);
@@ -111,7 +117,7 @@ export async function normalizeResult(
             "key",
             key
           );
-          returnObject[hash][key] = object[key];
+          returnObject[hash][map[key]] = object[key];
           console.log("2returnObject[hash]", returnObject[hash], "hash", hash);
         }
         console.log("returnObject", returnObject);
@@ -133,21 +139,22 @@ export async function normalizeResult(
         if (Array.isArray(object[key])) {
           //returnObject = {};
           console.log("returnObject[hash]", returnObject);
-          returnObject[key] = [];
+          returnObject[map[key]] = [];
           object[key].forEach((element) => {
-            returnObject[key].push(
-              recursiveObjectHashStore(element, uniqueArray)
+            returnObject[map[key]].push(
+              recursiveObjectHashStore(element, uniqueArray, map)
             );
           });
         } else if (typeof object[key] == "object") {
           //returnObject = {};
-          returnObject[key] = recursiveObjectHashStore(
+          returnObject[map[key]] = recursiveObjectHashStore(
             object[key],
-            uniqueArray
+            uniqueArray,
+            map
           );
         } else {
           //returnObject = {};
-          returnObject[key] = object[key];
+          returnObject[map[key]] = object[key];
         }
         console.log("returnObject", returnObject);
       });
@@ -164,27 +171,33 @@ export async function normalizeResult(
     // need to move down
   };
 
-  return await recursiveObjectHashStore(gqlResponse, idArray);
+  return await recursiveObjectHashStore(gqlResponse, idArray, map);
 }
 
-const cachePrimaryFields = async (normalizedResult, queryString) => {
-  const ast = gql(queryString);
+export const cachePrimaryFields = async (
+  normalizedResult,
+  queryString,
+  map
+) => {
+  let ast = gql(queryString);
+  ast = gql(print(visit(ast, { leave: rebuildInlinesVisitor })));
   console.log("WHOOOOA DADDY!");
   //console.log(ast);
   const primaryFieldsArray = ast.definitions[0].selectionSet.selections;
 
   console.log(primaryFieldsArray);
   console.log("ENDDDD DADDY!");
+
   const expectedResultKeys = [];
   const objectOfShitToHash = {};
   for (const primaryField of primaryFieldsArray) {
-    let title;
-    if (primaryField.alias) {
-      title = primaryField.alias.value;
-    } else {
-      title = primaryField.name.value;
-      console.log("_____title", title);
-    }
+    let title = primaryField.name.value;
+    // if (primaryField.alias) {
+    //   title = primaryField.alias.value;
+    // } else {
+    //   title = primaryField.name.value;
+    //   console.log("_____title", title);
+    // }
     expectedResultKeys.push(title);
     //console.log("NARWHAL", title);
     let hashName = "";
@@ -194,15 +207,24 @@ const cachePrimaryFields = async (normalizedResult, queryString) => {
       JSON.stringify(primaryField.arguments) +
       JSON.stringify(primaryField.directives);
     console.log("AINT GOT NOTTINGHAM FOREST", hashName);
-    objectOfShitToHash[hashName] = normalizedResult.data[title];
+    console.log("normalizedResult.data", normalizedResult.data);
+    objectOfShitToHash[hashName] = normalizedResult.data[map[title]];
     console.log(
       "____objectOfShitToHash",
       objectOfShitToHash,
       "___normalized",
-      normalizedResult
+      normalizedResult.data[primaryField.name.value]
     );
-
-    await cacheWriteList(hashName, normalizedResult.data[title]);
+    if (!Array.isArray(normalizedResult.data[primaryField.name.value])) {
+      normalizedResult.data[primaryField.name.value] = [
+        normalizedResult.data[primaryField.name.value],
+      ];
+      console.log("()()()", normalizedResult.data[primaryField.name.value]);
+    }
+    await cacheWriteList(
+      hashName,
+      normalizedResult.data[primaryField.name.value]
+    );
     console.log("waiting");
   }
   console.log(expectedResultKeys);
@@ -211,44 +233,51 @@ const cachePrimaryFields = async (normalizedResult, queryString) => {
   return objectOfShitToHash;
 };
 
-const testing = async () => {
-  const putin = {
-    data: {
-      Scifi: ["~7~Movie", "~15~Movie", "~17~Movie"],
-      Adventure: ["~3~Movie", "~8~Movie", "~9~Movie", "~21~Movie"],
-      actors: ["~1~Actor", "~2~Actor"],
-    },
-  };
-  const resultyface = await normalizeResult(testsObj.resp2);
-  console.log("This is what we really return", resultyface);
-  // await cachePrimaryFields(putin, testsObj.query2.query);
-  const testingCPF = await cachePrimaryFields(
-    resultyface,
-    testsObj.query2.query
-  );
+// const testing = async () => {
+//   const putin = {
+//     data: {
+//       Scifi: ["~7~Movie", "~15~Movie", "~17~Movie"],
+//       Adventure: ["~3~Movie", "~8~Movie", "~9~Movie", "~21~Movie"],
+//       actors: ["~1~Actor", "~2~Actor"],
+//     },
+//   };
+//   const resultyface = await normalizeResult(testsObj.resp2);
+//   console.log("This is what we really return", resultyface);
+//   // await cachePrimaryFields(putin, testsObj.query2.query);
+//   const testingCPF = await cachePrimaryFields(
+//     resultyface,
+//     testsObj.query2.query
+//   );
 
-  console.log("--------------------------------testingCPF", testingCPF);
-  //const somehashes = Object.keys(testingCPF);
-  const theoreticalHash2 = Object.keys(testingCPF)[0];
-  console.log("theoreticalHash2", theoreticalHash2);
-  console.log("Be Fast!");
-  // await cacheReadList(theoreticalHash2);
-  console.log("BE QUICK!");
+//   console.log("--------------------------------testingCPF", testingCPF);
+//   //const somehashes = Object.keys(testingCPF);
+//   const theoreticalHash2 = Object.keys(testingCPF)[0];
+//   console.log("theoreticalHash2", theoreticalHash2);
+//   console.log("Be Fast!");
+//   // await cacheReadList(theoreticalHash2);
+//   console.log("BE QUICK!");
 
-  console.log(
-    "this should be something",
-    await cacheReadList(theoreticalHash2)
-  );
-  // console.log("whatwhut", await what);
-  // console.log("")
-  //console.log("here we go", y);
-  let stoker =
-    'actors[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"film"},"value":{"kind":"IntValue","value":"1"}}]}}][{"kind":"Directive","name":{"kind":"Name","value":"include"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"if"},"value":{"kind":"BooleanValue","value":true}}]},{"kind":"Directive","name":{"kind":"Name","value":"skip"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"if"},"value":{"kind":"BooleanValue","value":false}}]}]';
-  let what = await cacheReadList(stoker);
-  console.log("what", await what);
+//   console.log(
+//     "this should be something",
+//     await cacheReadList(theoreticalHash2)
+//   );
+//   // console.log("whatwhut", await what);
+//   // console.log("")
+//   //console.log("here we go", y);
+//   let stoker =
+//     'actors[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"film"},"value":{"kind":"IntValue","value":"1"}}]}}][{"kind":"Directive","name":{"kind":"Name","value":"include"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"if"},"value":{"kind":"BooleanValue","value":true}}]},{"kind":"Directive","name":{"kind":"Name","value":"skip"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"if"},"value":{"kind":"BooleanValue","value":false}}]}]';
+//   let what = await cacheReadList(stoker);
+//   console.log("what", await what);
+// };
+// const prime = async (resp, query) => {
+//   const normal = await normalizeResult(resp);
+//   await cachePrimaryFields(normal, query);
+// };
+// await prime(testsObj.resp1, testsObj.query1.query);
+const rebuildInlinesVisitor = {
+  InlineFragment: (node) => {
+    console.log("^^^^", node);
+    console.log(node.selectionSet.selections[0].name);
+    return node.selectionSet.selections;
+  },
 };
-const prime = async (resp, query) => {
-  const normal = await normalizeResult(resp);
-  await cachePrimaryFields(normal, query);
-};
-await prime(testsObj.resp1, testsObj.query1.query);

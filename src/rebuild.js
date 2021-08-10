@@ -19,8 +19,8 @@ const cacheReadList = async (hash) => {
 const cacheReadObject = async (hash, field) => {
   if (field) {
     let returnValue = await redisdb.hget(hash, JSON.stringify(field));
-    console.log("do thing", returnValue);
     if (returnValue === undefined) return undefined;
+    console.log("do thing", returnValue);
     return JSON.parse(returnValue);
   } else {
     let objArray = await redisdb.hgetall(hash);
@@ -41,9 +41,13 @@ const cacheReadObject = async (hash, field) => {
   }
 };
 
-export const rebuildFromQuery = async (normalizedQuery) => {
-  const ast = gql(normalizedQuery);
-  //console.log("ast from rebuildFromQuery: ",ast)
+export const rebuildFromQuery = async (restructuredQuery) => {
+  let ast = gql(restructuredQuery);
+  ast = gql(print(visit(ast, { leave: rebuildInlinesVisitor })));
+  console.log(
+    "ast from rebuildFromQuery: ",
+    ast.definitions[0].selectionSet.selections
+  );
   const primaryFieldsArray = ast.definitions[0].selectionSet.selections;
   const primaryFieldResponseObject = {};
   for (const primaryField of primaryFieldsArray) {
@@ -77,6 +81,7 @@ export const rebuildFromQuery = async (normalizedQuery) => {
 };
 
 const rebuildArrays = async (cachedArray, queryArray) => {
+  console.log("%%%%%", queryArray);
   const returnArray = [];
   for (const cachedObject of cachedArray) {
     const returnObject = {};
@@ -85,12 +90,28 @@ const rebuildArrays = async (cachedArray, queryArray) => {
       cachedObject
     );
     for (const queryField of queryArray) {
-      const fieldValue = await cacheReadObject(
-        cachedObject,
-        queryField.name.value
-      );
+      console.log("looking for inline fragments", queryField);
+      let objKey;
+      let nameyName;
+      if (queryField.kind == "InlineFragment") {
+        console.log("!@!@!@");
+        let __typeof = await cacheReadObject(cachedObject, "__typeof");
+        if (__typeof == queryField.typeCondition.name.value) {
+        }
+      }
+      if (queryField.name && queryField.name.value) {
+        objKey = queryField.name.value;
+        nameyName = queryField.name.value;
+      }
+      if (queryField.alias && queryField.alias.value) {
+        objKey = queryField.alias.value;
+      }
+      console.log("__alley");
+      console.log(objKey);
+      const fieldValue = await cacheReadObject(cachedObject, nameyName);
+      console.log("stuipd");
       if (fieldValue === undefined) return undefined;
-      console.log(`In ${cachedObject}. ${queryField.name.value} :`, fieldValue);
+      console.log(`In nameyname ${cachedObject}. ${nameyName} :`, fieldValue);
       if (Array.isArray(fieldValue)) {
         console.log(fieldValue, " should be an array");
         console.log(
@@ -98,17 +119,20 @@ const rebuildArrays = async (cachedArray, queryArray) => {
           " should exist and be an array"
         );
         //returnObject[queryField.name.value]=fieldValue;
-        returnObject[queryField.name.value] = await rebuildArrays(
+
+        returnObject[objKey] = await rebuildArrays(
           fieldValue,
           queryField.selectionSet.selections
         );
-        if (returnObject[queryField.name.value].length === 0) return undefined;
+        if (returnObject[objKey] === undefined) return undefined;
       } else {
         console.log(fieldValue, "shouldn't be an array");
         if (queryField.selectionSet == undefined) {
           console.log("this is good");
-          returnObject[queryField.name.value] = fieldValue;
+          returnObject[objKey] = fieldValue;
+          console.log("this is gooood", returnObject);
         } else {
+          //its not undefined because its an inline fragment
           //insert error functionality here
           console.log("this is bad");
         }
@@ -123,7 +147,14 @@ const rebuildArrays = async (cachedArray, queryArray) => {
   return returnArray;
 };
 
+const rebuildInlinesVisitor = {
+  InlineFragment: (node) => {
+    console.log("^^^^", node);
+    console.log(node.selectionSet.selections[0].name);
+    return node.selectionSet.selections;
+  },
+};
 // let boop = await cacheReadList("actors[][]sddsfdsf")
 // console.log("Gotta know what comes back:", boop);
-let query1rebuilt = await rebuildFromQuery(testsObj.query1.query);
-console.log("Did we do it?", query1rebuilt);
+// let query1rebuilt = await rebuildFromQuery(testsObj.query1.query);
+// console.log("Did we do it?", query1rebuilt);

@@ -8,6 +8,9 @@ import queryDepthLimiter from './DoSSecurity.ts';
 import {restructure} from './restructure.ts';
 import {invalidateCacheCheck} from './invalidateCacheCheck.js';
 //import normalize from './Old/normalize.js'
+import {normalizeResult, cachePrimaryFields} from './astNormalize.js' 
+import {rebuildFromQuery} from './rebuild.js'
+import {mapSelectionSet} from '../testingSelection.js'
 
 
 interface Constructable<T> {
@@ -101,14 +104,18 @@ export async function ObsidianRouter<T>({
           console.log("Before invalidateCacheCheck");
           console.log("typeof body.query", typeof body.query)
           console.log("body:",body)
-          invalidateCacheCheck(body);
+          //invalidateCacheCheck(body);
         // Variable to block the normalization of mutations //
         let toNormalize = true;
 
         if (useCache) {
           // console.log("body.query1", body.query)
           // Send query off to be destructured and found in Redis if possible //
-          const obsidianReturn = await cache.read(body.query);
+          let obsidianReturn = await cache.read(body.query);
+          if (!obsidianReturn) {
+            const rebuildReturn = await rebuildFromQuery(body.query);
+            obsidianReturn = rebuildReturn
+          }
           // let log = await console.log("body.query2", (obsidianReturn))
           
           // console.log('Retrieved from cache: \n\t', obsidianReturn);
@@ -140,14 +147,29 @@ export async function ObsidianRouter<T>({
         // Send database response to client //
         response.status = 200;
         response.body = result;
+          console.log("&&&&&&&&", result.errors)
+          //cache of whole query completely non normalized
+        // cache.write(body.query, result, false);
 
         // Normalize response and store in cache //
         if (useCache && toNormalize && !result.errors) {
            //console.log('Writing to cache right now', "\n body.query", body.query, "\n result", result);
            //console.log(normalize(result))
 
-           //cache of whole query completely non normalized
-          cache.write(body.query, result, false);
+           //run to map alias 
+           let map = mapSelectionSet(body.query)
+           console.log("___+_", map)
+        // this normalizeds the result and saves to REDIS
+         let normalized = await normalizeResult(result, map)
+
+         console.log("+++++", normalized)
+
+         await cachePrimaryFields(normalized, body.query, map)
+
+         
+
+
+          
         }
         var t1 = performance.now();
         console.log(

@@ -68,12 +68,12 @@ testsObj.query2 = {
               id
             __typename
             title
-            releaseYear
+            Release: releaseYear
             genre
              actors {
                 id
                 __typename
-                firstName
+               First: firstName
                 lastName
                    }
                }
