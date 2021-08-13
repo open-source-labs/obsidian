@@ -106,7 +106,34 @@ export async function ObsidianRouter<T>({
           // console.log("Before invalidateCacheCheck");
           // console.log("typeof body.query", typeof body.query)
           // console.log("body:",body)
-          invalidateCacheCheck(body);
+          
+          const isSubscription = await invalidateCacheCheck(body);
+          if (isSubscription===true){
+            console.log("it's a subscription");
+            //we still have unaltered access to the original request
+            //and the original context at ctx.  You can forward any part
+            //of that on to a graphql subscription server that you need to.
+            //here we're just bypassing the cache.
+            //and exiting out of the rest of the functionality early
+            //if it's a subscription.
+            //
+            //If you need to upgrade the context, you should still be able to do so
+            //without any interference.
+            const result = await (graphql as any)(
+              schema,
+              body.query,
+              resolvers,
+              contextResult,
+              body.variables || undefined,
+              body.operationName || undefined
+            );
+    
+            // Send database response to client //
+            response.status = 200;
+            response.body = result;
+            return;
+          }
+          
         // Variable to block the normalization of mutations //
         let toNormalize = true;
 
