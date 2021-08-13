@@ -5,6 +5,7 @@ import { redisdb } from "./quickCache.js";
 
 export function invalidateCacheCheck(body) {
   // console.log("Inside invalidateCachecheck, body:", body);
+  let isSubscription=false;
   let ast = gql(body.query);
 
   //console.log("Inside invalidateCachecheck", ast);
@@ -14,9 +15,18 @@ export function invalidateCacheCheck(body) {
       if (node.operation === "mutation") {
         //console.log("now we nuke the redis");
         redisdb.flushdb();
-      }
+      };
     },
   };
-  visit(ast, { leave: checkMutationVisitor });
-  return body;
+  const subscriptionTunnelVisitor = {
+    OperationDefinition: (node) => {
+      if (node.operation === "subscription") {
+        isSubscription = true
+
+      }
+    }
+
+  }
+  visit(ast, { enter: subscriptionTunnelVisitor, leave: checkMutationVisitor });
+  return isSubscription;
 }
