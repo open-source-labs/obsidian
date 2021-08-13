@@ -28,14 +28,14 @@ function printNode(body) {
         //let argys = node.arguments[0];
         let i = 0;
         if (node.arguments[0]) {
-          console.log(`starting log ------------------------  \n`, {
-            node: node,
-            "node.name": node.name.value,
-            "node.arguments": node.arguments[0].value.fields,
-            "node.arguments.type": node.arguments[0].value.fields[0].name.value,
-            "node.arguments.input":
-              node.arguments[0].value.fields[0].value.value,
-          });
+          // console.log(`starting log ------------------------  \n`, {
+          //   node: node,
+          //   "node.name": node.name.value,
+          //   "node.arguments": node.arguments[0].value.fields,
+          //   "node.arguments.type": node.arguments[0].value.fields[0].name.value,
+          //   "node.arguments.input":
+          //     node.arguments[0].value.fields[0].value.value,
+          // });
         }
       }
     },

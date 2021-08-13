@@ -101,9 +101,9 @@ export async function ObsidianRouter<T>({
           // mike thinks we're golden
         
           body = {query : restructure(body)};
-          console.log("Before invalidateCacheCheck");
-          console.log("typeof body.query", typeof body.query)
-          console.log("body:",body)
+          // console.log("Before invalidateCacheCheck");
+          // console.log("typeof body.query", typeof body.query)
+          // console.log("body:",body)
           invalidateCacheCheck(body);
         // Variable to block the normalization of mutations //
         let toNormalize = true;
@@ -116,7 +116,7 @@ export async function ObsidianRouter<T>({
             console.log("Gentlemen, we can rebuild him. We have the technology...")
             const rebuildReturn = await rebuildFromQuery(body.query);
             
-            console.log("rebuildReturn", rebuildReturn)
+            // console.log("rebuildReturn", rebuildReturn)
             obsidianReturn = rebuildReturn
           }
           // let log = await console.log("body.query2", (obsidianReturn))
@@ -133,7 +133,7 @@ export async function ObsidianRouter<T>({
                 (t1 - t0) +
                 ' milliseconds.', "background: #222; color: #00FF00"
             );
-            console.log(body.query);
+            // console.log(body.query);
             await cache.write(body.query, obsidianReturn, false);
             return;
           }
@@ -152,7 +152,7 @@ export async function ObsidianRouter<T>({
         // Send database response to client //
         response.status = 200;
         response.body = result;
-          console.log("&&&&&&&&", result.errors)
+          // console.log("&&&&&&&&", result.errors)
           //cache of whole query completely non normalized
         await cache.write(body.query, result, false);
 
@@ -163,11 +163,11 @@ export async function ObsidianRouter<T>({
 
            //run to map alias 
            let map = mapSelectionSet(body.query)
-           console.log("___+_", map)
+          //  console.log("___+_", map)
         // this normalizeds the result and saves to REDIS
          let normalized = await normalizeResult(result, map)
 
-         console.log("+++++", normalized)
+        //  console.log("+++++", normalized)
 
          await cachePrimaryFields(normalized, body.query, map)
 

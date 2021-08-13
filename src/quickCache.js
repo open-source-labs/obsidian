@@ -83,41 +83,39 @@ export class Cache {
   cacheReadList = async (hash) => {
     let cachedArray = await redis.lrange(hash, 0, -1);
     cachedArray = cachedArray.map((element) => JSON.parse(element));
-    console.log(cachedArray);
+    // console.log(cachedArray);
     return cachedArray;
   };
 
   cacheWriteObject = async (hash, obj) => {
     let entries = Object.entries(obj).flat();
     entries = entries.map((entry) => JSON.stringify(entry));
-    console.log("Entries", entries);
+    // console.log("Entries", entries);
     await redis.hset(hash, ...entries);
   };
 
-  cacheReadObject = async (hash,field) => {
-    if(field){
-        let returnValue = await redisdb.hget(hash,JSON.stringify(field));
-        console.log("do thing",returnValue)
-        if(returnValue===undefined) return undefined;
-        return JSON.parse(returnValue);
-    }
-    else{
+  cacheReadObject = async (hash, field) => {
+    if (field) {
+      let returnValue = await redisdb.hget(hash, JSON.stringify(field));
+      // console.log("do thing",returnValue)
+      if (returnValue === undefined) return undefined;
+      return JSON.parse(returnValue);
+    } else {
+      let objArray = await redisdb.hgetall(hash);
+      if (objArray.length == 0) return undefined;
+      let parsedArray = objArray.map((entry) => JSON.parse(entry));
+      // console.log(parsedArray);
 
-    let objArray = await redisdb.hgetall(hash);
-    if(objArray.length==0) return undefined;
-    let parsedArray = objArray.map((entry) => JSON.parse(entry));
-    console.log(parsedArray);
-  
-    if (parsedArray.length % 2 !== 0) {
-      console.log("uneven number of keys and values in ", hash);
-      return undefined;
-    }
-    let returnObj = {};
-    for (let i = 0; i < parsedArray.length; i += 2) {
-      returnObj[parsedArray[i]] = parsedArray[i + 1];
-    }
-    console.log("returnObj:", returnObj);
-    return returnObj;
+      if (parsedArray.length % 2 !== 0) {
+        // console.log("uneven number of keys and values in ", hash);
+        return undefined;
+      }
+      let returnObj = {};
+      for (let i = 0; i < parsedArray.length; i += 2) {
+        returnObj[parsedArray[i]] = parsedArray[i + 1];
+      }
+      // console.log("returnObj:", returnObj);
+      return returnObj;
     }
   };
 

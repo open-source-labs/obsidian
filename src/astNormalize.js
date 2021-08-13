@@ -15,7 +15,7 @@ const cacheWriteList = async (hash, array, overwrite = true) => {
   if (overwrite) {
     await redisdb.del(hash);
   }
-  console.log("____array", array);
+  // console.log("____array", array);
   array = array.map((element) => JSON.stringify(element));
   await redisdb.rpush(hash, ...array);
   return;
@@ -25,7 +25,7 @@ const cacheReadList = async (hash) => {
   //we gotta get the list lubed up and ready for action
   //await redisdb.lrange(hash, 0, -1);
   let redisList = await redisdb.lrange(hash, 0, -1);
-  console.log("CachedArray", redisList);
+  // console.log("CachedArray", redisList);
   let cachedArray = redisList.map((element) => JSON.parse(element));
   // console.log(cachedArray);
   return cachedArray;
@@ -34,31 +34,31 @@ const cacheReadList = async (hash) => {
 const cacheWriteObject = async (hash, obj) => {
   let entries = Object.entries(obj).flat();
   entries = entries.map((entry) => JSON.stringify(entry));
-  console.log("Entries", entries);
+  // console.log("Entries", entries);
   await redisdb.hset(hash, ...entries);
 };
 
 const cacheReadObject = async (hash, field) => {
   if (field) {
     let returnValue = await redisdb.hget(hash, JSON.stringify(field));
-    console.log("do thing", returnValue);
+    // console.log("do thing", returnValue);
     if (returnValue === undefined) return undefined;
     return JSON.parse(returnValue);
   } else {
     let objArray = await redisdb.hgetall(hash);
     if (objArray.length == 0) return undefined;
     let parsedArray = objArray.map((entry) => JSON.parse(entry));
-    console.log(parsedArray);
+    // console.log(parsedArray);
 
     if (parsedArray.length % 2 !== 0) {
-      console.log("uneven number of keys and values in ", hash);
+      // console.log("uneven number of keys and values in ", hash);
       return undefined;
     }
     let returnObj = {};
     for (let i = 0; i < parsedArray.length; i += 2) {
       returnObj[parsedArray[i]] = parsedArray[i + 1];
     }
-    console.log("returnObj:", returnObj);
+    // console.log("returnObj:", returnObj);
     return returnObj;
   }
 };
@@ -71,29 +71,29 @@ export async function normalizeResult(
   idArray = ["id", "__typename"]
 ) {
   const recursiveObjectHashStore = (object, uniqueArray, map) => {
-    console.log("-+-+-+", object);
+    // console.log("-+-+-+", object);
     //const nullObj = "null";
     if (object == null) object = {};
 
     const keys = Object.keys(object);
-    console.log("__Object", object);
-    console.log("keys", keys);
-    console.log("__uniqueArray", uniqueArray);
+    // console.log("__Object", object);
+    // console.log("keys", keys);
+    // console.log("__uniqueArray", uniqueArray);
     const isHashable = uniqueArray.every((element) => keys.includes(element));
-    console.log("isHashable", isHashable);
+    // console.log("isHashable", isHashable);
     if (isHashable) {
       let hash = "";
-      console.log("uniqueArray before forEach", uniqueArray);
+      // console.log("uniqueArray before forEach", uniqueArray);
       uniqueArray.forEach((id) => (hash = hash + "~" + object[id]));
-      console.log("SHOULD BE UNIQUE: ", hash);
+      // console.log("SHOULD BE UNIQUE: ", hash);
       const returnObject = {};
-      console.log("this da map", map);
+      // console.log("this da map", map);
       keys.forEach((key) => {
         // if (!uniqueArray.includes(key)) {
         if (Array.isArray(object[key])) {
           //returnObject[hash] = {};
 
-          console.log("returnObject[hash]", returnObject[hash]);
+          // console.log("returnObject[hash]", returnObject[hash]);
           returnObject[hash][map[key]] = [];
           object[key].forEach((element) => {
             //tring to put null back in
@@ -104,37 +104,37 @@ export async function normalizeResult(
           });
         } else if (typeof object[key] == "object" && object[key] !== null) {
           //returnObject[hash] = {};
-          console.log("in the pasta", map[key], object[key]);
+          // console.log("in the pasta", map[key], object[key]);
           returnObject[hash][map[key]] = recursiveObjectHashStore(
             object[key],
             uniqueArray,
             map
           );
         } else {
-          console.log("CHECKIT", returnObject);
+          // console.log("CHECKIT", returnObject);
           if (!returnObject[hash]) {
             returnObject[hash] = {};
           }
 
-          console.log(
-            "1returnObject[hash]",
-            returnObject,
-            "hash",
-            hash,
-            "key",
-            key
-          );
-          console.log("in the pasta", map[key], object[key]);
+          // console.log(
+          // "1returnObject[hash]",
+          // returnObject,
+          // "hash",
+          // hash,
+          // "key",
+          // key
+          // );
+          // console.log("in the pasta", map[key], object[key]);
           returnObject[hash][map[key]] = object[key];
-          console.log("2returnObject[hash]", returnObject[hash], "hash", hash);
+          // console.log("2returnObject[hash]", returnObject[hash], "hash", hash);
         }
-        console.log("returnObject", returnObject);
+        // console.log("returnObject", returnObject);
         //console.log("desired object", [...returnObject]);
         //return returnObject;
         //returnObject[hash] -> is the object we eventually want to return?
         //}
       });
-      console.log("Right before return line 56", returnObject);
+      // console.log("Right before return line 56", returnObject);
 
       //here is where you store it in redis to store the nested info into keys
       cacheWriteObject(hash, Object.values(returnObject)[0]);
@@ -146,7 +146,7 @@ export async function normalizeResult(
       Object.keys(object).forEach((key) => {
         if (Array.isArray(object[key])) {
           //returnObject = {};
-          console.log("returnObject[hash]", returnObject);
+          // console.log("returnObject[hash]", returnObject);
           returnObject[key] = [];
           object[key].forEach((element) => {
             returnObject[key].push(
@@ -155,9 +155,9 @@ export async function normalizeResult(
           });
         } else if (typeof object[key] == "object") {
           //returnObject = {};
-          console.log("this is a key: ", key);
-          console.log("I named it object?: ");
-          console.log(object);
+          // console.log("this is a key: ", key);
+          // console.log("I named it object?: ");
+          // console.log(object);
           returnObject[key] = recursiveObjectHashStore(
             object[key],
             uniqueArray,
@@ -165,14 +165,14 @@ export async function normalizeResult(
           );
         } else {
           //returnObject = {};
-          console.log("console to beat all", object[key]);
+          // console.log("console to beat all", object[key]);
           returnObject[key] = object[key];
         }
-        console.log("CCCCCCC", returnObject);
+        // console.log("CCCCCCC", returnObject);
       });
       ////////
-      console.log("Bodiddly");
-      console.log(returnObject);
+      // console.log("Bodiddly");
+      // console.log(returnObject);
       return returnObject;
     }
     //define hash from idArray (loop through, concatenate all items into one string)
@@ -196,12 +196,12 @@ export const cachePrimaryFields = async (
 ) => {
   let ast = gql(queryString);
   //ast = gql(print(visit(ast, { leave: rebuildInlinesVisitor })));
-  console.log("WHOOOOA DADDY!");
+  // console.log("WHOOOOA DADDY!");
   //console.log(ast);
   const primaryFieldsArray = ast.definitions[0].selectionSet.selections;
 
-  console.log(primaryFieldsArray);
-  console.log("ENDDDD DADDY!");
+  // console.log(primaryFieldsArray);
+  // console.log("ENDDDD DADDY!");
 
   const expectedResultKeys = [];
   const objectOfShitToHash = {};
@@ -211,37 +211,37 @@ export const cachePrimaryFields = async (
       title = primaryField.alias.value;
     } else {
       title = primaryField.name.value;
-      console.log("_____title", title);
+      // console.log("_____title", title);
     }
     expectedResultKeys.push(title);
 
-    console.log("NARWHAL", title);
+    // console.log("NARWHAL", title);
     let hashName = "";
     hashName =
       hashName +
       primaryField.name.value +
       JSON.stringify(primaryField.arguments) +
       JSON.stringify(primaryField.directives);
-    console.log("AINT GOT NOTTINGHAM FOREST", hashName);
-    console.log("normalizedResult.data", normalizedResult.data);
+    // console.log("AINT GOT NOTTINGHAM FOREST", hashName);
+    // console.log("normalizedResult.data", normalizedResult.data);
     objectOfShitToHash[hashName] = normalizedResult.data[title];
-    console.log(
-      "____objectOfShitToHash",
-      objectOfShitToHash,
-      "___normalized",
-      normalizedResult.data[title]
-    );
+    // console.log(
+    //   "____objectOfShitToHash",
+    //   objectOfShitToHash,
+    //   "___normalized",
+    //   normalizedResult.data[title]
+    // );
     if (!Array.isArray(normalizedResult.data[title])) {
       normalizedResult.data[title] = [normalizedResult.data[title]];
-      console.log("()()()", normalizedResult.data[title]);
+      // console.log("()()()", normalizedResult.data[title]);
     }
-    console.log("BBBBB");
-    console.log(normalizedResult);
+    // console.log("BBBBB");
+    // console.log(normalizedResult);
     await cacheWriteList(hashName, normalizedResult.data[title]);
-    console.log("waiting");
+    // console.log("waiting");
   }
-  console.log(expectedResultKeys);
-  console.log("SOOOPER USEFUL", objectOfShitToHash);
+  // console.log(expectedResultKeys);
+  // console.log("SOOOPER USEFUL", objectOfShitToHash);
 
   return objectOfShitToHash;
 };
@@ -289,8 +289,8 @@ export const cachePrimaryFields = async (
 // await prime(testsObj.resp1, testsObj.query1.query);
 const rebuildInlinesVisitor = {
   InlineFragment: (node) => {
-    console.log("^^^^", node);
-    console.log(node.selectionSet.selections[0].name);
+    // console.log("^^^^", node);
+    // console.log(node.selectionSet.selections[0].name);
     return node.selectionSet.selections;
   },
 };
