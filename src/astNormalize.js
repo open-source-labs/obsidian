@@ -147,15 +147,18 @@ export async function normalizeResult(
         if (Array.isArray(object[key])) {
           //returnObject = {};
           console.log("returnObject[hash]", returnObject);
-          returnObject[map[key]] = [];
+          returnObject[key] = [];
           object[key].forEach((element) => {
-            returnObject[map[key]].push(
+            returnObject[key].push(
               recursiveObjectHashStore(element, uniqueArray, map)
             );
           });
         } else if (typeof object[key] == "object") {
           //returnObject = {};
-          returnObject[map[key]] = recursiveObjectHashStore(
+          console.log("this is a key: ", key);
+          console.log("I named it object?: ");
+          console.log(object);
+          returnObject[key] = recursiveObjectHashStore(
             object[key],
             uniqueArray,
             map
@@ -163,12 +166,13 @@ export async function normalizeResult(
         } else {
           //returnObject = {};
           console.log("console to beat all", object[key]);
-          returnObject[map[key]] = object[key];
+          returnObject[key] = object[key];
         }
-        console.log("returnObject", returnObject);
+        console.log("CCCCCCC", returnObject);
       });
       ////////
-
+      console.log("Bodiddly");
+      console.log(returnObject);
       return returnObject;
     }
     //define hash from idArray (loop through, concatenate all items into one string)
@@ -203,15 +207,15 @@ export const cachePrimaryFields = async (
   const objectOfShitToHash = {};
   for (const primaryField of primaryFieldsArray) {
     let title = primaryField.name.value;
-    console.log("this one title we lookingfor", title);
-    // if (primaryField.alias) {
-    //   title = primaryField.alias.value;
-    // } else {
-    //   title = primaryField.name.value;
-    //   console.log("_____title", title);
-    // }
+    if (primaryField.alias) {
+      title = primaryField.alias.value;
+    } else {
+      title = primaryField.name.value;
+      console.log("_____title", title);
+    }
     expectedResultKeys.push(title);
-    //console.log("NARWHAL", title);
+
+    console.log("NARWHAL", title);
     let hashName = "";
     hashName =
       hashName +
@@ -220,23 +224,20 @@ export const cachePrimaryFields = async (
       JSON.stringify(primaryField.directives);
     console.log("AINT GOT NOTTINGHAM FOREST", hashName);
     console.log("normalizedResult.data", normalizedResult.data);
-    objectOfShitToHash[hashName] = normalizedResult.data[map[title]];
+    objectOfShitToHash[hashName] = normalizedResult.data[title];
     console.log(
       "____objectOfShitToHash",
       objectOfShitToHash,
       "___normalized",
-      normalizedResult.data[primaryField.name.value]
+      normalizedResult.data[title]
     );
-    if (!Array.isArray(normalizedResult.data[primaryField.name.value])) {
-      normalizedResult.data[primaryField.name.value] = [
-        normalizedResult.data[primaryField.name.value],
-      ];
-      console.log("()()()", normalizedResult.data[primaryField.name.value]);
+    if (!Array.isArray(normalizedResult.data[title])) {
+      normalizedResult.data[title] = [normalizedResult.data[title]];
+      console.log("()()()", normalizedResult.data[title]);
     }
-    await cacheWriteList(
-      hashName,
-      normalizedResult.data[primaryField.name.value]
-    );
+    console.log("BBBBB");
+    console.log(normalizedResult);
+    await cacheWriteList(hashName, normalizedResult.data[title]);
     console.log("waiting");
   }
   console.log(expectedResultKeys);
