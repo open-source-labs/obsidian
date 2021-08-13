@@ -113,7 +113,9 @@ export async function ObsidianRouter<T>({
           // Send query off to be destructured and found in Redis if possible //
           let obsidianReturn = await cache.read(body.query);
           if (!obsidianReturn) {
+            console.log("Gentlemen, we can rebuild him. We have the technology...")
             const rebuildReturn = await rebuildFromQuery(body.query);
+            
             console.log("rebuildReturn", rebuildReturn)
             obsidianReturn = rebuildReturn
           }
@@ -132,6 +134,7 @@ export async function ObsidianRouter<T>({
                 ' milliseconds.', "background: #222; color: #00FF00"
             );
             console.log(body.query);
+            await cache.write(body.query, obsidianReturn, false);
             return;
           }
         }
@@ -151,7 +154,7 @@ export async function ObsidianRouter<T>({
         response.body = result;
           console.log("&&&&&&&&", result.errors)
           //cache of whole query completely non normalized
-        // cache.write(body.query, result, false);
+        await cache.write(body.query, result, false);
 
         // Normalize response and store in cache //
         if (useCache && toNormalize && !result.errors) {
