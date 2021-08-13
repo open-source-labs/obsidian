@@ -35,6 +35,7 @@ export interface ObsidianRouterOptions<T> {
   policy?: string;
   maxmemory?: string;
   maxQueryDepth?: number;
+  customIdentifier?: Array<string>;
 }
 
 export interface ResolversProps {
@@ -58,6 +59,7 @@ export async function ObsidianRouter<T>({
   policy,
   maxmemory,
   maxQueryDepth = 0,
+  customIdentifier = ["id", "_typename"]
 }: ObsidianRouterOptions<T>): Promise<T> {
   redisPortExport = redisPort;
   const router = new Router();
@@ -134,7 +136,7 @@ export async function ObsidianRouter<T>({
                 ' milliseconds.', "background: #222; color: #00FF00"
             );
             // console.log(body.query);
-            await cache.write(body.query, obsidianReturn, false);
+            // await cache.write(body.query, obsidianReturn, false);
             return;
           }
         }
@@ -154,7 +156,7 @@ export async function ObsidianRouter<T>({
         response.body = result;
           // console.log("&&&&&&&&", result.errors)
           //cache of whole query completely non normalized
-        await cache.write(body.query, result, false);
+        // await cache.write(body.query, result, false);
 
         // Normalize response and store in cache //
         if (useCache && toNormalize && !result.errors) {
@@ -165,8 +167,14 @@ export async function ObsidianRouter<T>({
            let map = mapSelectionSet(body.query)
           //  console.log("___+_", map)
         // this normalizeds the result and saves to REDIS
-         let normalized = await normalizeResult(result, map)
+        let normalized
+          if (customIdentifier.length === 0) {
+            normalized = await normalizeResult(result, map)
+          }
+          else{
 
+          normalized = await normalizeResult(result, map, customIdentifier)
+          }
         //  console.log("+++++", normalized)
 
          await cachePrimaryFields(normalized, body.query, map)
