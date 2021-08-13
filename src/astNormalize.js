@@ -102,7 +102,7 @@ export async function normalizeResult(
               recursiveObjectHashStore(element, uniqueArray, map)
             );
           });
-        } else if (typeof object[key] == "object" && object[key]!==null) {
+        } else if (typeof object[key] == "object" && object[key] !== null) {
           //returnObject[hash] = {};
           console.log("in the pasta", map[key], object[key]);
           returnObject[hash][map[key]] = recursiveObjectHashStore(
@@ -203,6 +203,7 @@ export const cachePrimaryFields = async (
   const objectOfShitToHash = {};
   for (const primaryField of primaryFieldsArray) {
     let title = primaryField.name.value;
+    console.log("this one title we lookingfor", title);
     // if (primaryField.alias) {
     //   title = primaryField.alias.value;
     // } else {

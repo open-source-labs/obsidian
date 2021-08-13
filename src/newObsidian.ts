@@ -104,7 +104,7 @@ export async function ObsidianRouter<T>({
           console.log("Before invalidateCacheCheck");
           console.log("typeof body.query", typeof body.query)
           console.log("body:",body)
-          //invalidateCacheCheck(body);
+          invalidateCacheCheck(body);
         // Variable to block the normalization of mutations //
         let toNormalize = true;
 
@@ -114,6 +114,7 @@ export async function ObsidianRouter<T>({
           let obsidianReturn = await cache.read(body.query);
           if (!obsidianReturn) {
             const rebuildReturn = await rebuildFromQuery(body.query);
+            console.log("rebuildReturn", rebuildReturn)
             obsidianReturn = rebuildReturn
           }
           // let log = await console.log("body.query2", (obsidianReturn))

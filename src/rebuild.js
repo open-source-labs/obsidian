@@ -67,6 +67,7 @@ export const rebuildFromQuery = async (restructuredQuery) => {
     let fieldsArray = primaryField.selectionSet.selections;
     console.log("fieldsArray", fieldsArray);
     const retrievedArray = await cacheReadList(hashName);
+    console.log("more console.logs, retrivedArray", retrievedArray);
     if (retrievedArray.length === 0) return undefined;
     const entry = await rebuildArrays(retrievedArray, fieldsArray);
     if (entry === undefined) return undefined;
@@ -88,10 +89,7 @@ const rebuildArrays = async (cachedArray, queryArray) => {
   const returnArray = [];
   for (const cachedHash of cachedArray) {
     let returnObject = {};
-    console.log(
-      "this is cachedHash in rebuildArrays outer loop: ",
-      cachedHash
-    );
+    console.log("this is cachedHash in rebuildArrays outer loop: ", cachedHash);
     for (const queryField of queryArray) {
       console.log("looking for inline fragments", queryField);
       let objKey;
@@ -114,7 +112,10 @@ const rebuildArrays = async (cachedArray, queryArray) => {
       const fieldValue = await cacheReadObject(cachedHash, nameyName);
       console.log("stuipd");
       if (fieldValue === undefined) return undefined;
-      console.log(`In nameyname ${cachedHash}. ${objKey||"PROBABLY INLINE"} :`, fieldValue);
+      console.log(
+        `In nameyname ${cachedHash}. ${objKey || "PROBABLY INLINE"} :`,
+        fieldValue
+      );
       if (Array.isArray(fieldValue)) {
         console.log(fieldValue, " should be an array");
         console.log(
@@ -140,14 +141,17 @@ const rebuildArrays = async (cachedArray, queryArray) => {
           console.log("this is bad");
           console.log(returnObject);
           //console.log(queryField);
-          if (returnObject.__typename === queryField.typeCondition.name.value){
+          if (returnObject.__typename === queryField.typeCondition.name.value) {
             console.log(queryField.selectionSet.selections);
             console.log(cachedHash);
-            let inlines = await rebuildArrays([cachedHash],queryField.selectionSet.selections)
+            let inlines = await rebuildArrays(
+              [cachedHash],
+              queryField.selectionSet.selections
+            );
             if (inlines == undefined) return undefined;
             console.log("This the inlines:", inlines);
-            returnObject = {...returnObject, ...inlines[0]};
-            console.log("Full Blast!", returnObject)
+            returnObject = { ...returnObject, ...inlines[0] };
+            console.log("Full Blast!", returnObject);
           }
         }
       }
