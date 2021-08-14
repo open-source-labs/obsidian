@@ -1,5 +1,7 @@
 /** @format */
 
+// I dont think this currently does anything
+
 import { gql } from "https://deno.land/x/oak_graphql/mod.ts";
 
 import { print, visit } from "https://deno.land/x/graphql_deno/mod.ts";
@@ -24,8 +26,6 @@ function printNode(body) {
   const checkNodeVisitor = {
     Field: (node) => {
       if (node.selectionSet) {
-        //console.log("node", node, "node.name", node.name.value);
-        //let argys = node.arguments[0];
         let i = 0;
         if (node.arguments[0]) {
         }
@@ -56,5 +56,3 @@ query {
   }
 `,
 };
-//printNode(test1);
-printNode(testsObj.query2);
