@@ -14,7 +14,7 @@
 
 // this function will destructure a query/mutation operation string into a query/mutation operation object
 export function destructureQueries(queryOperationStr) {
-  console.log("IN THE HOOOOOOOLE!");
+  //console.log("IN THE HOOOOOOOLE!");
   // Trims blocks of extra white space into a single white space for uniformity
   // of incoming queryOperationStrings
   queryOperationStr = queryOperationStr.replace(/\s+/g, " ").trim();

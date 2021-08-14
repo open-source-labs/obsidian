@@ -15,7 +15,9 @@ if (context === "server") {
     port: 6379,
   });
 }
+//this is being exported so we can flush db in invalidateCacheCheck
 
+export const redisdb = redis;
 export class Cache {
   constructor(
     initialCache = {
@@ -37,7 +39,7 @@ export class Cache {
   async read(queryStr) {
     //ther queryStr it gets is the JSON stringified shit
     const returnedValue = await this.cacheRead(queryStr);
-    console.log(returnedValue);
+    //console.log(returnedValue);
     if (("returnedValue", returnedValue)) {
       return JSON.parse(returnedValue);
     } else {
@@ -64,11 +66,60 @@ export class Cache {
     await this.cacheWrite(queryStr, JSON.stringify(respObj));
   }
 
-  async newWrite(queryStr, respObj, deleteFlag) {}
+  //will overwrite a list at the given hash by default
+  //if you pass a false value to overwrite, it will append the list items to the end
+
+  //Probably gonna be used in normalize currently not used 8/4/2021
+  cacheWriteList = async (hash, array, overwrite = true) => {
+    if (overwrite) {
+      await redis.del(hash);
+    }
+    array = array.map((element) => JSON.stringify(element));
+    await redis.rpush(hash, ...array);
+  };
+
+  cacheReadList = async (hash) => {
+    let cachedArray = await redis.lrange(hash, 0, -1);
+    cachedArray = cachedArray.map((element) => JSON.parse(element));
+    // console.log(cachedArray);
+    return cachedArray;
+  };
+
+  cacheWriteObject = async (hash, obj) => {
+    let entries = Object.entries(obj).flat();
+    entries = entries.map((entry) => JSON.stringify(entry));
+    // console.log("Entries", entries);
+    await redis.hset(hash, ...entries);
+  };
+
+  cacheReadObject = async (hash, field) => {
+    if (field) {
+      let returnValue = await redisdb.hget(hash, JSON.stringify(field));
+      // console.log("do thing",returnValue)
+      if (returnValue === undefined) return undefined;
+      return JSON.parse(returnValue);
+    } else {
+      let objArray = await redisdb.hgetall(hash);
+      if (objArray.length == 0) return undefined;
+      let parsedArray = objArray.map((entry) => JSON.parse(entry));
+      // console.log(parsedArray);
+
+      if (parsedArray.length % 2 !== 0) {
+        // console.log("uneven number of keys and values in ", hash);
+        return undefined;
+      }
+      let returnObj = {};
+      for (let i = 0; i < parsedArray.length; i += 2) {
+        returnObj[parsedArray[i]] = parsedArray[i + 1];
+      }
+      // console.log("returnObj:", returnObj);
+      return returnObj;
+    }
+  };
 
   createBigHash(inputfromQuery) {
     let ast = gql(inputfromQuery);
-    console.log("about to return whole Query String");
+    //console.log("about to return whole Query String");
     let returned = visit(ast, { enter: print(ast) });
     let thisIsDumb = print(returned);
     return JSON.stringify(thisIsDumb);

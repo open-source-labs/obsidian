@@ -1,7 +1,7 @@
 /** @format */
 
-import normalizeResult from "./normalize.js";
-import destructureQueries from "./destructure.js";
+import normalizeResult from "./Old/normalize.js";
+import destructureQueries from "./Old/destructure.js";
 
 class Node {
   constructor(key, value) {

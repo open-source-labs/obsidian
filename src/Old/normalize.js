@@ -1,19 +1,15 @@
-/**
- * Normalizes responses using the query object from destructure and the response object from
- * the graphql request
- *
- * @param  {} queryObj
- * @param  {} resultObj
- * @param  {} deleteFlag
- */
+/** @format */
+
+// Normalizes responses using the query object from destructure and the response object from
+// the graphql request
 export default function normalizeResult(queryObj, resultObj, deleteFlag) {
   // Object to hold normalized obj
   const result = {};
-  //console.log("IN ANOTHER REALLY AWESOME HOLE");
+
   // checks if there is a delete mutation
   if (deleteFlag) {
     //creates the ROOT_MUTATION hash that is being deleted
-    result['ROOT_MUTATION'] = createRootQuery(
+    result["ROOT_MUTATION"] = createRootQuery(
       queryObj.mutations,
       resultObj,
       deleteFlag
@@ -28,22 +24,22 @@ export default function normalizeResult(queryObj, resultObj, deleteFlag) {
       obj.forEach((ele) => {
         const mutationKeys = Object.keys(ele);
         const hash = labelId(ele[mutationKeys[0]]);
-        result[hash] = 'DELETED';
+        result[hash] = "DELETED";
       });
     } else {
       //else stores the hash in the result object with the value 'DELETE'
       const mutationKeys = Object.keys(obj);
       const hash = labelId(obj[mutationKeys[0]]);
-      result[hash] = 'DELETED';
+      result[hash] = "DELETED";
     }
   }
 
   // creates a stringified version of query request and stores it in ROOT_QUERY key
   else if (queryObj.queries || queryObj.mutations) {
     if (queryObj.queries) {
-      result['ROOT_QUERY'] = createRootQuery(queryObj.queries, resultObj);
+      result["ROOT_QUERY"] = createRootQuery(queryObj.queries, resultObj);
     } else {
-      result['ROOT_MUTATION'] = createRootQuery(queryObj.mutations, resultObj);
+      result["ROOT_MUTATION"] = createRootQuery(queryObj.mutations, resultObj);
     }
     for (const curr in resultObj.data) {
       if (!Array.isArray(resultObj.data[curr])) {
@@ -72,7 +68,7 @@ export default function normalizeResult(queryObj, resultObj, deleteFlag) {
       }
     }
   }
-
+  console.log(result);
   return result;
 }
 
@@ -106,19 +102,19 @@ function createRootQuery(queryObjArr, resultObj) {
 
 //returns a hash value pair of each response obj passed in
 function createHash(obj, output = {}) {
-  //console.log("obj from normalize", obj);
+  console.log("obj from normalize", obj);
   const hash = labelId(obj);
-  //console.log("hash from normalize", hash);
+  console.log("hash from normalize", hash);
   //if output doesnt have a key of hash create a new obj with that hash key
   if (!output[hash]) output[hash] = {};
   // iterate thru the fields in the current obj and check whether the current field
   // is __typename, if so continue to the next iteration
   for (const field in obj) {
-    if (field === '__typename') continue;
+    if (field === "__typename") continue;
     //check whether current field is not an array
     if (!Array.isArray(obj[field])) {
       //check whether current field is an object
-      if (typeof obj[field] === 'object' && obj[field] !== null) {
+      if (typeof obj[field] === "object" && obj[field] !== null) {
         output[hash][field] = labelId(obj[field]);
         output = createHash(obj[field], output);
       } else {
@@ -143,5 +139,5 @@ function createHash(obj, output = {}) {
 
 function labelId(obj) {
   const id = obj.id || obj.ID || obj._id || obj._ID || obj.Id || obj._Id;
-  return obj.__typename + '~' + id;
+  return obj.__typename + "~" + id;
 }
