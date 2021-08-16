@@ -4,14 +4,17 @@ import { redisdb } from "./quickCache.js";
 import { gql } from "https://deno.land/x/oak_graphql/mod.ts";
 import { print, visit } from "https://deno.land/x/graphql_deno/mod.ts";
 import testsObj from "../queries.js";
-
+let localCacheObject = {};
 const cacheReadList = async (hash) => {
   //we gotta get the list lubed up and ready for action
   //await redisdb.lrange(hash, 0, -1);
+  if(localCacheObject[hash]){console.log("yo");
+console.log(localCacheObject[hash])}
   let redisList = await redisdb.lrange(hash, 0, -1);
   // console.log("CachedArray", redisList);
   //if (redisList.length===0) return undefined;
   let cachedArray = redisList.map((element) => JSON.parse(element));
+  localCacheObject[hash]=cachedArray;
   // console.log(cachedArray);
   // console.log("CachedArray2", cachedArray);
   return cachedArray;
@@ -45,6 +48,7 @@ const cacheReadObject = async (hash, field) => {
 };
 
 export const rebuildFromQuery = async (restructuredQuery) => {
+  localCacheObject={};
   let ast = gql(restructuredQuery);
   //ast = gql(print(visit(ast, { leave: rebuildInlinesVisitor })));
   // console.log(
