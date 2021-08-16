@@ -35,6 +35,7 @@ export interface ObsidianRouterOptions<T> {
   maxmemory?: string;
   maxQueryDepth?: number;
   useQueryCache?: boolean;
+  useRebuildCache?: boolean;
   customIdentifier?: Array<string>;
 }
 
@@ -65,6 +66,7 @@ export async function ObsidianRouter<T>({
   maxmemory,
   maxQueryDepth = 0,
   useQueryCache = true,
+  useRebuildCache = true,
   customIdentifier = ["id", "_typename"]
 }: ObsidianRouterOptions<T>): Promise<T> {
   redisPortExport = redisPort;
@@ -152,7 +154,7 @@ export async function ObsidianRouter<T>({
           if (useQueryCache) {
           obsidianReturn = await cache.read(body.query);
           }
-          if (!obsidianReturn) {
+          if (!obsidianReturn && useRebuildCache) {
             console.log("Gentlemen, we can rebuild him. We have the technology...")
             const rebuildReturn = await rebuildFromQuery(body.query);
             
@@ -197,12 +199,12 @@ export async function ObsidianRouter<T>({
           // console.log("&&&&&&&&", result.errors)
           //cache of whole query completely non normalized
           //boolean to allow the full query cache
-      if (useQueryCache) {
+      if (useQueryCache && useCache) {
         await cache.write(body.query, result, false);
       }
 
         // Normalize response and store in cache //
-        if (useCache && toNormalize && !result.errors) {
+        if (useCache && toNormalize && !result.errors && useRebuildCache) {
            //console.log('Writing to cache right now', "\n body.query", body.query, "\n result", result);
            //console.log(normalize(result))
 
