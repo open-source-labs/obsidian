@@ -22,13 +22,31 @@ console.log(localCacheObject[hash])}
 
 const cacheReadObject = async (hash, field) => {
   if (field) {
+    if (localCacheObject[hash]&&localCacheObject[hash][field]){
+      console.log("original savetime");
+      return localCacheObject[hash][field];
+    } else {
+      console.log("hash",hash, "field",field);
+      console.log("localCacheObject: ");
+      console.log(localCacheObject)
+
+    }
     let returnValue = await redisdb.hget(hash, JSON.stringify(field));
     if (returnValue === undefined) return undefined;
     // console.log("do thing", returnValue);
     // console.log(returnValue);
     // console.log(typeof returnValue);
+    if(!localCacheObject[hash]){localCacheObject[hash]={}};
+    if(localCacheObject[hash]){localCacheObject[hash][field]= JSON.parse(returnValue)}
     return JSON.parse(returnValue);
   } else {
+    if(localCacheObject[hash]){
+      console.log("savetime");
+      return localCacheObject[hash]}else{
+        console.log("hash",hash);
+        console.log("localCacheObject: ");
+        console.log(localCacheObject)
+      }
     let objArray = await redisdb.hgetall(hash);
     if (objArray.length == 0) return undefined;
     let parsedArray = objArray.map((entry) => JSON.parse(entry));
@@ -43,6 +61,7 @@ const cacheReadObject = async (hash, field) => {
       returnObj[parsedArray[i]] = parsedArray[i + 1];
     }
     // console.log("returnObj:", returnObj);
+    localCacheObject[hash]=returnObj;
     return returnObj;
   }
 };
