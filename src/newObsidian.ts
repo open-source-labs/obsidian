@@ -101,20 +101,17 @@ export async function ObsidianRouter<T>({
       try {
         const contextResult = context ? await context(ctx) : undefined;
         let body = await request.body().value;
-        console.log("the first body,", body)
+        
 
         // If a securty limit is set for maxQueryDepth, invoke queryDepthLimiter
         // which throws error if query depth exceeds maximum
         if (maxQueryDepth) queryDepthLimiter(body.query, maxQueryDepth);
 
-         // if we run restructre to get rid of variables and fragments 
-          //then we wont have to do it anywhere later 
-          // mike thinks we're golden
+         // we run restructre to get rid of variables and fragments 
+          
         
           body = {query : restructure(body)};
-          // console.log("Before invalidateCacheCheck");
-          // console.log("typeof body.query", typeof body.query)
-          // console.log("body:",body)
+          
           
           const isSubscription = await invalidateCacheCheck(body);
           if (isSubscription===true){
@@ -147,7 +144,7 @@ export async function ObsidianRouter<T>({
         let toNormalize = true;
 
         if (useCache) {
-          // console.log("body.query1", body.query)
+         
           // Send query off to be destructured and found in Redis if possible //
           
           let obsidianReturn
@@ -155,18 +152,18 @@ export async function ObsidianRouter<T>({
           obsidianReturn = await cache.read(body.query);
           }
           if (!obsidianReturn && useRebuildCache) {
-            console.log("Gentlemen, we can rebuild him. We have the technology...")
+           
             const rebuildReturn = await rebuildFromQuery(body.query);
             
-            // console.log("rebuildReturn", rebuildReturn)
+            
             obsidianReturn = rebuildReturn
           }
-          // let log = await console.log("body.query2", (obsidianReturn))
+          
 
-          // console.log('Retrieved from cache: \n\t', obsidianReturn);
+          
 
           if (obsidianReturn) {
-            // console.log("Obsidian Return")
+            
             response.status = 200;
             response.body = obsidianReturn;
             var t1 = performance.now();
@@ -175,7 +172,7 @@ export async function ObsidianRouter<T>({
                 (t1 - t0) +
                 ' milliseconds.', "background: #222; color: #00FF00"
             );
-            // console.log(body.query);
+            
            if (useQueryCache) {
            await cache.write(body.query, obsidianReturn, false);
            }
@@ -196,7 +193,7 @@ export async function ObsidianRouter<T>({
         // Send database response to client //
         response.status = 200;
         response.body = result;
-          // console.log("&&&&&&&&", result.errors)
+         
           //cache of whole query completely non normalized
           //boolean to allow the full query cache
       if (useQueryCache && useCache) {
@@ -205,12 +202,12 @@ export async function ObsidianRouter<T>({
 
         // Normalize response and store in cache //
         if (useCache && toNormalize && !result.errors && useRebuildCache) {
-           //console.log('Writing to cache right now', "\n body.query", body.query, "\n result", result);
-           //console.log(normalize(result))
+          
+          
 
            //run to map alias 
            let map = mapSelectionSet(body.query)
-          //  console.log("___+_", map)
+          
         // this normalizeds the result and saves to REDIS
         let normalized
           if (customIdentifier.length === 0) {
@@ -220,7 +217,7 @@ export async function ObsidianRouter<T>({
 
           normalized = await normalizeResult(result, map, customIdentifier)
           }
-        //  console.log("+++++", normalized)
+        
 
          await cachePrimaryFields(normalized, body.query, map)
 
