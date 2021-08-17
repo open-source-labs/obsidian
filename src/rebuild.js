@@ -2,8 +2,7 @@
 
 import { redisdb } from "./quickCache.js";
 import { gql } from "https://deno.land/x/oak_graphql/mod.ts";
-import { print, visit } from "https://deno.land/x/graphql_deno/mod.ts";
-import testsObj from "../queries.js";
+
 let localCacheObject = {};
 const cacheReadList = async (hash) => {
   //await redisdb.lrange(hash, 0, -1);
@@ -58,11 +57,7 @@ const cacheReadObject = async (hash, field) => {
 export const rebuildFromQuery = async (restructuredQuery) => {
   localCacheObject = {};
   let ast = gql(restructuredQuery);
-  //ast = gql(print(visit(ast, { leave: rebuildInlinesVisitor })));
-  // console.log(
-  //   "ast from rebuildFromQuery: ",
-  //   ast.definitions[0].selectionSet.selections
-  // );
+
   const primaryFieldsArray = ast.definitions[0].selectionSet.selections;
   const primaryFieldResponseObject = {};
   for (const primaryField of primaryFieldsArray) {

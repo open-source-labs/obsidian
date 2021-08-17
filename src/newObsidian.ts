@@ -1,15 +1,15 @@
 import { graphql } from 'https://cdn.pika.dev/graphql@15.0.0';
 import { renderPlaygroundPage } from 'https://deno.land/x/oak_graphql@0.6.2/graphql-playground-html/render-playground-html.ts';
 import { makeExecutableSchema } from 'https://deno.land/x/oak_graphql@0.6.2/graphql-tools/schema/makeExecutableSchema.ts';
-import LFUCache from './lfuBrowserCache.js';
+import LFUCache from './Browser/lfuBrowserCache.js';
 import { Cache } from './quickCache.js';
 import queryDepthLimiter from './DoSSecurity.ts';
 import {restructure} from './restructure.ts';
 import {invalidateCacheCheck} from './invalidateCacheCheck.js';
-//import normalize from './Old/normalize.js'
+
 import {normalizeResult, cachePrimaryFields} from './astNormalize.js' 
 import {rebuildFromQuery} from './rebuild.js'
-import {mapSelectionSet} from '../testingSelection.js'
+import {mapSelectionSet} from './mapSelections.js'
 
 
 interface Constructable<T> {
@@ -157,10 +157,7 @@ export async function ObsidianRouter<T>({
             
             
             obsidianReturn = rebuildReturn
-          }
-          
-
-          
+          }        
 
           if (obsidianReturn) {
             
@@ -203,28 +200,23 @@ export async function ObsidianRouter<T>({
         // Normalize response and store in cache //
         if (useCache && toNormalize && !result.errors && useRebuildCache) {
           
-          
-
            //run to map alias 
            let map = mapSelectionSet(body.query)
           
         // this normalizeds the result and saves to REDIS
         let normalized
+        // uses base id, __typename if given customIdentifer array is not populated
           if (customIdentifier.length === 0) {
             normalized = await normalizeResult(result, map)
           }
+          // this uses the custom identifier if given
           else{
 
           normalized = await normalizeResult(result, map, customIdentifier)
           }
         
-
          await cachePrimaryFields(normalized, body.query, map)
 
-         
-
-
-          
         }
         var t1 = performance.now();
         console.log(
