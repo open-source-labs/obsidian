@@ -31,8 +31,7 @@ export function restructure (value:any){
         fragments[node.name.value]=node.selectionSet.selections;
         // console.log("I'm entering a FragmentDefinition");
       }
-    };
-  
+    };  
     const buildDefaultVarsVisitor = {
       VariableDefinition:(node:any)=>{
         // console.log("vardef",node);

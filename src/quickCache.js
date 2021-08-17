@@ -1,5 +1,5 @@
-import normalizeResult from "./BigNormalize.js";
-import destructureQueries from "./BigDestructure.js";
+/** @format */
+
 import "https://deno.land/x/dotenv/load.ts";
 import { connect } from "https://deno.land/x/redis/mod.ts";
 import { gql } from "https://deno.land/x/oak_graphql/mod.ts";

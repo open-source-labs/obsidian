@@ -2,7 +2,6 @@ import { graphql } from 'https://cdn.pika.dev/graphql@15.0.0';
 import { renderPlaygroundPage } from 'https://deno.land/x/oak_graphql@0.6.2/graphql-playground-html/render-playground-html.ts';
 import { makeExecutableSchema } from 'https://deno.land/x/oak_graphql@0.6.2/graphql-tools/schema/makeExecutableSchema.ts';
 import LFUCache from './lfuBrowserCache.js';
-//import { Cache } from './CacheClassAST.js';
 import { Cache } from './quickCache.js';
 import queryDepthLimiter from './DoSSecurity.ts';
 import {restructure} from './restructure.ts';
@@ -35,6 +34,8 @@ export interface ObsidianRouterOptions<T> {
   policy?: string;
   maxmemory?: string;
   maxQueryDepth?: number;
+  useQueryCache?: boolean;
+  useRebuildCache?: boolean;
   customIdentifier?: Array<string>;
 }
 
@@ -64,6 +65,8 @@ export async function ObsidianRouter<T>({
   policy,
   maxmemory,
   maxQueryDepth = 0,
+  useQueryCache = true,
+  useRebuildCache = true,
   customIdentifier = ["id", "_typename"]
 }: ObsidianRouterOptions<T>): Promise<T> {
   redisPortExport = redisPort;
@@ -146,8 +149,12 @@ export async function ObsidianRouter<T>({
         if (useCache) {
           // console.log("body.query1", body.query)
           // Send query off to be destructured and found in Redis if possible //
-          let obsidianReturn = await cache.read(body.query);
-          if (!obsidianReturn) {
+          
+          let obsidianReturn
+          if (useQueryCache) {
+          obsidianReturn = await cache.read(body.query);
+          }
+          if (!obsidianReturn && useRebuildCache) {
             console.log("Gentlemen, we can rebuild him. We have the technology...")
             const rebuildReturn = await rebuildFromQuery(body.query);
             
@@ -169,7 +176,9 @@ export async function ObsidianRouter<T>({
                 ' milliseconds.', "background: #222; color: #00FF00"
             );
             // console.log(body.query);
-            await cache.write(body.query, obsidianReturn, false);
+           if (useQueryCache) {
+           await cache.write(body.query, obsidianReturn, false);
+           }
             return;
           }
         }
@@ -189,10 +198,13 @@ export async function ObsidianRouter<T>({
         response.body = result;
           // console.log("&&&&&&&&", result.errors)
           //cache of whole query completely non normalized
+          //boolean to allow the full query cache
+      if (useQueryCache && useCache) {
         await cache.write(body.query, result, false);
+      }
 
         // Normalize response and store in cache //
-        if (useCache && toNormalize && !result.errors) {
+        if (useCache && toNormalize && !result.errors && useRebuildCache) {
            //console.log('Writing to cache right now', "\n body.query", body.query, "\n result", result);
            //console.log(normalize(result))
 
