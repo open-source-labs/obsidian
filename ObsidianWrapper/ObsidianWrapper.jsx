@@ -1,6 +1,6 @@
 import React from 'https://dev.jspm.io/react';
-import Cache from '../src/CacheClassBrowser.js';
-import { insertTypenames } from '../src/insertTypenames.js';
+import Cache from '../src/Browser/CacheClassBrowser.js/index.js';
+import { insertTypenames } from '../src/Browser/insertTypenames.js/index.js';
 
 const cacheContext = React.createContext();
 

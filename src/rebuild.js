@@ -2,8 +2,7 @@
 
 import { redisdb } from "./quickCache.js";
 import { gql } from "https://deno.land/x/oak_graphql/mod.ts";
-import { print, visit } from "https://deno.land/x/graphql_deno/mod.ts";
-import testsObj from "../queries.js";
+
 let localCacheObject = {};
 const cacheReadList = async (hash) => {
   //await redisdb.lrange(hash, 0, -1);
