@@ -6,7 +6,6 @@ import { print, visit } from "https://deno.land/x/graphql_deno/mod.ts";
 import testsObj from "../queries.js";
 let localCacheObject = {};
 const cacheReadList = async (hash) => {
-  //we gotta get the list lubed up and ready for action
   //await redisdb.lrange(hash, 0, -1);
 
   let redisList = await redisdb.lrange(hash, 0, -1);
