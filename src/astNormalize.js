@@ -1,6 +1,5 @@
 /** @format */
 
-//this where some normilizaiton of the result comes in so we can be normal
 import { gql } from "https://deno.land/x/oak_graphql/mod.ts";
 import { print, visit } from "https://deno.land/x/graphql_deno/mod.ts";
 import { redisdb } from "./quickCache.js";
@@ -98,7 +97,7 @@ export async function normalizeResult(
           returnObject[hash][map[key]] = object[key];
         }
 
-        //returnObject[hash] -> is the object we eventually want to return?
+        //returnObject[hash] -> is the object we eventually want to return
       });
 
       //here is where you store it in redis to store the nested info into keys
@@ -148,7 +147,7 @@ export const cachePrimaryFields = async (
   const primaryFieldsArray = ast.definitions[0].selectionSet.selections;
 
   const expectedResultKeys = [];
-  const objectOfShitToHash = {};
+  const objectOfHashs = {};
   for (const primaryField of primaryFieldsArray) {
     let title = primaryField.name.value;
     if (primaryField.alias) {
@@ -164,9 +163,8 @@ export const cachePrimaryFields = async (
       primaryField.name.value +
       JSON.stringify(primaryField.arguments) +
       JSON.stringify(primaryField.directives);
-    // console.log("AINT GOT NOTTINGHAM FOREST", hashName);
-    // console.log("normalizedResult.data", normalizedResult.data);
-    objectOfShitToHash[hashName] = normalizedResult.data[title];
+
+    objectOfHashs[hashName] = normalizedResult.data[title];
 
     if (!Array.isArray(normalizedResult.data[title])) {
       normalizedResult.data[title] = [normalizedResult.data[title]];
@@ -175,7 +173,5 @@ export const cachePrimaryFields = async (
     await cacheWriteList(hashName, normalizedResult.data[title]);
   }
 
-  // console.log("SOOOPER USEFUL", objectOfShitToHash);
-
-  return objectOfShitToHash;
+  return objectOfHashs;
 };

@@ -37,39 +37,24 @@ export class Cache {
   // Main functionality methods
   // for reading the inital query
   async read(queryStr) {
-    //ther queryStr it gets is the JSON stringified shit
+    //the queryStr it gets is the JSON stringified
     const returnedValue = await this.cacheRead(queryStr);
-    //console.log(returnedValue);
+
     if (("returnedValue", returnedValue)) {
       return JSON.parse(returnedValue);
     } else {
       return undefined;
     }
-
-    /*
-        if (typeof queryStr !== "string")
-          throw TypeError("input should be a string");
-        // destructure the query string into an object
-        const queries = destructureQueries(queryStr).queries;
-        //console.log("queries from cachclassServer", queries);
-    
-        // breaks out of function if queryStr is a mutation
-        if (!queries) return undefined;
-    */
   }
   async write(queryStr, respObj, deleteFlag) {
-    // const queryObj = destructureQueries(queryStr);
-    // const resFromNormalize = normalizeResult(queryObj, respObj, deleteFlag);
-    // console.log("\n resFromNormalize\n", resFromNormalize);
     // update the original cache with same reference
-
     await this.cacheWrite(queryStr, JSON.stringify(respObj));
   }
 
   //will overwrite a list at the given hash by default
   //if you pass a false value to overwrite, it will append the list items to the end
 
-  //Probably gonna be used in normalize currently not used 8/4/2021
+  //Probably be used in normalize
   cacheWriteList = async (hash, array, overwrite = true) => {
     if (overwrite) {
       await redis.del(hash);
@@ -81,49 +66,46 @@ export class Cache {
   cacheReadList = async (hash) => {
     let cachedArray = await redis.lrange(hash, 0, -1);
     cachedArray = cachedArray.map((element) => JSON.parse(element));
-    // console.log(cachedArray);
+
     return cachedArray;
   };
 
   cacheWriteObject = async (hash, obj) => {
     let entries = Object.entries(obj).flat();
     entries = entries.map((entry) => JSON.stringify(entry));
-    // console.log("Entries", entries);
+
     await redis.hset(hash, ...entries);
   };
 
   cacheReadObject = async (hash, field) => {
     if (field) {
       let returnValue = await redisdb.hget(hash, JSON.stringify(field));
-      // console.log("do thing",returnValue)
+
       if (returnValue === undefined) return undefined;
       return JSON.parse(returnValue);
     } else {
       let objArray = await redisdb.hgetall(hash);
       if (objArray.length == 0) return undefined;
       let parsedArray = objArray.map((entry) => JSON.parse(entry));
-      // console.log(parsedArray);
 
       if (parsedArray.length % 2 !== 0) {
-        // console.log("uneven number of keys and values in ", hash);
         return undefined;
       }
       let returnObj = {};
       for (let i = 0; i < parsedArray.length; i += 2) {
         returnObj[parsedArray[i]] = parsedArray[i + 1];
       }
-      // console.log("returnObj:", returnObj);
+
       return returnObj;
     }
   };
 
   createBigHash(inputfromQuery) {
     let ast = gql(inputfromQuery);
-    //console.log("about to return whole Query String");
+
     let returned = visit(ast, { enter: print(ast) });
-    let thisIsDumb = print(returned);
-    return JSON.stringify(thisIsDumb);
-    //return this.operationDefinition(inputfromQuery)
+    let finalReturn = print(returned);
+    return JSON.stringify(finalReturn);
   }
 
   async cacheRead(hash) {

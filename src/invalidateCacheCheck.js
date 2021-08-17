@@ -10,7 +10,6 @@ export function invalidateCacheCheck(body) {
   const checkMutationVisitor = {
     OperationDefinition: (node) => {
       if (node.operation === "mutation") {
-        //console.log("now we nuke the redis");
         redisdb.flushdb();
       }
     },

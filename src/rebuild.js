@@ -58,11 +58,7 @@ const cacheReadObject = async (hash, field) => {
 export const rebuildFromQuery = async (restructuredQuery) => {
   localCacheObject = {};
   let ast = gql(restructuredQuery);
-  //ast = gql(print(visit(ast, { leave: rebuildInlinesVisitor })));
-  // console.log(
-  //   "ast from rebuildFromQuery: ",
-  //   ast.definitions[0].selectionSet.selections
-  // );
+
   const primaryFieldsArray = ast.definitions[0].selectionSet.selections;
   const primaryFieldResponseObject = {};
   for (const primaryField of primaryFieldsArray) {

@@ -6,10 +6,10 @@ import { Cache } from './quickCache.js';
 import queryDepthLimiter from './DoSSecurity.ts';
 import {restructure} from './restructure.ts';
 import {invalidateCacheCheck} from './invalidateCacheCheck.js';
-//import normalize from './Old/normalize.js'
+
 import {normalizeResult, cachePrimaryFields} from './astNormalize.js' 
 import {rebuildFromQuery} from './rebuild.js'
-import {mapSelectionSet} from '../testingSelection.js'
+import {mapSelectionSet} from './testingSelection.js/index.js'
 
 
 interface Constructable<T> {
