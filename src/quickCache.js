@@ -3,7 +3,6 @@
 import "https://deno.land/x/dotenv/load.ts";
 import { connect } from "https://deno.land/x/redis/mod.ts";
 import { gql } from "https://deno.land/x/oak_graphql/mod.ts";
-//import {concatInlineFragments, parseFragmentToInlineFragment} from "https://deno.land/x/oak_graphql/graphql-tools/utils/fragments.ts";
 import { print, visit } from "https://deno.land/x/graphql_deno/mod.ts";
 
 let redis;

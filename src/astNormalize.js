@@ -1,7 +1,7 @@
 /** @format */
 
 import { gql } from "https://deno.land/x/oak_graphql/mod.ts";
-import { print, visit } from "https://deno.land/x/graphql_deno/mod.ts";
+
 import { redisdb } from "./quickCache.js";
 
 //graphql response is going to be in JSON;
@@ -19,43 +19,12 @@ const cacheWriteList = async (hash, array, overwrite = true) => {
   return;
 };
 
-// const cacheReadList = async (hash) => {
-//   let redisList = await redisdb.lrange(hash, 0, -1);
-
-//   let cachedArray = redisList.map((element) => JSON.parse(element));
-
-//   return cachedArray;
-// };
-
 const cacheWriteObject = async (hash, obj) => {
   let entries = Object.entries(obj).flat();
   entries = entries.map((entry) => JSON.stringify(entry));
 
   await redisdb.hset(hash, ...entries);
 };
-
-// const cacheReadObject = async (hash, field) => {
-//   if (field) {
-//     let returnValue = await redisdb.hget(hash, JSON.stringify(field));
-
-//     if (returnValue === undefined) return undefined;
-//     return JSON.parse(returnValue);
-//   } else {
-//     let objArray = await redisdb.hgetall(hash);
-//     if (objArray.length == 0) return undefined;
-//     let parsedArray = objArray.map((entry) => JSON.parse(entry));
-
-//     if (parsedArray.length % 2 !== 0) {
-//       return undefined;
-//     }
-//     let returnObj = {};
-//     for (let i = 0; i < parsedArray.length; i += 2) {
-//       returnObj[parsedArray[i]] = parsedArray[i + 1];
-//     }
-
-//     return returnObj;
-//   }
-// };
 
 export async function normalizeResult(
   gqlResponse,
@@ -101,7 +70,7 @@ export async function normalizeResult(
 
       //here is where you store it in redis to store the nested info into keys
       cacheWriteObject(hash, Object.values(returnObject)[0]);
-      //here is where
+
       return Object.keys(returnObject)[0];
     } else {
       //if object isn't hashable
@@ -129,8 +98,6 @@ export async function normalizeResult(
     }
     //define hash from idArray (loop through, concatenate all items into one string)
     //define query hash from name,
-
-    //think about whether leave and enter need to be different to track the things
   };
 
   return await recursiveObjectHashStore(gqlResponse, idArray, map);

@@ -1,7 +1,6 @@
 /** @format */
 
 import { gql } from "https://deno.land/x/oak_graphql/mod.ts";
-import { print, visit } from "https://deno.land/x/graphql_deno/mod.ts";
 
 export function mapSelectionSet(query) {
   let selectionKeysMap = { data: "data" };
