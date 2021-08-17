@@ -1,5 +1,5 @@
 import { Rhum } from 'https://deno.land/x/rhum@v1.1.4/mod.ts';
-import Cache from '../../src/CacheClassBrowser.js';
+import Cache from '../../src/Browser/CacheClassBrowser.js';
 import { test } from '../test_variables/garbage_collection_variables.ts';
 
 Rhum.testPlan('CacheClassBrowser garbage collection', () => {

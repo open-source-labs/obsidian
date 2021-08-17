@@ -3,29 +3,25 @@
  * 1. For now we will record the arguments as a string unless we come up with an alternative argument
  * 3. We won't worry about aliases for now
  * 4. We won't worry about handling MULTIPLE directives for now (both @skip and
- *    @include)
- * 5. We won't worry about fragments for now
- * 6. This function will assume that everything passed in can be a query or a mutation (not both).
- * 8. We will handle only the meta field "__typename" for now
- * 9. What edge cases as far as field/query names do we have to worry about: special characters, apostrophes, etc???
- * 10. Directives-implementation doesn't handle fragment inclusion
  *
+ * @format
+ * @include) 5. We won't worry about fragments for now 6. This function will assume that everything passed in can be a query or a mutation (not both). 8. We will handle only the meta field "__typename" for now 9. What edge cases as far as field/query names do we have to worry about: special characters, apostrophes, etc??? 10. Directives-implementation doesn't handle fragment inclusion
  */
 
 // this function will destructure a query/mutation operation string into a query/mutation operation object
 export function destructureQueries(queryOperationStr, queryOperationVars) {
   // Trims blocks of extra white space into a single white space for uniformity
   // of incoming queryOperationStrings
-  queryOperationStr = queryOperationStr.replace(/\s+/g, ' ').trim();
+  queryOperationStr = queryOperationStr.replace(/\s+/g, " ").trim();
 
   // check if query has fragments
-  if (queryOperationStr.indexOf('fragment') !== -1) {
+  if (queryOperationStr.indexOf("fragment") !== -1) {
     // reassigns query string to replace fragment references with fragment fields
     queryOperationStr = destructureQueriesWithFragments(queryOperationStr);
   }
 
   // check if query has directives
-  if (queryOperationStr.indexOf('@') !== -1) {
+  if (queryOperationStr.indexOf("@") !== -1) {
     // reassigns query string to handle directives
     queryOperationStr = destructureQueriesWithDirectives(
       queryOperationStr,
@@ -34,15 +30,15 @@ export function destructureQueries(queryOperationStr, queryOperationVars) {
   }
 
   // ignore operation name by finding the beginning of the query strings
-  const startIndex = queryOperationStr.indexOf('{');
+  const startIndex = queryOperationStr.indexOf("{");
   const queryStrings = queryOperationStr.substring(startIndex).trim();
   // create an array of individual query strings
   const arrayOfQueryStrings = findQueryStrings(queryStrings);
   // define the type property name of the operation query/mutation
   const typePropName =
-    queryOperationStr.trim().slice(0, 8) === 'mutation'
-      ? 'mutations'
-      : 'queries';
+    queryOperationStr.trim().slice(0, 8) === "mutation"
+      ? "mutations"
+      : "queries";
   // create a queries object from array of query strings
   const queriesObj = createQueriesObj(
     arrayOfQueryStrings,
@@ -64,12 +60,12 @@ export function findQueryStrings(queryStrings) {
   for (let i = 1; i < queryStrings.length; i += 1) {
     const char = queryStrings[i];
     // flips insideQuery flag when at the beginning of query fields
-    if (char === '{' && !bracePairs && !parensPairs) insideQuery = true;
+    if (char === "{" && !bracePairs && !parensPairs) insideQuery = true;
     // bracket/parens counter
-    if (char === '{') bracePairs += 1;
-    if (char === '}') bracePairs -= 1;
-    if (char === '(') parensPairs += 1;
-    if (char === ')') parensPairs -= 1;
+    if (char === "{") bracePairs += 1;
+    if (char === "}") bracePairs -= 1;
+    if (char === "(") parensPairs += 1;
+    if (char === ")") parensPairs -= 1;
     // special operation for when we find the end of the query strings
     if (i === queryStrings.length - 1) {
       const queryStr = queryStrings.substring(queryStartIndex, i).trim();
@@ -110,15 +106,15 @@ export function splitUpQueryStr(queryStr, queryVars) {
   // creates new queryObj
   const queryObj = {};
   let parensPairs = 0;
-  const argsStartIndex = queryStr.indexOf('(');
-  const firstBraceIndex = queryStr.indexOf('{');
+  const argsStartIndex = queryStr.indexOf("(");
+  const firstBraceIndex = queryStr.indexOf("{");
   // checks to see if there are no arguments
   if (argsStartIndex === -1 || firstBraceIndex < argsStartIndex) {
     queryObj.name = queryStr.substring(0, firstBraceIndex).trim();
     // // Checks if there is an alias
-    if (queryObj.name.includes(':')) {
+    if (queryObj.name.includes(":")) {
       // sets index of alias marker :
-      const aliasIndex = queryObj.name.indexOf(':');
+      const aliasIndex = queryObj.name.indexOf(":");
       // sets alias
       queryObj.alias = queryObj.name.substring(0, aliasIndex).trim();
       // shortens name to exclude alias
@@ -126,7 +122,7 @@ export function splitUpQueryStr(queryStr, queryVars) {
         .substring(aliasIndex + 1, firstBraceIndex)
         .trim();
     }
-    queryObj.arguments = '';
+    queryObj.arguments = "";
     queryObj.fields = queryStr.substring(firstBraceIndex);
 
     return queryObj;
@@ -134,9 +130,9 @@ export function splitUpQueryStr(queryStr, queryVars) {
   // finds the query name string and assigns it
   queryObj.name = queryStr.substring(0, argsStartIndex).trim();
   // Checks if there is an alias
-  if (queryObj.name.includes(':')) {
+  if (queryObj.name.includes(":")) {
     // sets index of alias marker :
-    const aliasIndex = queryObj.name.indexOf(':');
+    const aliasIndex = queryObj.name.indexOf(":");
     // sets alias
     queryObj.alias = queryObj.name.substring(0, aliasIndex).trim();
     // shortens name to exclude alias
@@ -147,15 +143,15 @@ export function splitUpQueryStr(queryStr, queryVars) {
   // begin iterating through the queryString at the beginning of the arguments
   for (let i = argsStartIndex; i < queryStr.length; i += 1) {
     const char = queryStr[i];
-    if (char === '(') parensPairs += 1;
-    if (char === ')') parensPairs -= 1;
+    if (char === "(") parensPairs += 1;
+    if (char === ")") parensPairs -= 1;
     // returns the arguments string when the matching closing parens is found
-    if (char === ')' && !parensPairs) {
+    if (char === ")" && !parensPairs) {
       let argsString = queryStr.substring(argsStartIndex, i + 1);
       // removes whitespace inside parens string;
-      argsString = argsString.replace(/\s/g, '');
+      argsString = argsString.replace(/\s/g, "");
       // handles edge case where ther are no arguments inside the argument parens pair.
-      if (argsString === '()') argsString = '';
+      if (argsString === "()") argsString = "";
 
       // if variables were passed in with the query, replace the variables in
       // the argString with their values
@@ -180,9 +176,9 @@ export function replaceQueryVariables(queryArgs, variables) {
     const char = queryArgs[i];
 
     // the start of variable names are always indicated by $
-    if (char === '$') varStartIndex = i;
+    if (char === "$") varStartIndex = i;
     // the end of variable names are always indicated by , or )
-    if (char === ',' || char === ')') varEndIndex = i;
+    if (char === "," || char === ")") varEndIndex = i;
 
     // if we have found the start and end positions of a variable in the query
     // args string
@@ -195,7 +191,7 @@ export function replaceQueryVariables(queryArgs, variables) {
       // if the variable was present in the "variables" object, mutate the query
       // arg string by replacing the variable with its value
       if (varValue !== undefined) {
-        queryArgs = queryArgs.replace('$' + varName, varValue);
+        queryArgs = queryArgs.replace("$" + varName, varValue);
 
         // reset i after replacing the variable with its value
         /* NOTE: the value of the variable COULD be bigger than the variable itself */
@@ -214,19 +210,19 @@ export function replaceQueryVariables(queryArgs, variables) {
 // helper function to recursively convert the fields string to a fields object
 export function findQueryFields(fieldsStr) {
   const fieldsObj = {};
-  let fieldCache = '';
+  let fieldCache = "";
   let foundEndOfFieldName = false;
   // starts at index 1 to skip first open brace
   for (let i = 1; i < fieldsStr.length; i += 1) {
     const char = fieldsStr[i];
     // the brace indicates that we have found the fields object for a complex field
-    if (char === '{') {
+    if (char === "{") {
       const closingBraceIndex = findClosingBrace(fieldsStr, i);
       const complexFieldName = fieldCache;
       const complexFieldObjStr = fieldsStr.substring(i, closingBraceIndex + 1);
       fieldsObj[complexFieldName] = findQueryFields(complexFieldObjStr);
       // reset cache string
-      fieldCache = '';
+      fieldCache = "";
       // update index to resume iteration from
       i = closingBraceIndex;
       foundEndOfFieldName = false;
@@ -239,13 +235,13 @@ export function findQueryFields(fieldsStr) {
     }
     // finding a non-whitespace character after the end of fieldname indicates the field is scalar or meta
     if (char.match(/\S/) && foundEndOfFieldName) {
-      fieldsObj[fieldCache] = fieldCache === '__typename' ? 'meta' : 'scalar';
+      fieldsObj[fieldCache] = fieldCache === "__typename" ? "meta" : "scalar";
 
-      fieldCache = '';
+      fieldCache = "";
       foundEndOfFieldName = false;
     }
     // break out when you find a closing brace
-    if (char === '}') break;
+    if (char === "}") break;
     // adds current non-whitespace character in fieldCache
     if (char.match(/\S/)) fieldCache += char;
   }
@@ -259,9 +255,9 @@ export function findClosingBrace(str, index) {
   // skips ahead 1 index to skip first brace
   for (let i = index + 1; i < str.length; i += 1) {
     const char = str[i];
-    if (char === '}' && !bracePairs) return i;
-    if (char === '{') bracePairs += 1;
-    if (char === '}') bracePairs -= 1;
+    if (char === "}" && !bracePairs) return i;
+    if (char === "{") bracePairs += 1;
+    if (char === "}") bracePairs -= 1;
   }
 }
 
@@ -273,20 +269,20 @@ export function destructureQueriesWithFragments(queryOperationStr) {
   const fragments = [];
   // helper function to separate fragment from query/mutation
   const separateFragments = (queryCopy) => {
-    const startFragIndex = queryCopy.indexOf('fragment');
-    const startFragCurly = queryCopy.indexOf('{', startFragIndex);
+    const startFragIndex = queryCopy.indexOf("fragment");
+    const startFragCurly = queryCopy.indexOf("{", startFragIndex);
     let endFragCurly;
-    const stack = ['{'];
+    const stack = ["{"];
     const curlsAndParens = {
-      '}': '{',
-      ')': '(',
+      "}": "{",
+      ")": "(",
     };
     for (let i = startFragCurly + 1; i < queryCopy.length; i++) {
       const char = queryCopy[i];
-      if (char === '{' || char === '(') {
+      if (char === "{" || char === "(") {
         stack.push(char);
       }
-      if (char === '}' || char === ')') {
+      if (char === "}" || char === ")") {
         const topOfStack = stack[stack.length - 1];
         if (topOfStack === curlsAndParens[char]) stack.pop();
       }
@@ -299,13 +295,13 @@ export function destructureQueriesWithFragments(queryOperationStr) {
     const fragment = queryCopy.slice(startFragIndex, endFragCurly + 1);
 
     fragments.push(fragment);
-    const newStr = queryCopy.replace(fragment, '');
+    const newStr = queryCopy.replace(fragment, "");
 
     return newStr;
   };
   // keep calling helper function as long as 'fragment' is found in the string
   //! TODO: indices for one time loop instead of recursion
-  while (queryCopy.indexOf('fragment') !== -1) {
+  while (queryCopy.indexOf("fragment") !== -1) {
     queryCopy = separateFragments(queryCopy);
   }
 
@@ -316,8 +312,8 @@ export function destructureQueriesWithFragments(queryOperationStr) {
   //! TODO: OPTIMIZE, SHOULD NOT NEED TO ITERATE THROUGH WHOLE QUERY STRING TO FIND THE ONE WORD NAME OF THE FRAGMENT. MAYBE WHILE STRING INDEX< INDEX OF '{' ?
   // store each fragment name with its corresponding fields in fragmentObj
   fragments.forEach((fragment) => {
-    const index = fragment.indexOf('{');
-    const words = fragment.split(' ');
+    const index = fragment.indexOf("{");
+    const words = fragment.split(" ");
     const fragmentFields = fragment.slice(index + 1, fragment.length - 1);
 
     fragmentObj[words[1]] = fragmentFields;
@@ -336,7 +332,7 @@ export function destructureQueriesWithFragments(queryOperationStr) {
 // fields depending on the value of the variable passed in
 export function destructureQueriesWithDirectives(queryStr, queryVars) {
   // starting point of iteration over queryStr
-  let startIndex = queryStr.indexOf('{');
+  let startIndex = queryStr.indexOf("{");
 
   // the starting and ending indices of arguments in queryStr
   let argStartIndex;
@@ -346,8 +342,8 @@ export function destructureQueriesWithDirectives(queryStr, queryVars) {
   for (let i = startIndex; i < queryStr.length; i += 1) {
     const char = queryStr[i];
 
-    if (char === '(') argStartIndex = i;
-    if (char === ')') argEndIndex = i;
+    if (char === "(") argStartIndex = i;
+    if (char === ")") argEndIndex = i;
 
     // if the start and end positions for a query argument have been found,
     // replace variables in that argument
@@ -364,13 +360,13 @@ export function destructureQueriesWithDirectives(queryStr, queryVars) {
   }
 
   // starting point of iteration is now the first directive (indicated by @)
-  startIndex = queryStr.indexOf('@');
+  startIndex = queryStr.indexOf("@");
 
   // skipFlag will indicate if the directive is @skip, otherwise @include is
   // assumed to be the directive
   let skipFlag = false;
 
-  if (queryStr[startIndex + 1] === 's') {
+  if (queryStr[startIndex + 1] === "s") {
     skipFlag = true;
   }
 
@@ -389,17 +385,17 @@ export function destructureQueriesWithDirectives(queryStr, queryVars) {
   for (let i = startIndex; i < queryStr.length; i += 1) {
     const char = queryStr[i];
 
-    if (char === '@') {
+    if (char === "@") {
       startDeleteIndex = i;
     }
-    if (char === ')') {
+    if (char === ")") {
       endDeleteIndex = i;
     }
 
     // check value of the variable in the directive (to the right of the ':')
-    if (startDeleteIndex && char === ':') {
+    if (startDeleteIndex && char === ":") {
       // @skip directives will do the opposite of @include directives
-      if (queryStr.slice(i, i + 6).indexOf('true') !== -1) {
+      if (queryStr.slice(i, i + 6).indexOf("true") !== -1) {
         includeQueryField = skipFlag ? false : true;
       } else {
         includeQueryField = skipFlag ? true : false;
@@ -411,7 +407,7 @@ export function destructureQueriesWithDirectives(queryStr, queryVars) {
     if (startDeleteIndex && endDeleteIndex) {
       const directive = queryStr.slice(startDeleteIndex, endDeleteIndex + 2);
 
-      queryStr = queryStr.replace(directive, '');
+      queryStr = queryStr.replace(directive, "");
 
       // adjust i after deleting the directive from the queryStr
       i -= directive.length;
@@ -424,7 +420,7 @@ export function destructureQueriesWithDirectives(queryStr, queryVars) {
 
         // boolean indicating whether a field has nested fields (more fields
         // within '{' and '}')
-        const hasNestedFields = queryStr.slice(i, i + 3).indexOf('{') !== -1;
+        const hasNestedFields = queryStr.slice(i, i + 3).indexOf("{") !== -1;
 
         // if a field has nested fields and the @include was false/@skip was
         // true, delete the nested fields as well
@@ -440,28 +436,28 @@ export function destructureQueriesWithDirectives(queryStr, queryVars) {
             i++;
             const char = queryStr[i];
 
-            if (char === '{') numBraces++;
-            if (char === '}') numBraces--;
+            if (char === "{") numBraces++;
+            if (char === "}") numBraces--;
           }
 
           const endBodyIndex = ++i;
 
           // delete the body of the field
           const fieldBody = queryStr.slice(startBodyIndex, endBodyIndex);
-          queryStr = queryStr.replace(fieldBody, '');
+          queryStr = queryStr.replace(fieldBody, "");
         }
 
         // delete the field with the directive attached to it
         let startFieldNameIndex = i - 1;
         const endFieldNameIndex = i + 1;
 
-        while (queryStr[startFieldNameIndex] !== ' ') {
+        while (queryStr[startFieldNameIndex] !== " ") {
           startFieldNameIndex--;
         }
 
         queryStr = queryStr.replace(
           queryStr.slice(startFieldNameIndex, endFieldNameIndex),
-          ''
+          ""
         );
       }
 
