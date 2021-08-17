@@ -2,8 +2,15 @@ import { graphql } from 'https://cdn.pika.dev/graphql@15.0.0';
 import { renderPlaygroundPage } from 'https://deno.land/x/oak_graphql@0.6.2/graphql-playground-html/render-playground-html.ts';
 import { makeExecutableSchema } from 'https://deno.land/x/oak_graphql@0.6.2/graphql-tools/schema/makeExecutableSchema.ts';
 import LFUCache from './lfuBrowserCache.js';
-import { Cache } from './CacheClassServer.js';
+import { Cache } from './quickCache.js';
 import queryDepthLimiter from './DoSSecurity.ts';
+import {restructure} from './restructure.ts';
+import {invalidateCacheCheck} from './invalidateCacheCheck.js';
+//import normalize from './Old/normalize.js'
+import {normalizeResult, cachePrimaryFields} from './astNormalize.js' 
+import {rebuildFromQuery} from './rebuild.js'
+import {mapSelectionSet} from '../testingSelection.js'
+
 
 interface Constructable<T> {
   new (...args: any): T & OakRouter;
@@ -27,6 +34,9 @@ export interface ObsidianRouterOptions<T> {
   policy?: string;
   maxmemory?: string;
   maxQueryDepth?: number;
+  useQueryCache?: boolean;
+  useRebuildCache?: boolean;
+  customIdentifier?: Array<string>;
 }
 
 export interface ResolversProps {
@@ -38,6 +48,11 @@ export interface ResolversProps {
 // Export developer chosen port for redis database connection //
 export let redisPortExport: number = 6379;
 
+/**
+ * 
+ * @param param0 
+ * @returns 
+ */
 export async function ObsidianRouter<T>({
   Router,
   path = '/graphql',
@@ -50,6 +65,9 @@ export async function ObsidianRouter<T>({
   policy,
   maxmemory,
   maxQueryDepth = 0,
+  useQueryCache = true,
+  useRebuildCache = true,
+  customIdentifier = ["id", "_typename"]
 }: ObsidianRouterOptions<T>): Promise<T> {
   redisPortExport = redisPort;
   const router = new Router();
@@ -57,12 +75,14 @@ export async function ObsidianRouter<T>({
   const schema = makeExecutableSchema({ typeDefs, resolvers });
 
   // If using LFU Browser Caching, the following cache line needs to be uncommented.
-  // const cache = new LFUCache(50);
+  //const cache = new LFUCache(50);
 
   // If using Redis caching, the following lines need to be uncommented.
-  const cache = new Cache();
 
+  const cache = new Cache();
+  
   // clear redis cache when restarting the server
+
   cache.cacheClear();
 
   // set redis configurations
@@ -80,29 +100,82 @@ export async function ObsidianRouter<T>({
     if (request.hasBody) {
       try {
         const contextResult = context ? await context(ctx) : undefined;
-        const body = await request.body().value;
+        let body = await request.body().value;
+        
 
         // If a securty limit is set for maxQueryDepth, invoke queryDepthLimiter
         // which throws error if query depth exceeds maximum
         if (maxQueryDepth) queryDepthLimiter(body.query, maxQueryDepth);
 
+         // we run restructre to get rid of variables and fragments 
+          
+        
+          body = {query : restructure(body)};
+          
+          
+          const isSubscription = await invalidateCacheCheck(body);
+          if (isSubscription===true){
+            console.log("it's a subscription");
+            //we still have unaltered access to the original request
+            //and the original context at ctx.  You can forward any part
+            //of that on to a graphql subscription server that you need to.
+            //here we're just bypassing the cache.
+            //and exiting out of the rest of the functionality early
+            //if it's a subscription.
+            //
+            //If you need to upgrade the context, you should still be able to do so
+            //without any interference.
+            const result = await (graphql as any)(
+              schema,
+              body.query,
+              resolvers,
+              contextResult,
+              body.variables || undefined,
+              body.operationName || undefined
+            );
+    
+            // Send database response to client //
+            response.status = 200;
+            response.body = result;
+            return;
+          }
+          
         // Variable to block the normalization of mutations //
         let toNormalize = true;
 
         if (useCache) {
+         
           // Send query off to be destructured and found in Redis if possible //
-          const obsidianReturn = await cache.read(body.query, body.variables);
-          console.log('Retrieved from cache: \n\t', obsidianReturn);
+          
+          let obsidianReturn
+          if (useQueryCache) {
+          obsidianReturn = await cache.read(body.query);
+          }
+          if (!obsidianReturn && useRebuildCache) {
+           
+            const rebuildReturn = await rebuildFromQuery(body.query);
+            
+            
+            obsidianReturn = rebuildReturn
+          }
+          
+
+          
 
           if (obsidianReturn) {
+            
             response.status = 200;
             response.body = obsidianReturn;
             var t1 = performance.now();
             console.log(
-              'Obsidian retrieved data from cache and took ' +
+              '%c Obsidian retrieved data from cache and took ' +
                 (t1 - t0) +
-                ' milliseconds.'
+                ' milliseconds.', "background: #222; color: #00FF00"
             );
+            
+           if (useQueryCache) {
+           await cache.write(body.query, obsidianReturn, false);
+           }
             return;
           }
         }
@@ -120,14 +193,42 @@ export async function ObsidianRouter<T>({
         // Send database response to client //
         response.status = 200;
         response.body = result;
+         
+          //cache of whole query completely non normalized
+          //boolean to allow the full query cache
+      if (useQueryCache && useCache) {
+        await cache.write(body.query, result, false);
+      }
 
         // Normalize response and store in cache //
-        if (useCache && toNormalize && !result.errors) {
-          cache.write(body.query, result, false, body.variables);
+        if (useCache && toNormalize && !result.errors && useRebuildCache) {
+          
+          
+
+           //run to map alias 
+           let map = mapSelectionSet(body.query)
+          
+        // this normalizeds the result and saves to REDIS
+        let normalized
+          if (customIdentifier.length === 0) {
+            normalized = await normalizeResult(result, map)
+          }
+          else{
+
+          normalized = await normalizeResult(result, map, customIdentifier)
+          }
+        
+
+         await cachePrimaryFields(normalized, body.query, map)
+
+         
+
+
+          
         }
         var t1 = performance.now();
         console.log(
-          'Obsidian received new data and took ' + (t1 - t0) + ' milliseconds.'
+          '%c Obsidian received new data and took ' + (t1 - t0) + ' milliseconds', 'background: #222; color: #FFFF00'
         );
         return;
       } catch (error) {
