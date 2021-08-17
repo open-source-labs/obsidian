@@ -6,7 +6,6 @@ import { Cache } from './quickCache.js';
 import queryDepthLimiter from './DoSSecurity.ts';
 import {restructure} from './restructure.ts';
 import {invalidateCacheCheck} from './invalidateCacheCheck.js';
-
 import {normalizeResult, cachePrimaryFields} from './astNormalize.js' 
 import {rebuildFromQuery} from './rebuild.js'
 import {mapSelectionSet} from './mapSelections.js'
