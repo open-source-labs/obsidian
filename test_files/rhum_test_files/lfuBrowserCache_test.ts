@@ -8,7 +8,7 @@
  * Should test capacity 
  */
 
-import LFUCache from '../../src/Browser/lfuBrowserCache.js/index.js';
+import LFUCache from '../../src/Browser/lfuBrowserCache.js';
 import { Rhum } from 'https://deno.land/x/rhum@v1.1.4/mod.ts';
 import { test } from '../test_variables/lfuBrowserCache_variables.ts';
 import normalizeResult from '../../src/Browser/normalize.js';
