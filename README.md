@@ -194,7 +194,10 @@ const MovieApp = () => {
 ## Authors
 
 _Lascaux_ Engineers
-
+[Christopher Berry](https://github.com/cjamesb)
+[Olivia Yeghiazarian](https://github.com/Olivia-code)
+[Michael Melville](https://github.com/meekle)
+[John Wong](https://github.com/johnwongfc)
 [Kyung Lee](https://github.com/kyunglee1)  
 [Justin McKay](https://github.com/justinwmckay)  
 [Patrick Sullivan](https://github.com/pjmsullivan)  
