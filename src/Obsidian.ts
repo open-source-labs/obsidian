@@ -6,7 +6,6 @@ import { Cache } from './quickCache.js';
 import queryDepthLimiter from './DoSSecurity.ts';
 import {restructure} from './restructure.ts';
 import {invalidateCacheCheck} from './invalidateCacheCheck.js';
-
 import {normalizeResult, cachePrimaryFields} from './astNormalize.js' 
 import {rebuildFromQuery} from './rebuild.js'
 import {mapSelectionSet} from './mapSelections.js'
@@ -67,7 +66,7 @@ export async function ObsidianRouter<T>({
   maxQueryDepth = 0,
   useQueryCache = true,
   useRebuildCache = true,
-  customIdentifier = ["id", "_typename"]
+  customIdentifier = ["id", "__typename"]
 }: ObsidianRouterOptions<T>): Promise<T> {
   redisPortExport = redisPort;
   const router = new Router();
