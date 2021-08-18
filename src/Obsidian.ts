@@ -242,11 +242,16 @@ export async function ObsidianRouter<T>({
     const { request, response } = ctx;
     if (usePlayground) {
       const prefersHTML = request.accepts('text/html');
-
+      const optionsObj:any = {    
+          'schema.polling.enable': false, // enables automatic schema polling
+      }  
+      
       if (prefersHTML) {
+        
         const playground = renderPlaygroundPage({
           endpoint: request.url.origin + path,
           subscriptionEndpoint: request.url.origin,
+          settings : optionsObj
         });
         response.status = 200;
         response.body = playground;
