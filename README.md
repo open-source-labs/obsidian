@@ -22,56 +22,33 @@
 
 ## Features
 
-- GraphQL query abstraction and caching in SSR React projects, improving the performance of your app
-- Normalized caching, optimizing memory management to keep your site lightweight and fast
+- GraphQL query abstraction and caching improving the performance of your app
+- SSR React wrapper, allowing you to cache in browser
+- Configurable caching options, giving you complete control over your cache
 - Fullstack integration, leveraging client-side and server-side caching to streamline your caching strategy
-- Support for GraphQL fragments, directives, and variables
+- Support for the full GraphQL convention
 - Optional GraphQL DoS attack mitigation security module
 
 ## Overview
 
-Obsidian is Deno's first native GraphQL caching client and server module. Boasting lightning-fast caching and fetching capabilities alongside headlining normalization and destructuring strategies, Obsidian is equipped to support scalable, highly performant applications.
+Obsidian is Deno's first native GraphQL caching client and server module. Boasting lightning-fast caching and fetching capabilities alongside headlining normalization and rebuilding strategies, Obsidian is equipped to support scalable, highly performant applications.
 
-Optimized for use in server-side rendered React apps built with Deno, full stack integration of Obsidian enables many of its most powerful features, including optimized caching exchanges between client and server and extremely lightweight client-side caching.
+With additional support for use in server-side rendered React apps built with Deno, full stack integration of Obsidian enables a fast and flexible caching solution.
 
-## Documentation and Demo
-
-[obsidian.land](http://obsidian.land)
 
 ## Installation
 
 <div align="center"><strong>QUICK START</strong></div>
 <br>
 
-In the server:
-
-```javascript
-import { ObsidianRouter } from 'https://deno.land/x/obsidian/mod.ts';
-```
-
-In the app:
-
-```javascript
-import { ObsidianWrapper } from 'https://deno.land/x/obsidian/clientMod.ts';
-```
-
 ## Creating the Router
 
 ```javascript
-import { Application, Router } from 'https://deno.land/x/oak/mod.ts';
+import { Application, Router } from 'https://deno.land/x/oak@v6.0.1/mod.ts';
 import { ObsidianRouter, gql } from 'https://deno.land/x/obsidian/mod.ts';
+import { resolvers } from './ import from your resolvers file'
+import { types } from './ import your schema/types from schema/types file'
 
-const PORT = 8000;
-
-const app = new Application();
-
-const types = (gql as any)`
-  // GraphQL type definitions
-`;
-
-const resolvers = {
-  // Resolvers
-}
 
 interface ObsRouter extends Router {
   obsidianSchema?: any;
@@ -80,33 +57,18 @@ interface ObsRouter extends Router {
 const GraphQLRouter = await ObsidianRouter<ObsRouter>({
   Router,
   typeDefs: types,
-  resolvers: resolvers,
-  redisPort: 6379,
+  resolvers: resolvers,   
+  redisPort: 6379,        //Desired redis port
+  useCache: true,         //Boolean to toggle all cache functionality
+  usePlayground: true,    //Boolean to allow for graphQL playground
+  useQueryCache: true,    //Boolean to toogle full query cache
+  useRebuildCache: true,  //Boolean to toggle rebuilding from normalized data
+  customIdentifier: ["id", "__typename"]  
+        
 });
 
-const router = new Router();
-router.get('/', handlePage);
-
-function handlePage(ctx: any) {
-  try {
-    const body = (ReactDomServer as any).renderToString(<App />);
-    ctx.response.body = `<!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="UTF-8">
-        <title>SSR React App</title>
-      </head>
-      <body>
-        <div id="root">\${body}</div>
-        <script src="/static/client.tsx" defer></script>
-      </body>
-      </html>`;
-  } catch (error) {
-    console.error(error);
-
-app.use(GraphQLRouter.routes(), GraphQLRouter.allowedMethods());
-
-await app.listen({ port: PORT });
+// attach the graphql routers routes to our app
+  app.use(GraphQLRouter.routes(), GraphQLRouter.allowedMethods());
 ```
 
 ## Creating the Wrapper
@@ -191,15 +153,23 @@ const MovieApp = () => {
 
 [obsidian.land](http://obsidian.land)
 
+## Dockerized Demo
+working demo to install locally in docker:    
+[oslabs-beta/obsidian-demo-docker](https://github.com/oslabs-beta/obsidian-demo-docker)
+
+## Working Example Demo Code
+github for a demo with some example code to play with:    
+[oslabs-beta/obsidian-demo-3.2](https://github.com/oslabs-beta/obsidian-demo-3.2)
+
+
 ## Authors
 
-_Lascaux_ Engineers
-[Christopher Berry](https://github.com/cjamesb)
-[Olivia Yeghiazarian](https://github.com/Olivia-code)
-[Michael Melville](https://github.com/meekle)
-[John Wong](https://github.com/johnwongfc)
-[Kyung Lee](https://github.com/kyunglee1)  
-[Justin McKay](https://github.com/justinwmckay)  
+[Christopher Berry](https://github.com/cjamesb)   
+[Olivia Yeghiazarian](https://github.com/Olivia-code)  
+[Michael Melville](https://github.com/meekle)   
+[John Wong](https://github.com/johnwongfc)    
+[Kyung Lee](https://github.com/kyunglee1)   
+[Justin McKay](https://github.com/justinwmckay)   
 [Patrick Sullivan](https://github.com/pjmsullivan)  
 [Cameron Simmons](https://github.com/cssim22)  
 [Raymond Ahn](https://github.com/raymondcodes)  
