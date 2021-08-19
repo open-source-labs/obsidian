@@ -66,7 +66,7 @@ export async function ObsidianRouter<T>({
   maxQueryDepth = 0,
   useQueryCache = true,
   useRebuildCache = true,
-  customIdentifier = ["id", "__typename"]
+  customIdentifier = ["id", "__typename"],
 }: ObsidianRouterOptions<T>): Promise<T> {
   redisPortExport = redisPort;
   const router = new Router();
@@ -216,11 +216,14 @@ export async function ObsidianRouter<T>({
         
          await cachePrimaryFields(normalized, body.query, map)
 
+       
+         
         }
         var t1 = performance.now();
         console.log(
           '%c Obsidian received new data and took ' + (t1 - t0) + ' milliseconds', 'background: #222; color: #FFFF00'
         );
+
         return;
       } catch (error) {
         response.status = 200;
