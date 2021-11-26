@@ -3,7 +3,7 @@ import {
   addTypenamesToFieldsStr,
   findClosingBrace,
 } from '../../src/Browser/insertTypenames.js';
-import { Rhum } from 'https://deno.land/x/rhum@v1.1.4/mod.ts';
+import { Rhum } from 'https://deno.land/x/rhum@v1.1.11/mod.ts';
 import { test } from '../test_variables/insertTypenames_variables.ts';
 
 Rhum.testPlan('insertTypenames.js', () => {

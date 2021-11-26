@@ -1,4 +1,4 @@
-import { Rhum } from 'https://deno.land/x/rhum@v1.1.4/mod.ts';
+import { Rhum } from 'https://deno.land/x/rhum@v1.1.11/mod.ts';
 import queryDepthLimiter from '../../src/DoSSecurity.ts';
 import { test } from '../test_variables/DoSSecurity_variables.ts';
 

@@ -4,10 +4,10 @@
  */
 
 import { Cache as Cache } from '../../src/quickCache.js';
-import { Rhum } from 'https://deno.land/x/rhum@v1.1.4/mod.ts';
+import { Rhum } from 'https://deno.land/x/rhum@v1.1.11/mod.ts';
 import { test as testWrite } from '../test_variables/writeCache_variables.ts';
 import { test as testRead } from '../test_variables/readCache_variables.ts';
-import { connect } from 'https://deno.land/x/redis/mod.ts';
+import { connect } from 'https://deno.land/x/redis@v0.23.2/mod.ts';
 
 // set up a redis sever
 let redis;
@@ -15,7 +15,7 @@ const context = 'server';
 
 if (context === 'server') {
   redis = await connect({
-    hostname: 'localhost',
+    hostname: '127.0.0.1',
     port: 6379,
   });
 }
