@@ -3,11 +3,12 @@
 import { gql } from "https://deno.land/x/oak_graphql/mod.ts";
 
 import { redisdb } from "./quickCache.js";
+import { Cache } from './quickCache.js';
 
 //graphql response is going to be in JSON;
 // this is for breaking up AST feilds/parts into the hash
 // and taking the response and pairing the resp info with hash
-
+const cache = new Cache();
 //idArray so they can define hash nomenclature
 const cacheWriteList = async (hash, array, overwrite = true) => {
   if (overwrite) {
@@ -19,59 +20,64 @@ const cacheWriteList = async (hash, array, overwrite = true) => {
   return;
 };
 
-const cacheWriteObject = async (hash, obj) => {
-  let entries = Object.entries(obj).flat();
-  entries = entries.map((entry) => JSON.stringify(entry));
-
-  await redisdb.hset(hash, ...entries);
-};
-
 export async function normalizeResult(
   gqlResponse,
   map,
   idArray = ["id", "__typename"]
 ) {
   const recursiveObjectHashStore = (object, uniqueArray, map) => {
+
     if (object == null) object = {};
 
-    const keys = Object.keys(object);
+    const keys = new Set(Object.keys(object)); // keys = ['data'], keys = ['id', '__typename', 'title', ...]
 
-    const isHashable = uniqueArray.every((element) => keys.includes(element));
+    // only the keys 'id' and '__typename' are hashable
+    const isHashable = uniqueArray.every((element) => keys.has(element)); // can turn this from O(N) to O(1) with Map/Set.has
 
     if (isHashable) {
       let hash = "";
 
-      uniqueArray.forEach((id) => (hash = hash + "~" + object[id]));
-      const returnObject = {};
-      keys.forEach((key) => {
-        if (Array.isArray(object[key])) {
-          returnObject[hash][map[key]] = [];
-          object[key].forEach((element) => {
-            returnObject[hash][map[key]].push(
-              recursiveObjectHashStore(element, uniqueArray, map)
+      uniqueArray.forEach((id) => (hash += "~" + object[id])); //~7~Movie
+      
+      // if hash exists in Redis, go to line 91
+      if (redisdb.exists(hash) === 0) {
+        const returnObject = {};
+        keys.forEach((key) => {
+          if (Array.isArray(object[key])) {
+            returnObject[hash][map[key]] = [];
+            object[key].forEach((element) => {
+              returnObject[hash][map[key]].push(
+                recursiveObjectHashStore(element, uniqueArray, map)
+              );
+            });
+          } else if (typeof object[key] == "object" && object[key] !== null) {
+            returnObject[hash][map[key]] = recursiveObjectHashStore(
+              object[key],
+              uniqueArray,
+              map
             );
-          });
-        } else if (typeof object[key] == "object" && object[key] !== null) {
-          returnObject[hash][map[key]] = recursiveObjectHashStore(
-            object[key],
-            uniqueArray,
-            map
-          );
-        } else {
-          if (!returnObject[hash]) {
-            returnObject[hash] = {};
+          } else {
+            if (!returnObject[hash]) {
+              returnObject[hash] = {};
+            }
+            
+            returnObject[hash][map[key]] = object[key];
           }
 
-          returnObject[hash][map[key]] = object[key];
-        }
+          //returnObject[hash] -> is the object we eventually want to return
+        });
+        // console.log('Returned returnObject', returnObject);
 
-        //returnObject[hash] -> is the object we eventually want to return
-      });
-
-      //here is where you store it in redis to store the nested info into keys
-      cacheWriteObject(hash, Object.values(returnObject)[0]);
-
-      return Object.keys(returnObject)[0];
+        //here is where you store it in redis to store the nested info into keys
+        // console.log('cacheWriteObject called from astNormalize.js passing in hash and some object')
+        // console.log('some object being passed in', Object.values(returnObject)[0])
+        cache.cacheWriteObject(hash, Object.values(returnObject)[0]);
+        console.log('hash -->', hash)
+        console.log('Object.keys(returnObject)[0] -->', Object.keys(returnObject)[0])
+        console.log('returnObject ->', returnObject)  
+      }
+ 
+      return hash;
     } else {
       //if object isn't hashable
       let returnObject = {};
