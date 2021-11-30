@@ -25,6 +25,11 @@ export async function normalizeResult(
   map,
   idArray = ["id", "__typename"]
 ) {
+  // console.log('gqlResponse -> ', gqlResponse);
+  // console.log('map -> ', map);
+
+  // console.log('%c astNormalize.js (normalizeResult) triggered', "background: #222; color: #F42504");
+
   const recursiveObjectHashStore = (object, uniqueArray, map) => {
 
     if (object == null) object = {};
@@ -38,46 +43,47 @@ export async function normalizeResult(
       let hash = "";
 
       uniqueArray.forEach((id) => (hash += "~" + object[id])); //~7~Movie
-      
-      // if hash exists in Redis, go to line 91
-      if (redisdb.exists(hash) === 0) {
-        const returnObject = {};
-        keys.forEach((key) => {
-          if (Array.isArray(object[key])) {
-            returnObject[hash][map[key]] = [];
-            object[key].forEach((element) => {
-              returnObject[hash][map[key]].push(
-                recursiveObjectHashStore(element, uniqueArray, map)
-              );
+
+      // if hash exists as key in Redis, skip code block below and only return hash variable
+      redisdb.exists(hash)
+        .then(data => {
+          if (!data) {
+            const returnObject = {};
+            keys.forEach((key) => {
+              if (Array.isArray(object[key])) {
+                returnObject[hash][map[key]] = [];
+                object[key].forEach((element) => {
+                  returnObject[hash][map[key]].push(
+                     recursiveObjectHashStore(element, uniqueArray, map)
+                  );
+                });
+              } else if (typeof object[key] == "object" && object[key] !== null) {
+                returnObject[hash][map[key]] = recursiveObjectHashStore(
+                  object[key],
+                  uniqueArray,
+                  map
+                );
+              } else {
+                if (!returnObject[hash]) {
+                  returnObject[hash] = {};
+                }
+                returnObject[hash][map[key]] = object[key];
+              }
             });
-          } else if (typeof object[key] == "object" && object[key] !== null) {
-            returnObject[hash][map[key]] = recursiveObjectHashStore(
-              object[key],
-              uniqueArray,
-              map
-            );
-          } else {
-            if (!returnObject[hash]) {
-              returnObject[hash] = {};
-            }
-            
-            returnObject[hash][map[key]] = object[key];
+            // console.log('Returned returnObject', returnObject);
+            // console.log('cacheWriteObject called from astNormalize.js passing in hash and some object')
+            // console.log('some object being passed in', Object.values(returnObject)[0])
+            cache.cacheWriteObject(hash, Object.values(returnObject)[0]);
+            // console.log('hash -->', hash)
+            // console.log('Object.keys(returnObject)[0] -->', Object.keys(returnObject)[0])
+            // console.log('returnObject ->', returnObject)
           }
-
-          //returnObject[hash] -> is the object we eventually want to return
-        });
-        // console.log('Returned returnObject', returnObject);
-
-        //here is where you store it in redis to store the nested info into keys
-        // console.log('cacheWriteObject called from astNormalize.js passing in hash and some object')
-        // console.log('some object being passed in', Object.values(returnObject)[0])
-        cache.cacheWriteObject(hash, Object.values(returnObject)[0]);
-        console.log('hash -->', hash)
-        console.log('Object.keys(returnObject)[0] -->', Object.keys(returnObject)[0])
-        console.log('returnObject ->', returnObject)  
-      }
- 
-      return hash;
+        })
+        .catch(err => {
+          console.log('err occured when checking if hash in redis: ', err)
+        })
+        
+        return hash;
     } else {
       //if object isn't hashable
       let returnObject = {};
