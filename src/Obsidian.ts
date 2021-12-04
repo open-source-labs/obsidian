@@ -4,15 +4,15 @@ import { makeExecutableSchema } from 'https://deno.land/x/oak_graphql@0.6.2/grap
 import LFUCache from './Browser/lfuBrowserCache.js';
 import { Cache } from './quickCache.js';
 import queryDepthLimiter from './DoSSecurity.ts';
-import {restructure} from './restructure.ts';
-import {invalidateCacheCheck} from './invalidateCacheCheck.js';
-import {normalizeResult, cachePrimaryFields} from './astNormalize.js' 
-import {rebuildFromQuery} from './rebuild.js'
-import {mapSelectionSet} from './mapSelections.js'
+import { restructure } from './restructure.ts';
+import { invalidateCacheCheck, invalidateCache } from './invalidateCacheCheck.js';
+import { normalizeResult, cachePrimaryFields } from './astNormalize.js'
+import { rebuildFromQuery } from './rebuild.js'
+import { mapSelectionSet } from './mapSelections.js'
 
 
 interface Constructable<T> {
-  new (...args: any): T & OakRouter;
+  new(...args: any): T & OakRouter;
 }
 
 interface OakRouter {
@@ -79,7 +79,7 @@ export async function ObsidianRouter<T>({
   // If using Redis caching, the following lines need to be uncommented.
 
   const cache = new Cache();
-  
+
   // clear redis cache when restarting the server
 
   cache.cacheClear();
@@ -100,78 +100,107 @@ export async function ObsidianRouter<T>({
       try {
         const contextResult = context ? await context(ctx) : undefined;
         let body = await request.body().value;
-        
+
 
         // If a securty limit is set for maxQueryDepth, invoke queryDepthLimiter
         // which throws error if query depth exceeds maximum
         if (maxQueryDepth) queryDepthLimiter(body.query, maxQueryDepth);
 
-         // we run restructre to get rid of variables and fragments 
-          
-        
-          body = {query : restructure(body)};
-          
-          
-          const isSubscription = await invalidateCacheCheck(body);
-          if (isSubscription===true){
-            console.log("it's a subscription");
-            //we still have unaltered access to the original request
-            //and the original context at ctx.  You can forward any part
-            //of that on to a graphql subscription server that you need to.
-            //here we're just bypassing the cache.
-            //and exiting out of the rest of the functionality early
-            //if it's a subscription.
-            //
-            //If you need to upgrade the context, you should still be able to do so
-            //without any interference.
-            const result = await (graphql as any)(
-              schema,
-              body.query,
-              resolvers,
-              contextResult,
-              body.variables || undefined,
-              body.operationName || undefined
-            );
-    
-            // Send database response to client //
-            response.status = 200;
-            response.body = result;
-            return;
-          }
-          
+        // we run restructre to get rid of variables and fragments 
+
+
+        body = { query: restructure(body) };
+
+
+        const isMutation = await invalidateCacheCheck(body);
+        if (isMutation) {
+          const mutationResponse = await (graphql as any)( // returns the response from mutation. This can be used to construct hash and check in redis if key already exists
+            schema,
+            body.query,
+            resolvers,
+            contextResult,
+            body.variables || undefined,
+            body.operationName || undefined
+          );
+          invalidateCache(mutationResponse, 'constructed key from astnormalize goes here')
+
+          // //run to map alias 
+          // const map = mapSelectionSet(body.query)
+
+          // // this normalizeds the result and saves to REDIS
+          // let normalized
+          // // uses base id, __typename if given customIdentifer array is not populated
+          // if (customIdentifier.length === 0) {
+          //   normalized = await normalizeResult(mutationResponse, map)
+          // } else {
+          //   // this uses the custom identifier if given
+          //   normalized = await normalizeResult(mutationResponse, map, customIdentifier)
+          // }
+          // console.log('Normalized result -->>\n', normalized);
+          return;
+        }
+
+
+
+        // if (isSubscription===true){
+        //   console.log("it's a subscription");
+        //   //we still have unaltered access to the original request
+        //   //and the original context at ctx.  You can forward any part
+        //   //of that on to a graphql subscription server that you need to.
+        //   //here we're just bypassing the cache.
+        //   //and exiting out of the rest of the functionality early
+        //   //if it's a subscription.
+        //   //
+        //   //If you need to upgrade the context, you should still be able to do so
+        //   //without any interference.
+        //   const result = await (graphql as any)(
+        //     schema,
+        //     body.query,
+        //     resolvers,
+        //     contextResult,
+        //     body.variables || undefined,
+        //     body.operationName || undefined
+        //   );
+
+        // Send database response to client //
+        //   response.status = 200;
+        //   response.body = result;
+        //   return;
+        // }
+
         // Variable to block the normalization of mutations //
         let toNormalize = true;
 
         if (useCache) {
-         
+
           // Send query off to be destructured and found in Redis if possible //
-          
+
           let obsidianReturn
           if (useQueryCache) {
-          obsidianReturn = await cache.read(body.query);
+            obsidianReturn = await cache.read(body.query);
           }
           if (!obsidianReturn && useRebuildCache) {
-           
+
             const rebuildReturn = await rebuildFromQuery(body.query);
-            
-            
+
+
             obsidianReturn = rebuildReturn
-          }        
+          }
 
           if (obsidianReturn) {
-            
+
             response.status = 200;
             response.body = obsidianReturn;
             var t1 = performance.now();
             console.log(
               '%c Obsidian retrieved data from cache and took ' +
-                (t1 - t0) +
-                ' milliseconds.', "background: #222; color: #00FF00"
+              (t1 - t0) +
+              ' milliseconds.', "background: #222; color: #00FF00"
             );
-            
-           if (useQueryCache) {
-           await cache.write(body.query, obsidianReturn, false);
-           }
+
+            if (useQueryCache) {
+              await cache.write(body.query, obsidianReturn, false);
+            }
             return;
           }
         }
@@ -189,36 +218,32 @@ export async function ObsidianRouter<T>({
         // Send database response to client //
         response.status = 200;
         response.body = result;
-         
-          //cache of whole query completely non normalized
-          //boolean to allow the full query cache
-      if (useQueryCache && useCache) {
-        await cache.write(body.query, result, false);
-      }
+
+        //cache of whole query completely non normalized
+        //boolean to allow the full query cache
+        if (useQueryCache && useCache) {
+          await cache.write(body.query, result, false);
+        }
 
         // Normalize response and store in cache //
         if (useCache && toNormalize && !result.errors && useRebuildCache) {
-          
-           //run to map alias 
-           let map = mapSelectionSet(body.query)
-          
-        // this normalizeds the result and saves to REDIS
-        let normalized
-        // uses base id, __typename if given customIdentifer array is not populated
+
+          //run to map alias 
+          let map = mapSelectionSet(body.query)
+
+          // this normalizeds the result and saves to REDIS
+          let normalized
+          // uses base id, __typename if given customIdentifer array is not populated
           if (customIdentifier.length === 0) {
             normalized = await normalizeResult(result, map)
+          } else {
+            // this uses the custom identifier if given
+            normalized = await normalizeResult(result, map, customIdentifier)
           }
-          // this uses the custom identifier if given
-          else{
 
-          normalized = await normalizeResult(result, map, customIdentifier)
-          }
-        
-         await cachePrimaryFields(normalized, body.query, map)
-
-       
-         
+          await cachePrimaryFields(normalized, body.query, map)
         }
+
         var t1 = performance.now();
         console.log(
           '%c Obsidian received new data and took ' + (t1 - t0) + ' milliseconds', 'background: #222; color: #FFFF00'
@@ -245,16 +270,16 @@ export async function ObsidianRouter<T>({
     const { request, response } = ctx;
     if (usePlayground) {
       const prefersHTML = request.accepts('text/html');
-      const optionsObj:any = {    
-          'schema.polling.enable': false, // enables automatic schema polling
-      }  
-      
+      const optionsObj: any = {
+        'schema.polling.enable': false, // enables automatic schema polling
+      }
+
       if (prefersHTML) {
-        
+
         const playground = renderPlaygroundPage({
           endpoint: request.url.origin + path,
           subscriptionEndpoint: request.url.origin,
-          settings : optionsObj
+          settings: optionsObj
         });
         response.status = 200;
         response.body = playground;
