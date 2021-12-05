@@ -46,6 +46,41 @@ const hashableObjFail2 =
 console.log(isHashableObject(hashableObjFail1, hashableKeys));
 console.log(isHashableObject(hashableObjFail2, hashableKeys));
 /* ----------------------------------------------------------------*/
+type FlatObject = { [key:string]: (string | number | boolean)};
+/**
+ * Creates unique hash for an object with hashable keys 
+ *
+ * @param {FlatObject} nestedObject Nested object 
+ * @return {ArrayOfObjects} Array of normalized objects
+ */
+const hashMaker = (hashableObject, hashableKeys):ArrayOfObjects => {
+    if(!isHashableObject(hashableObject, hashableKeys)) return "Not a hashable object";
+    let hash = '';
+    let tilde = "~"
+    for(let i = hashableKeys.length - 1; i >= 0; i--){
+        let value = '';
+        value += tilde;
+        value += hashableObject[hashableKeys[i]]
+        hash += value;
+    }
+    // for(const hashableKey of hashableKeys){
+    //     let value = '';
+    //     value += tilde;
+    //     value += hashableObject[hashableKey]
+    //     hash += value;
+    // }
+    return hash;
+}
+console.log(hashMaker({"id": "7", "__typename": "Movie", "title": "Ad Astra"}, hashableKeys));
+
+
+
+
+
+
+
+
+
 
 
 
