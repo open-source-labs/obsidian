@@ -122,7 +122,7 @@ export async function ObsidianRouter<T>({
             body.variables || undefined,
             body.operationName || undefined
           );
-          invalidateCache(mutationResponse)
+          invalidateCache(mutationResponse['data'])
           response.body = mutationResponse;
           return;
         }
