@@ -239,9 +239,9 @@ console.log(printHashableObject(containsHashableObjTrue3));
 // }
 const normalizeObject = (nestedObject: GenericObject, hashableKeys:Array<string>, normalizedHashableObjects = {}):FlatObject => {
     for(const key in nestedObject){
-        // let visitedFlag = false;
+        let visitedFlag = false;
         if(containsHashableObject(nestedObject, hashableKeys)){
-            // visitedFlag = true;
+            visitedFlag = true;
             const hashableObject = printHashableObject(nestedObject);
             const hash = hashMaker(hashableObject, hashableKeys);
             if(!normalizedHashableObjects.hasOwnProperty(hash)) normalizedHashableObjects[hash] = hashableObject;
@@ -15496,8 +15496,9 @@ const allMovies =
 }
 console.log(normalizeObject(scifiMovies, arrHashableKeys))
 console.log(normalizeObject(allMovies, arrHashableKeys))
-
-
+console.log(normalizeObject(allMovies, arrHashableKeys))
+const lenTest = normalizeObject(allMovies, arrHashableKeys)
+console.log(Object.keys(lenTest).length)
 
 
 
