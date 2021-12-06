@@ -88,10 +88,17 @@ const containsHashableObjTrue2 = {
         }
     ]
 }
-
+const containsHashableObjTrue3 = {
+    "id": "1",
+    "__typename": "Actor",
+    "firstName": "Brad",
+    "lastName": "Pitt",
+    "movies": ["Ad Astra", "Fight Club"]
+}
 console.log(containsHashableObject(containsHashableObjFalse1, arrHashableKeys));
 console.log(containsHashableObject(containsHashableObjTrue1, arrHashableKeys));
 console.log(containsHashableObject(containsHashableObjTrue2, arrHashableKeys));
+console.log(containsHashableObject(containsHashableObjTrue3, arrHashableKeys));
 /* ----------------------------------------------------------------*/
 
 
@@ -211,7 +218,7 @@ const printHashableObject = (hashableObject: GenericObject):GenericObject => {
 
 console.log(printHashableObject(containsHashableObjTrue1));
 console.log(printHashableObject(containsHashableObjTrue2));
-
+console.log(printHashableObject(containsHashableObjTrue3));
 
 /* ----------------------------------------------------------------*/
 
@@ -224,12 +231,10 @@ console.log(printHashableObject(containsHashableObjTrue2));
  */
  const normalizeObject = (nestedObject: GenericObject, hashableKeys:Array<string>, normalizedObjects = []):ArrayOfObjects => {
     for(const key in nestedObject){
-        if(isHashableObject(nestedObject, hashableKeys)) {
-            normalizedObjects.push(nestedObject)
-            break;
-        }
-        if(!containsHashableObject(nestedObject, hashableKeys)) normalizeObject(nestedObject[key], hashableKeys, normalizedObjects)
+        if(isHashableObject(nestedObject, hashableKeys)) normalizedObjects.push(nestedObject)
+        if(isHashableObject(nestedObject[key], hashableKeys)) normalizedObjects.push(nestedObject[key])
         if(containsHashableObject(nestedObject[key], hashableKeys)) normalizedObjects.push(printHashableObject(nestedObject[key]));
+        if(!containsHashableObject(nestedObject, hashableKeys)) normalizeObject(nestedObject[key], hashableKeys, normalizedObjects)
     }
     return normalizedObjects;
 }
