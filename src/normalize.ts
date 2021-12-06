@@ -5,15 +5,15 @@
  * @param {Array} hashableKeys Array of hashable keys
  * @return {boolean} Hashable or not
  */
- const isHashableKey = (key:string, hashableKeys:string[]):boolean => {
-    const hashableKeysSet = new Set(hashableKeys);
-    return hashableKeysSet.has(key)
+export const isHashableKey = (key: string, hashableKeys: string[]): boolean => {
+  const hashableKeysSet = new Set(hashableKeys);
+  return hashableKeysSet.has(key)
 }
 const arrHashableKeys = ["id", "__typename"];
 console.log(isHashableKey("id", arrHashableKeys));
 console.log(isHashableKey("__typename", arrHashableKeys));
 console.log(isHashableKey(["id"], arrHashableKeys));
-console.log(isHashableKey({"id": "id"}, arrHashableKeys));
+console.log(isHashableKey({ "id": "id" }, arrHashableKeys));
 console.log(isHashableKey("Brad", arrHashableKeys));
 
 /* ----------------------------------------------------------------*/
@@ -46,54 +46,54 @@ console.log(isHashableKey("Brad", arrHashableKeys));
  * @return {boolean} Boolean indicating if objectInQuestion is hashable or not
  */
 
- const containsHashableObject = (objectInQuestion: GenericObject, hashableKeys: Array<string>) => {
-    if(typeof objectInQuestion !== 'object' ||
-        Array.isArray(objectInQuestion) ||
-        !objectInQuestion
-    ) return false;
-    const objectInQuestionKeysSet = new Set(Object.keys(objectInQuestion));
-    return hashableKeys.every(key => objectInQuestionKeysSet.has(key))
+export const containsHashableObject = (objectInQuestion: GenericObject, hashableKeys: Array<string>) => {
+  if (typeof objectInQuestion !== 'object' ||
+    Array.isArray(objectInQuestion) ||
+    !objectInQuestion
+  ) return false;
+  const objectInQuestionKeysSet = new Set(Object.keys(objectInQuestion));
+  return hashableKeys.every(key => objectInQuestionKeysSet.has(key))
 }
 
 const containsHashableObjFalse1 =
-[
+  [
     "id",
     "__typename"
-]
-const containsHashableObjTrue1 = 
+  ]
+const containsHashableObjTrue1 =
 {
-    "id": "11", 
-    "__typename": "Movie", 
-    "title": "Ad Astra",
-    "thing": {"generic": "thing"}
+  "id": "11",
+  "__typename": "Movie",
+  "title": "Ad Astra",
+  "thing": { "generic": "thing" }
 }
 const containsHashableObjTrue2 = {
-    "id": "7",
-    "__typename": "Movie",
-    "title": "Ad Astra",
-    "releaseYear": 2019,
-    "genre": "SCIFI",
-    "actors": [
-        {
-            "id": "1",
-            "__typename": "Actor",
-            "firstName": "Brad",
-            "lastName": "Pitt"
-        },
-        {
-            "id": "14",
-            "__typename": "Actor",
-            "firstName": "Tommy Lee",
-            "lastName": "Jones"
-        }
-    ]
+  "id": "7",
+  "__typename": "Movie",
+  "title": "Ad Astra",
+  "releaseYear": 2019,
+  "genre": "SCIFI",
+  "actors": [
+    {
+      "id": "1",
+      "__typename": "Actor",
+      "firstName": "Brad",
+      "lastName": "Pitt"
+    },
+    {
+      "id": "14",
+      "__typename": "Actor",
+      "firstName": "Tommy Lee",
+      "lastName": "Jones"
+    }
+  ]
 }
 const containsHashableObjTrue3 = {
-    "id": "1",
-    "__typename": "Actor",
-    "firstName": "Brad",
-    "lastName": "Pitt",
-    "movies": ["Ad Astra", "Fight Club"]
+  "id": "1",
+  "__typename": "Actor",
+  "firstName": "Brad",
+  "lastName": "Pitt",
+  "movies": ["Ad Astra", "Fight Club"]
 }
 console.log(containsHashableObject(containsHashableObjFalse1, arrHashableKeys));
 console.log(containsHashableObject(containsHashableObjTrue1, arrHashableKeys));
@@ -125,40 +125,40 @@ console.log(containsHashableObject(containsHashableObjTrue3, arrHashableKeys));
  * @param {array} hashableKeys Array of hashable keys
  * @return {boolean} Boolean indicating if objectInQuestion is hashable or not
  */
- const isHashableObject = (objectInQuestion:any, hashableKeys:Array<string>):boolean => {
-    if(!containsHashableObject(objectInQuestion, hashableKeys)) return false;
-    for(const key in objectInQuestion){
-        if(typeof objectInQuestion[key] === 'object') return false;
-    }
-    return true;
+export const isHashableObject = (objectInQuestion: any, hashableKeys: Array<string>): boolean => {
+  if (!containsHashableObject(objectInQuestion, hashableKeys)) return false;
+  for (const key in objectInQuestion) {
+    if (typeof objectInQuestion[key] === 'object') return false;
+  }
+  return true;
 }
 
 const isHashableObjFalse1 =
-[
+  [
     "id",
     "__typename"
-]
+  ]
 const isHashableObjFalse2 =
 {
-    "id": "11",
-    "__typename": "Movie",
-    "title": "Ad Astra",
-    "thing": {"generic": "thing"}
+  "id": "11",
+  "__typename": "Movie",
+  "title": "Ad Astra",
+  "thing": { "generic": "thing" }
 }
-const isHashableObjTrue1 = 
+const isHashableObjTrue1 =
 {
-    "id": "7",
-    "__typename": "Movie",
-    "title": "Ad Astra",
-    "releaseYear": 2019,
-    "genre": "SCIFI"
+  "id": "7",
+  "__typename": "Movie",
+  "title": "Ad Astra",
+  "releaseYear": 2019,
+  "genre": "SCIFI"
 }
 const isHashableObjTrue2 =
 {
-    "id": "1",
-    "__typename": "Actor",
-    "firstName": "Brad",
-    "lastName": "Pitt"
+  "id": "1",
+  "__typename": "Actor",
+  "firstName": "Brad",
+  "lastName": "Pitt"
 }
 
 console.log(isHashableObject(isHashableObjFalse1, arrHashableKeys));
@@ -174,46 +174,46 @@ console.log(isHashableObject(isHashableObjTrue2, arrHashableKeys));
 
 
 /* ----------------------------------------------------------------*/
-type FlatObject = { [key:string]: (string | number | boolean)};
+type FlatObject = { [key: string]: (string | number | boolean) };
 /**
  * Creates unique hash for an object with hashable keys
  *
  * @param {FlatObject} nestedObject Nested object 
  * @return {ArrayOfObjects} Array of normalized objects
  */
-const hashMaker = (hashableObject, hashableKeys):string => {
-    if(!isHashableObject(hashableObject, hashableKeys)) return "Not a hashable object";
-    
-    let hash = '';
-    let value = '';
+export const hashMaker = (hashableObject, hashableKeys): string => {
+  if (!isHashableObject(hashableObject, hashableKeys)) return "Not a hashable object";
 
-    for(let i = hashableKeys.length - 1; i >= 0; i--){
-        value = '~';
-        value += hashableObject[hashableKeys[i]]
-        hash += value;
-    }
-    /*
-    for(const hashableKey of hashableKeys){
-        let value = '';
-        value += tilde;
-        value += hashableObject[hashableKey]
-        hash += value;
-    }
-    */
-    return hash;
+  let hash = '';
+  let value = '';
+
+  for (let i = hashableKeys.length - 1; i >= 0; i--) {
+    value = '~';
+    value += hashableObject[hashableKeys[i]]
+    hash += value;
+  }
+  /*
+  for(const hashableKey of hashableKeys){
+      let value = '';
+      value += tilde;
+      value += hashableObject[hashableKey]
+      hash += value;
+  }
+  */
+  return hash;
 }
-console.log(hashMaker({"id": "7", "__typename": "Movie", "title": "Ad Astra"}, arrHashableKeys));
+console.log(hashMaker({ "id": "7", "__typename": "Movie", "title": "Ad Astra" }, arrHashableKeys));
 
 /* ----------------------------------------------------------------*/
-type GenericObject = { [key:string]: any};
+type GenericObject = { [key: string]: any };
 type ArrayOfObjects = GenericObject[]
 
-const printHashableObject = (hashableObject: GenericObject):GenericObject => {
-    const hashObj = {};
-    for(const key in hashableObject){
-        if(typeof hashableObject[key] !== 'object' && !hashObj.hasOwnProperty(key)) hashObj[key] = hashableObject[key];
-    }
-    return hashObj;
+const printHashableObject = (hashableObject: GenericObject): GenericObject => {
+  const hashObj = {};
+  for (const key in hashableObject) {
+    if (typeof hashableObject[key] !== 'object' && !hashObj.hasOwnProperty(key)) hashObj[key] = hashableObject[key];
+  }
+  return hashObj;
 }
 
 console.log(printHashableObject(containsHashableObjTrue1));
@@ -229,83 +229,83 @@ console.log(printHashableObject(containsHashableObjTrue3));
  * @param {GenericObject} nestedObject Nested object 
  * @return {ArrayOfObjects} Array of normalized objects
  */
- const normalizeObject = (nestedObject: GenericObject, hashableKeys:Array<string>, normalizedObjects = []):ArrayOfObjects => {
-    for(const key in nestedObject){
-        if(isHashableObject(nestedObject, hashableKeys)) normalizedObjects.push(nestedObject)
-        if(isHashableObject(nestedObject[key], hashableKeys)) normalizedObjects.push(nestedObject[key])
-        if(containsHashableObject(nestedObject[key], hashableKeys)) normalizedObjects.push(printHashableObject(nestedObject[key]));
-        if(!containsHashableObject(nestedObject, hashableKeys)) normalizeObject(nestedObject[key], hashableKeys, normalizedObjects)
-    }
-    return normalizedObjects;
+export const normalizeObject = (nestedObject: GenericObject, hashableKeys: Array<string>, normalizedObjects = []): ArrayOfObjects => {
+  for (const key in nestedObject) {
+    if (isHashableObject(nestedObject, hashableKeys)) normalizedObjects.push(nestedObject)
+    if (isHashableObject(nestedObject[key], hashableKeys)) normalizedObjects.push(nestedObject[key])
+    if (containsHashableObject(nestedObject[key], hashableKeys)) normalizedObjects.push(printHashableObject(nestedObject[key]));
+    if (!containsHashableObject(nestedObject, hashableKeys)) normalizeObject(nestedObject[key], hashableKeys, normalizedObjects)
+  }
+  return normalizedObjects;
 }
 const nestedObject1 = {
-    "data": {
-        "movies": [
-            {
-                "id": "7",
-                "__typename": "Movie",
-                "title": "Ad Astra",
-                "releaseYear": 2019,
-                "genre": "SCIFI",
-                "actors": [
-                    {
-                        "id": "1",
-                        "__typename": "Actor",
-                        "firstName": "Brad",
-                        "lastName": "Pitt"
-                    },
-                    {
-                        "id": "14",
-                        "__typename": "Actor",
-                        "firstName": "Tommy Lee",
-                        "lastName": "Jones"
-                    }
-                ]
-            },
-            {
-                "id": "15",
-                "__typename": "Movie",
-                "title": "World War Z",
-                "releaseYear": 2013,
-                "genre": "SCIFI",
-                "actors": [
-                    {
-                        "id": "1",
-                        "__typename": "Actor",
-                        "firstName": "Brad",
-                        "lastName": "Pitt"
-                    }
-                ]
-            },
-            {
-                "id": "17",
-                "__typename": "Movie",
-                "title": "Sky Captain and the World of Tomorrow",
-                "releaseYear": 2004,
-                "genre": "SCIFI",
-                "actors": [
-                    {
-                        "id": "2",
-                        "__typename": "Actor",
-                        "firstName": "Angelina",
-                        "lastName": "Jolie"
-                    },
-                    {
-                        "id": "25",
-                        "__typename": "Actor",
-                        "firstName": "Jude",
-                        "lastName": "Law"
-                    },
-                    {
-                        "id": "26",
-                        "__typename": "Actor",
-                        "firstName": "Gwyneth",
-                        "lastName": "Paltrow"
-                    }
-                ]
-            }
+  "data": {
+    "movies": [
+      {
+        "id": "7",
+        "__typename": "Movie",
+        "title": "Ad Astra",
+        "releaseYear": 2019,
+        "genre": "SCIFI",
+        "actors": [
+          {
+            "id": "1",
+            "__typename": "Actor",
+            "firstName": "Brad",
+            "lastName": "Pitt"
+          },
+          {
+            "id": "14",
+            "__typename": "Actor",
+            "firstName": "Tommy Lee",
+            "lastName": "Jones"
+          }
         ]
-    }
+      },
+      {
+        "id": "15",
+        "__typename": "Movie",
+        "title": "World War Z",
+        "releaseYear": 2013,
+        "genre": "SCIFI",
+        "actors": [
+          {
+            "id": "1",
+            "__typename": "Actor",
+            "firstName": "Brad",
+            "lastName": "Pitt"
+          }
+        ]
+      },
+      {
+        "id": "17",
+        "__typename": "Movie",
+        "title": "Sky Captain and the World of Tomorrow",
+        "releaseYear": 2004,
+        "genre": "SCIFI",
+        "actors": [
+          {
+            "id": "2",
+            "__typename": "Actor",
+            "firstName": "Angelina",
+            "lastName": "Jolie"
+          },
+          {
+            "id": "25",
+            "__typename": "Actor",
+            "firstName": "Jude",
+            "lastName": "Law"
+          },
+          {
+            "id": "26",
+            "__typename": "Actor",
+            "firstName": "Gwyneth",
+            "lastName": "Paltrow"
+          }
+        ]
+      }
+    ]
+  }
 }
 console.log(normalizeObject(nestedObject1, arrHashableKeys))
 

@@ -3,6 +3,7 @@ import { gql } from "https://deno.land/x/oak_graphql/mod.ts";
 import { visit } from "https://deno.land/x/graphql_deno/mod.ts";
 import { Cache } from "./quickCache.js";
 import { deepEqual } from "./utils.js";
+import { isHashableKey } from "./normalize.ts";
 
 const cache = new Cache();
 
@@ -33,8 +34,8 @@ export function invalidateCacheCheck(body) {
 export function invalidateCache(mutationResponse) {
 
   for (obj of mutationResponse) {
-    const redisKey = 'call hash creator function passing in obj'
-    const normalizedMutationResponse = 'call response normalizer passing in obj' 
+    const redisKey = 'call hash creator function passing in obj' //~Movie~7
+    const normalizedMutationResponse = 'call response normalizer passing in obj' //
     const cachedVal = await cache.cacheReadObject(redisKey)
 
     // if no value in redis at @redisKey then it's an add mution so we write the added value to cache
