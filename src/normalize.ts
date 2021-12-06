@@ -213,7 +213,96 @@ console.log(printHashableObject(containsHashableObjTrue1));
 console.log(printHashableObject(containsHashableObjTrue2));
 
 
+/* ----------------------------------------------------------------*/
 
+/**
+ * Flattens an arbitrarily nested object into an array of objects by: 
+ * 
+ *
+ * @param {GenericObject} nestedObject Nested object 
+ * @return {ArrayOfObjects} Array of normalized objects
+ */
+ const normalizeObject = (nestedObject: GenericObject, hashableKeys:Array<string>, normalizedObjects = []):ArrayOfObjects => {
+    for(const key in nestedObject){
+        if(isHashableObject(nestedObject, hashableKeys)) {
+            normalizedObjects.push(nestedObject)
+            break;
+        }
+        if(!containsHashableObject(nestedObject, hashableKeys)) normalizeObject(nestedObject[key], hashableKeys, normalizedObjects)
+        if(containsHashableObject(nestedObject[key], hashableKeys)) normalizedObjects.push(printHashableObject(nestedObject[key]));
+    }
+    return normalizedObjects;
+}
+const nestedObject1 = {
+    "data": {
+        "movies": [
+            {
+                "id": "7",
+                "__typename": "Movie",
+                "title": "Ad Astra",
+                "releaseYear": 2019,
+                "genre": "SCIFI",
+                "actors": [
+                    {
+                        "id": "1",
+                        "__typename": "Actor",
+                        "firstName": "Brad",
+                        "lastName": "Pitt"
+                    },
+                    {
+                        "id": "14",
+                        "__typename": "Actor",
+                        "firstName": "Tommy Lee",
+                        "lastName": "Jones"
+                    }
+                ]
+            },
+            {
+                "id": "15",
+                "__typename": "Movie",
+                "title": "World War Z",
+                "releaseYear": 2013,
+                "genre": "SCIFI",
+                "actors": [
+                    {
+                        "id": "1",
+                        "__typename": "Actor",
+                        "firstName": "Brad",
+                        "lastName": "Pitt"
+                    }
+                ]
+            },
+            {
+                "id": "17",
+                "__typename": "Movie",
+                "title": "Sky Captain and the World of Tomorrow",
+                "releaseYear": 2004,
+                "genre": "SCIFI",
+                "actors": [
+                    {
+                        "id": "2",
+                        "__typename": "Actor",
+                        "firstName": "Angelina",
+                        "lastName": "Jolie"
+                    },
+                    {
+                        "id": "25",
+                        "__typename": "Actor",
+                        "firstName": "Jude",
+                        "lastName": "Law"
+                    },
+                    {
+                        "id": "26",
+                        "__typename": "Actor",
+                        "firstName": "Gwyneth",
+                        "lastName": "Paltrow"
+                    }
+                ]
+            }
+        ]
+    }
+}
+console.log(normalizeObject(nestedObject1, arrHashableKeys))
 
 
 
