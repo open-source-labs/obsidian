@@ -122,21 +122,8 @@ export async function ObsidianRouter<T>({
             body.variables || undefined,
             body.operationName || undefined
           );
-          invalidateCache(mutationResponse, 'constructed key from astnormalize goes here')
-
-          // //run to map alias 
-          // const map = mapSelectionSet(body.query)
-
-          // // this normalizeds the result and saves to REDIS
-          // let normalized
-          // // uses base id, __typename if given customIdentifer array is not populated
-          // if (customIdentifier.length === 0) {
-          //   normalized = await normalizeResult(mutationResponse, map)
-          // } else {
-          //   // this uses the custom identifier if given
-          //   normalized = await normalizeResult(mutationResponse, map, customIdentifier)
-          // }
-          // console.log('Normalized result -->>\n', normalized);
+          invalidateCache(mutationResponse)
+          response.body = mutationResponse;
           return;
         }
 
