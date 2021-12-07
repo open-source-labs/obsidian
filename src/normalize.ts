@@ -1,4 +1,7 @@
+
+
 /** isHashableKey - O(n) such that n is the length of hashableKeys array
+ * 
  * Returns a boolean indicating that the passed in value is a hasbale key
  *
  * @param {string} key  Key to test if hashable
@@ -18,35 +21,19 @@ console.log(isHashableKey("Brad", arrHashableKeys));
 
 /* ----------------------------------------------------------------*/
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* ----------------------------------------------------------------*/
 
-/** containsHashableObject - O(n) such that n is the length of hashableKeys array
+/** containsHashableObject -
  * Returns a boolean indicating that the passed in value contains a hashable object. It must:
  * 1) Be an object
  * 2) Has all hashable keys
  *
- * @param {any} objectInQuestion Object being tested if hashable
- * @param {Array} hashableKeys Array of hashable keys
+ * @param {any} objectInQuestion Object being tested contains hashable object
+ * @param {Array<string>} hashableKeys Array of hashable keys
  * @return {boolean} Boolean indicating if objectInQuestion is hashable or not
  */
 
- const containsHashableObject = (objectInQuestion: GenericObject, hashableKeys: Array<string>) => {
+ const containsHashableObject = (objectInQuestion: any, hashableKeys: Array<string>):boolean => {
     if(typeof objectInQuestion !== 'object' ||
         Array.isArray(objectInQuestion) ||
         !objectInQuestion
@@ -60,6 +47,20 @@ const containsHashableObjFalse1 =
     "id",
     "__typename"
 ]
+const containsHashableObjFalse2 =
+[
+    {
+        "id": 1,
+        "__typename" : 'Movie'
+    }
+]
+const containsHashableObjFalse3 =
+{
+    "data": {
+        "id": 1,
+        "__typename" : 'Movie'
+    }
+}
 const containsHashableObjTrue1 = 
 {
     "id": "11", 
@@ -96,24 +97,12 @@ const containsHashableObjTrue3 = {
     "movies": ["Ad Astra", "Fight Club"]
 }
 console.log(containsHashableObject(containsHashableObjFalse1, arrHashableKeys));
+console.log(containsHashableObject(containsHashableObjFalse2, arrHashableKeys));
+console.log(containsHashableObject(containsHashableObjFalse3, arrHashableKeys));
 console.log(containsHashableObject(containsHashableObjTrue1, arrHashableKeys));
 console.log(containsHashableObject(containsHashableObjTrue2, arrHashableKeys));
 console.log(containsHashableObject(containsHashableObjTrue3, arrHashableKeys));
 /* ----------------------------------------------------------------*/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /* ----------------------------------------------------------------*/
 /** isHashableObject - 
@@ -122,7 +111,7 @@ console.log(containsHashableObject(containsHashableObjTrue3, arrHashableKeys));
  * 2) Does not have any nesting (i.e., contains no objects or array values)
  *
  * @param {any} objectInQuestion Object being tested if hashable
- * @param {array} hashableKeys Array of hashable keys
+ * @param {Array<string>} hashableKeys Array of hashable keys
  * @return {boolean} Boolean indicating if objectInQuestion is hashable or not
  */
  const isHashableObject = (objectInQuestion:any, hashableKeys:Array<string>):boolean => {
@@ -171,18 +160,19 @@ console.log(isHashableObject(isHashableObjTrue2, arrHashableKeys));
 
 
 
-
-
 /* ----------------------------------------------------------------*/
+type GenericObject = { [key:string]: any};
+type ArrayOfObjects = GenericObject[]
 type FlatObject = { [key:string]: (string | number | boolean)};
-/**
- * Creates unique hash for an object with hashable keys
+/** hashMaker -
+ * Creates unique hash string for an object with hashable keys. If not hashable, will return null
  *
- * @param {FlatObject} hashableObject Object that has all hashable keys 
+ * @param {FlatObject} hashableObject Object that is hashable 
+ * @param {Array<string>} hashableKeys Array of hashable keys
  * @return {ArrayOfObjects} Array of normalized objects
  */
-const hashMaker = (hashableObject, hashableKeys):string => {
-    if(!isHashableObject(hashableObject, hashableKeys)) return "Not a hashable object";
+const hashMaker = (hashableObject: FlatObject, hashableKeys:Array<string>):string|null => {
+    if(!isHashableObject(hashableObject, hashableKeys)) return null;
     
     let hash = '';
     let value = '';
@@ -201,47 +191,69 @@ const hashMaker = (hashableObject, hashableKeys):string => {
     
     return hash;
 }
-console.log(hashMaker({"id": "7", "__typename": "Movie", "title": "Ad Astra"}, arrHashableKeys));
+const hashMaker1 = {'id': 7, '__typename': 'Movie', 'title': 'Ad Astra', 'releaseYear': 2019, 'genre': 'SCIFI'}
+const hashMaker2 = { 'id': 1, '__typename': 'Actor', 'firstName': 'Brad', 'lastName': 'Pitt' }
+console.log(hashMaker(hashMaker1, arrHashableKeys));
+console.log(hashMaker(hashMaker2, arrHashableKeys));
+console.log(hashMaker(isHashableObjFalse1, arrHashableKeys));
+/* ----------------------------------------------------------------*/
+
+
+
+
+
 
 /* ----------------------------------------------------------------*/
-type GenericObject = { [key:string]: any};
-type ArrayOfObjects = GenericObject[]
-
-const printHashableObject = (hashableObject: GenericObject):GenericObject => {
+/** printHashableObject -
+ * Creates a hashable object from an object that contains a hashable object. Does not print hashable object 
+ * 
+ * @param {FlatObject} containsHashableObject Object that is hashable 
+ * @return {GenericObject} A hashable object
+ */
+const printHashableObject = (containsHashableObject: GenericObject):GenericObject => {
     const hashObj = {};
-    for(const key in hashableObject){
-        if(typeof hashableObject[key] !== 'object' && !hashObj.hasOwnProperty(key)) hashObj[key] = hashableObject[key];
+    for(const key in containsHashableObject){
+        if(typeof containsHashableObject[key] !== 'object' && !hashObj.hasOwnProperty(key)) hashObj[key] = containsHashableObject[key];
     }
     return hashObj;
 }
-
+/* ----------------------------------------------------------------*/
 console.log(printHashableObject(containsHashableObjTrue1));
 console.log(printHashableObject(containsHashableObjTrue2));
 console.log(printHashableObject(containsHashableObjTrue3));
+/* ----------------------------------------------------------------*/
+
+
+
+
+
 
 /* ----------------------------------------------------------------*/
 
 /**
- * Flattens an arbitrarily nested object into an array of objects by: 
+ * Recursively flattens an arbitrarily nested object into an objects with hash key and hashable object pairs
  * 
- *
- * @param {GenericObject} nestedObject Nested object 
- * @return {FlatObject} Object of normalized objects in its keys
+ * For each key in object (typeof === 'object', meaning it can be array):
+ * 
+ * 1) If current object contains hashable object and if it hasn't printed already,
+ * it prints a hashable object and makes its associated hash. If hash doesn't exist in normalizedHashableObjects,
+ * it adds hash key and hashable object pair.
+ * 
+ * 2) If the value at the current key is an object (typeof === 'object', meaning it can be array), it recursively
+ * calls normalizeObject with the value passed in. This recursive calls goes inside arbitrary nesting.
+ * 
+ * 3) Return normalizedHashableObjects. In the outer most execution context, this will return the output of the function.
+ * In inner execution contexts, this will return that execution context's normalizedHashableObjects.
+ * 
+ * @param {GenericObject} nestedObject Nested object
+ * @param {Array<string>} hashableKeys Array of hashable keys 
+ * @return {FlatObject} Normalized object with hash keys and hashable object pairs
  */
-// const normalizeObject = (nestedObject: GenericObject, hashableKeys:Array<string>, normalizedObjects = []):ArrayOfObjects => {
-//     for(const key in nestedObject){
-//         if(isHashableObject(nestedObject, hashableKeys)) normalizedObjects.push(nestedObject)
-//         if(isHashableObject(nestedObject[key], hashableKeys)) normalizedObjects.push(nestedObject[key])
-//         if(containsHashableObject(nestedObject[key], hashableKeys)) normalizedObjects.push(printHashableObject(nestedObject[key]));
-//         if(!containsHashableObject(nestedObject, hashableKeys)) normalizeObject(nestedObject[key], hashableKeys, normalizedObjects)
-//     }
-//     return normalizedObjects;
-// }
 const normalizeObject = (nestedObject: GenericObject, hashableKeys:Array<string>, normalizedHashableObjects = {}):FlatObject => {
-    for(const key in nestedObject){
-        let visitedFlag = false;
-        if(containsHashableObject(nestedObject, hashableKeys)){
-            visitedFlag = true;
+    let hasAlreadyPrinted = false;
+    for(const key in nestedObject){    
+        if(containsHashableObject(nestedObject, hashableKeys) && hasAlreadyPrinted === false){
+            hasAlreadyPrinted = true;
             const hashableObject = printHashableObject(nestedObject);
             const hash = hashMaker(hashableObject, hashableKeys);
             if(!normalizedHashableObjects.hasOwnProperty(hash)) normalizedHashableObjects[hash] = hashableObject;
@@ -250,18 +262,7 @@ const normalizeObject = (nestedObject: GenericObject, hashableKeys:Array<string>
     }
     return normalizedHashableObjects;
 }
-/*
-const normalizeObject = (nestedObject: GenericObject, hashableKeys:Array<string>, arrOfObj = []):Array<any> => {
-    for(const key in nestedObject){
-        if(containsHashableObject(nestedObject, hashableKeys)){
-            const hashableObject = printHashableObject(nestedObject);
-            if(!JSON.stringify(arrOfObj).includes(JSON.stringify(hashableObject))) arrOfObj.push(hashableObject);
-        }
-        if(typeof nestedObject[key] === 'object') normalizeObject(nestedObject[key], hashableKeys, arrOfObj);
-    }
-    return arrOfObj;
-}
-*/
+
 const scifiMovies = {
     "data": {
         "movies": [
@@ -331,6 +332,10 @@ const scifiMovies = {
         ]
     }
 }
+console.log(normalizeObject(scifiMovies, arrHashableKeys))
+const scifiMoviesLenTest = normalizeObject(scifiMovies, arrHashableKeys);
+console.log(Object.keys(scifiMoviesLenTest).length)
+
 const allMovies =
     {
         "data": {
@@ -15490,15 +15495,16 @@ const allMovies =
                 }
               ]
             }
+            console.log(normalizeObject(scifiMovies, arrHashableKeys))
           ]
         }
-      }
-}
-console.log(normalizeObject(scifiMovies, arrHashableKeys))
+    }
+const t0 = performance.now();
 console.log(normalizeObject(allMovies, arrHashableKeys))
-console.log(normalizeObject(allMovies, arrHashableKeys))
-const lenTest = normalizeObject(allMovies, arrHashableKeys)
-console.log(Object.keys(lenTest).length)
+const t1 = performance.now();
+console.log(t1 - t0, 'milliseconds');
+const allMoviesLenTest = normalizeObject(allMovies, arrHashableKeys)
+console.log(Object.keys(allMoviesLenTest).length)
 
 
 
