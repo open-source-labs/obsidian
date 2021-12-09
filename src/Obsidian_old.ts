@@ -10,7 +10,8 @@ import { normalizeResult, cachePrimaryFields } from './astNormalize.js'
 import { rebuildFromQuery } from './rebuild.js'
 import { mapSelectionSet } from './mapSelections.js'
 import { normalizeObject } from './normalize.ts'
-import { transformResponse, detransformResponse } from './transformResponse.ts'
+import { transformResult } from './transform_MC.ts'
+import { detransformResult } from './detransform_MC.ts'
 
 interface Constructable<T> {
   new(...args: any): T & OakRouter;
@@ -111,6 +112,8 @@ export async function ObsidianRouter<T>({
         
         
         body = { query: restructure(body) };
+        console.log('Unprocessed body', await request.body().value)
+        console.log('Restructured body', body)
 
 
         const isMutation = await invalidateCacheCheck(body);
@@ -123,10 +126,14 @@ export async function ObsidianRouter<T>({
               body.variables || undefined,
               body.operationName || undefined
             );
+            console.log('Mutation response', mutationResponse)
             await invalidateCache(normalizeObject(mutationResponse, customIdentifier))
+            console.log('inside Obsidian.ts isMutation block')
             response.body = await mutationResponse;
             return;
         }
+
+        console.log('past isMutation block in obsidian.ts')
 
         // Variable to block the normalization of mutations //
         let toNormalize = true;
@@ -150,7 +157,7 @@ export async function ObsidianRouter<T>({
           if (obsidianReturn) {
 
             // detransform MC
-            obsidianReturn = await detransformResponse(body.query, obsidianReturn);
+            obsidianReturn = await detransformResult(body.query, obsidianReturn);
             response.status = 200;
             response.body = obsidianReturn;
             var t1 = performance.now();
@@ -162,7 +169,7 @@ export async function ObsidianRouter<T>({
 
             if (useQueryCache) {
               // transform for big query
-              obsidianReturn = transformResponse(obsidianReturn, customIdentifier);
+              obsidianReturn = transformResult(obsidianReturn, customIdentifier);
               await cache.write(body.query, obsidianReturn, false);
             }
             return;
@@ -186,7 +193,7 @@ export async function ObsidianRouter<T>({
         //cache of whole query completely non normalized
         //boolean to allow the full query cache
         if (useQueryCache && useCache && !isMutation) {
-          const transformedResult = transformResponse(result, customIdentifier); // MC
+          const transformedResult = transformResult(result, customIdentifier); // MC
           await cache.write(body.query, transformedResult, false); 
         }
 

@@ -2,7 +2,7 @@
   "compileOnSave": true,
   "compilerOptions": {
     "allowJs": true,
-    "target": "ES2017",
+    "target": "ES2021",
     "jsx": "react",
     "noImplicitAny": false,
     "module": "CommonJS",
