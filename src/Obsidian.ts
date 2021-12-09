@@ -9,6 +9,7 @@ import { invalidateCacheCheck, invalidateCache } from './invalidateCacheCheck.js
 import { normalizeResult, cachePrimaryFields } from './astNormalize.js'
 import { rebuildFromQuery } from './rebuild.js'
 import { mapSelectionSet } from './mapSelections.js'
+import { normalizeObject } from './normalize.ts'
 
 
 interface Constructable<T> {
@@ -122,7 +123,8 @@ export async function ObsidianRouter<T>({
             body.variables || undefined,
             body.operationName || undefined
           );
-          invalidateCache(mutationResponse['data'])
+
+          invalidateCache(normalizeObject(mutationResponse, customIdentifier))
           response.body = mutationResponse;
           return;
         }
