@@ -66,7 +66,7 @@ export async function ObsidianRouter<T>({
   maxQueryDepth = 0,
   useQueryCache = true,
   useRebuildCache = true,
-  customIdentifier = ["__typename", "id"],
+  customIdentifier = ["id", "__typename"],
 }: ObsidianRouterOptions<T>): Promise<T> {
   redisPortExport = redisPort;
   const router = new Router();
