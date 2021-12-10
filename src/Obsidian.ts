@@ -90,8 +90,9 @@ export async function ObsidianRouter<T>({
       body = { query: restructure(body) }; // Restructre gets rid of variables and fragments from the query
       // Is query in cache? 
       let cacheQueryValue = await cache.read(body.query) //problem?
+      // If in cache: read from cache 
       if (useCache && useQueryCache && cacheQueryValue){
-        const detransformedCacheQueryValue = await detransformResponse(body.query, cacheQueryValue)
+        const detransformedCacheQueryValue = await detransformResponse(body.query, cacheQueryValue) // add feature to know if partial cache isn't in cache, so whole query can be run and enter next if block
         response.status = 200;
         response.body = detransformedCacheQueryValue;
         const t1 = performance.now();
