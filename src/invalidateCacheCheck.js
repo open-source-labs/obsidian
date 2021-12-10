@@ -50,26 +50,3 @@ export async function invalidateCache(normalizedMutation) {
     }
   }
 }
-
-
-
-// THE BELOW NEEDS WORK TO BREAK UP THE CACHE INVALIDATION FUNCTIONALITY
-
-const isAddMutation = (cachedVal) => {
-  (cachedVal === undefined) ? true : false;
-}
-
-const isDeleteMutation = (cachedVal, normalizedResponseObjVal) => {
-    deepEqual(normalizedData, cachedVal) ? true : false
-}
-
-const isUpdateMutation = (cachedVal, normalizedResponseObjVal) => {
-    if(!isAddMutation(cachedVal) && !isDeleteMutation(cachedVal, normalizedResponseObjVal)) return true;
-    return false;
-}
-
-export const cacheInvalidation = async (redisKey, cachedVal, normalizedResponseObjVal) => {
-  if(isAddMutation(cachedVal)) await cache.cacheWriteObject(redisKey, normalizedResponseObjVal)
-  else if(isDeleteMutation(cachedVal, normalizedResponseObjVal)) await cache.cacheDelete(redisKey)
-  else if(isUpdateMutation(cachedVal, normalizedResponseObjVal)) await cache.cacheWriteObject(redisKey, normalizedResponseObjVal)
-}
