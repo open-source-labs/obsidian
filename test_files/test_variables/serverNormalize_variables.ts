@@ -1,3 +1,5 @@
+// import { containsHashableObject, printHashableObject } from "../../src/normalize";
+
 export const serverNormalizeTestVariables:any = {};
 
 serverNormalizeTestVariables.containsHashableObjFalse1 =
@@ -15314,3 +15316,5 @@ serverNormalizeTestVariables.arbitraryNestedScifiMovies =
       ]
     }
 }
+
+// console.log(printHashableObject(serverNormalizeTestVariables.containsHashableObjTrue1))

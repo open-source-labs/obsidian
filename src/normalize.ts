@@ -48,7 +48,7 @@ type FlatObject = { [key:string]: (string | number | boolean)};
  *
  * @param {FlatObject} hashableObject Object that is hashable 
  * @param {Array<string>} hashableKeys Array of hashable keys
- * @return {ArrayOfObjects} Array of normalized objects
+ * @return {string} Hash string
  */
 export const hashMaker = (hashableObject: FlatObject, hashableKeys:Array<string>):string => {   
     let hash = '';
