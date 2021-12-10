@@ -25,7 +25,7 @@ const isArrayOfHashableObjects = (arrayOfObjects: Array<GenericObject>, hashable
 */
 export const transformResponse = (responseObject: any, hashableKeys: Array<string>):GenericObject => {
   const result: GenericObject = {};
-  // console.log(responseObject);
+
   if (responseObject.data) {
     return transformResponse(responseObject.data, hashableKeys);
   } else if (isHashableObject(responseObject, hashableKeys)) {
@@ -40,6 +40,7 @@ export const transformResponse = (responseObject: any, hashableKeys: Array<strin
       }
     }
   }
+  console.log('result ->', result);
   return result;
 }
 
@@ -53,6 +54,8 @@ export const transformResponse = (responseObject: any, hashableKeys: Array<strin
 */
 export const detransformResponse = async (queryKey: String, transformedValue: GenericObject):Promise<GenericObject> => {
 
+  console.log('queryKey -> ',queryKey);
+  console.log('transformedValue ->', transformedValue);
   // remove all text within parentheses aka '(input: ...)'
   queryKey = queryKey.replace(/\(([^)]+)\)/, '');
   // save Regex matches for line break followed by '{'
@@ -68,6 +71,8 @@ export const detransformResponse = async (queryKey: String, transformedValue: Ge
     const result: GenericObject = {}; 
     let currDepth = depth;
 
+    console.log(transformedValue);
+    // base case: innermost object with key:value pair of hash:{}
     if (Object.keys(transformedValue).length === 0) {
       return result;
     } else {
@@ -76,6 +81,12 @@ export const detransformResponse = async (queryKey: String, transformedValue: Ge
   
       for (let hash in transformedValue) { 
         const redisValue: GenericObject = await cache.cacheReadObject(hash);
+
+        // edge case in which our eviction strategy has pushed partial Cache data out of Redis
+        if (!redisValue) {
+          return {'cache evicted': {}};
+        }
+
         result[currField].push(redisValue);
         
         result[currField][result[currField].length - 1] = Object.assign(
