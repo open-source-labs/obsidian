@@ -118,7 +118,7 @@ export async function ObsidianRouter<T>({
           invalidateCache(normalizedGQLResponse);
         }
         else {
-          const transformedGQLResponse = transformResponse(normalizedGQLResponse, customIdentifier);
+          const transformedGQLResponse = transformResponse(gqlResponse, customIdentifier);
           await cache.write(body.query, transformedGQLResponse, false);
           for(const key in normalizedGQLResponse){
             await cache.cacheWriteObject(key, normalizedGQLResponse[key]); 
