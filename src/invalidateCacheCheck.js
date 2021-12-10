@@ -6,10 +6,14 @@ import { deepEqual } from "./utils.js";
 
 const cache = new Cache();
 
+/**
+ * Returns true if qgl querys' operation field represents mutation. Otherwise returns false.
+ * @param {object} body - Object containing the query string
+ */
 export function isMutation(body) {
   let isMutation = false;
   let ast = gql(body.query);
-  
+
   const checkMutationVisitor = {
     OperationDefinition: (node) => {
       if (node.operation === "mutation") {
@@ -30,23 +34,48 @@ export function isMutation(body) {
   return isMutation;
 }
 
-export async function invalidateCache(normalizedMutation) {
+/**
+ * Invalidates cache in redis based on the mutation type.
+ * @param {object} normalizedMutation - Object containing hash val in redis as key and normalized object as value. 
+ * Ex: {
+ * ~7~Movie: {id: 7, __typename: Movie, title: Ad Astra, releaseYear: 2019}
+ * }
+ * @param {string} queryString - raw mutation query.
+ * Ex: 'mutation { addMovie(input: {title: "sdfsdg", releaseYear: 1234, genre: ACTION }) { __typename  id ti...'
+ */
+export async function invalidateCache(normalizedMutation, queryString) {
+  // isDelete flag is a safety net for delete mutations.
+  // it's set to true if certain keywords such as 'delete' are found in the mutation query
+  // Because we check if response object from delete mutation equals to cached object to determine if it's a delete mutation 
+  // but there may be instances that the object is evicted from cache or never cached previously.
+  const deleteKeywords = ['delete', 'remove']
+  let isDelete = false;
+  for (const keyword of deleteKeywords) {
+    const regex = new RegExp(keyword);
+    if (queryString.search(regex) !== -1) isDelete = true;
+  }
+
   let normalizedData;
   let cachedVal;
   for (const redisKey in normalizedMutation) {
     normalizedData = normalizedMutation[redisKey];
     cachedVal = await cache.cacheReadObject(redisKey);
 
-    // if response from mutation and cached response values are same then it's a delete mutation
-    // edge case not covered for delete mutation: if value is not currently cached in redis it will be treated as add mutation and stale value will be written to redis 
+    // if response from mutation and cached response values are same then we assume it's a delete mutation
     if (cachedVal !== undefined && deepEqual(normalizedData, cachedVal)) {
       await cache.cacheDelete(redisKey)
-      return 'Delete mutation -> Cache delete performed'
+      return 'Cached object deleted due to mutation'
     } else {
-      // otherwise it's an update mutation because mutation response doesn't match cached response values so we overwrite it
-      // Edge case: update is done without changing any values... cache will be deleted from redis and needs to be rewritten to cache on the next request.
+      // otherwise it's an update or add mutation because mutation response doesn't match cached response values so we overwrite it
+      // Edge case: update is done without changing any values... cache will be deleted from redis because the response obj and cached obj will be equal
+      // we put it in the backburner because it doesn't make our cache stale, we would just perform an extra operation to re-cache the missing value when a request comes in
       await cache.cacheWriteObject(redisKey, normalizedData)
-      return 'Update or Add mutation -> Cache overwrite performed'
+      // extra check to delete the cached object if it contains certain keywords
+      if (isDelete) {
+        await cache.cacheDelete(redisKey)
+        return 'Cached object deleted due to mutation'
+      }
+      return 'Cached object updated or added due to mutation'
     }
   }
 }

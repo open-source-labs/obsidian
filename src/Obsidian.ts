@@ -114,8 +114,9 @@ export async function ObsidianRouter<T>({
           body.operationName || undefined
         );
         const normalizedGQLResponse = normalizeObject(gqlResponse, customIdentifier);
-        if(isMutation(body)) { 
-          invalidateCache(normalizedGQLResponse);
+        if(isMutation(body)) {
+          const queryString = await request.body().value;
+          invalidateCache(normalizedGQLResponse, queryString.query);
         }
         else {
           const transformedGQLResponse = transformResponse(normalizedGQLResponse, customIdentifier);
