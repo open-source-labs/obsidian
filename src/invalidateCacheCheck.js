@@ -6,7 +6,7 @@ import { deepEqual } from "./utils.js";
 
 const cache = new Cache();
 
-export function invalidateCacheCheck(body) {
+export function isMutation(body) {
   let isMutation = false;
   let ast = gql(body.query);
   
@@ -31,10 +31,11 @@ export function invalidateCacheCheck(body) {
 }
 
 export async function invalidateCache(normalizedMutation) {
-
+  let normalizedData;
+  let cachedVal;
   for (const redisKey in normalizedMutation) {
-    const normalizedData = normalizedMutation[redisKey];
-    const cachedVal = await cache.cacheReadObject(redisKey);
+    normalizedData = normalizedMutation[redisKey];
+    cachedVal = await cache.cacheReadObject(redisKey);
 
     // if response from mutation and cached response values are same then it's a delete mutation
     // edge case not covered for delete mutation: if value is not currently cached in redis it will be treated as add mutation and stale value will be written to redis 
@@ -54,21 +55,21 @@ export async function invalidateCache(normalizedMutation) {
 
 // THE BELOW NEEDS WORK TO BREAK UP THE CACHE INVALIDATION FUNCTIONALITY
 
-// const isAddMutation = (cachedVal) => {
-//   (cachedVal === undefined) ? true : false;
-// }
+const isAddMutation = (cachedVal) => {
+  (cachedVal === undefined) ? true : false;
+}
 
-// const isDeleteMutation = (cachedVal, normalizedResponseObjVal) => {
-//     deepEqual(normalizedData, cachedVal) ? true : false
-// }
+const isDeleteMutation = (cachedVal, normalizedResponseObjVal) => {
+    deepEqual(normalizedData, cachedVal) ? true : false
+}
 
-// const isUpdateMutation = (cachedVal, normalizedResponseObjVal) => {
-//     if(!isAddMutation(cachedVal) && !isDeleteMutation(cachedVal, normalizedResponseObjVal)) return true;
-//     return false;
-// }
+const isUpdateMutation = (cachedVal, normalizedResponseObjVal) => {
+    if(!isAddMutation(cachedVal) && !isDeleteMutation(cachedVal, normalizedResponseObjVal)) return true;
+    return false;
+}
 
-// const cacheInvalidationJS = async (redisKey, cachedVal, normalizedResponseObjVal) => {
-//   if(isAddMutation(cachedVal)) await cache.cacheWriteObject(redisKey, normalizedResponseObjVal)
-//   else if(isDeleteMutation(cachedVal, normalizedResponseObjVal)) await cache.cacheDelete(redisKey)
-//   else if(isUpdateMutation(cachedVal, normalizedResponseObjVal)) await cache.cacheWriteObject(redisKey, normalizedResponseObjVal)
-// }
+export const cacheInvalidation = async (redisKey, cachedVal, normalizedResponseObjVal) => {
+  if(isAddMutation(cachedVal)) await cache.cacheWriteObject(redisKey, normalizedResponseObjVal)
+  else if(isDeleteMutation(cachedVal, normalizedResponseObjVal)) await cache.cacheDelete(redisKey)
+  else if(isUpdateMutation(cachedVal, normalizedResponseObjVal)) await cache.cacheWriteObject(redisKey, normalizedResponseObjVal)
+}

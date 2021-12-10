@@ -93,7 +93,7 @@ export async function ObsidianRouter<T>({
     cache.configSet('maxmemory', maxmemory);
   }
 
-  await router.post(path, async (ctx: any) => {
+  await router.post(path, async (ctx: any): => {
     var t0 = performance.now();
 
     const { response, request } = ctx;

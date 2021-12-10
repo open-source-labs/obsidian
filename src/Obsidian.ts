@@ -1,16 +1,15 @@
 import { graphql } from 'https://cdn.pika.dev/graphql@15.0.0';
 import { renderPlaygroundPage } from 'https://deno.land/x/oak_graphql@0.6.2/graphql-playground-html/render-playground-html.ts';
 import { makeExecutableSchema } from 'https://deno.land/x/oak_graphql@0.6.2/graphql-tools/schema/makeExecutableSchema.ts';
-import LFUCache from './Browser/lfuBrowserCache.js';
 import { Cache } from './quickCache.js';
 import queryDepthLimiter from './DoSSecurity.ts';
 import { restructure } from './restructure.ts';
-import { invalidateCacheCheck, invalidateCache } from './invalidateCacheCheck.js';
-import { normalizeResult, cachePrimaryFields } from './astNormalize.js'
+import { invalidateCache } from './invalidateCacheCheck.js';
 import { rebuildFromQuery } from './rebuild.js'
-import { mapSelectionSet } from './mapSelections.js'
 import { normalizeObject } from './normalize.ts'
 import { transformResponse, detransformResponse } from './transformResponse.ts'
+import { isMutation } from './invalidateCacheCheck.js'
+// import LFUCache from './Browser/lfuBrowserCache.js';
 
 interface Constructable<T> {
   new(...args: any): T & OakRouter;
@@ -29,12 +28,12 @@ export interface ObsidianRouterOptions<T> {
   resolvers: ResolversProps;
   context?: (ctx: any) => any;
   usePlayground?: boolean;
-  useCache?: boolean;
+  useCache?: boolean; // trivial parameter
   redisPort?: number;
   policy?: string;
   maxmemory?: string;
   maxQueryDepth?: number;
-  useQueryCache?: boolean;
+  useQueryCache?: boolean; // trivial parameter
   useRebuildCache?: boolean;
   customIdentifier?: Array<string>;
 }
@@ -71,106 +70,50 @@ export async function ObsidianRouter<T>({
 }: ObsidianRouterOptions<T>): Promise<T> {
   redisPortExport = redisPort;
   const router = new Router();
-
   const schema = makeExecutableSchema({ typeDefs, resolvers });
-
-  // If using LFU Browser Caching, the following cache line needs to be uncommented.
-  //const cache = new LFUCache(50);
-
-  // If using Redis caching, the following lines need to be uncommented.
-
-  const cache = new Cache();
-
-  // clear redis cache when restarting the server
-
+  // const cache = new LFUCache(50); // If using LFU Browser Caching, uncomment line
+  const cache = new Cache(); // If using Redis caching, uncomment line
   cache.cacheClear();
-
-  // set redis configurations
-
-  if (policy || maxmemory) {
+  if (policy || maxmemory) { // set redis configurations
     cache.configSet('maxmemory-policy', policy);
     cache.configSet('maxmemory', maxmemory);
   }
 
-  await router.post(path, async (ctx: any) => {
-    var t0 = performance.now();
-
+  await router.post(path, async (ctx: any):Promise => {
+    const t0 = performance.now();
     const { response, request } = ctx;
+    if (!request.hasBody) return 
+    try {
 
-    if (request.hasBody) {
-      try {
-        const contextResult = context ? await context(ctx) : undefined;
-        let body = await request.body().value;
-        
-        
-        // If a securty limit is set for maxQueryDepth, invoke queryDepthLimiter
-        // which throws error if query depth exceeds maximum
-        if (maxQueryDepth) queryDepthLimiter(body.query, maxQueryDepth);
-        
-        // we run restructre to get rid of variables and fragments 
-        
-        
-        body = { query: restructure(body) };
+      // Scrub query
+      const contextResult = context ? await context(ctx) : undefined;
+      let body = await request.body().value;
+      if (maxQueryDepth) queryDepthLimiter(body.query, maxQueryDepth); // If a securty limit is set for maxQueryDepth, invoke queryDepthLimiter, which throws error if query depth exceeds maximum
+      body = { query: restructure(body) }; // Restructre gets rid of variables and fragments from the query
 
-
-        const isMutation = await invalidateCacheCheck(body);
-        if (isMutation) {
-            const mutationResponse = await (graphql as any)( // returns the response from mutation. This can be used to construct hash and check in redis if key already exists
-              schema,
-              body.query,
-              resolvers,
-              contextResult,
-              body.variables || undefined,
-              body.operationName || undefined
-            );
-            await invalidateCache(normalizeObject(mutationResponse, customIdentifier))
-            response.body = await mutationResponse;
-            return;
-        }
-
-        // Variable to block the normalization of mutations //
-        let toNormalize = true;
-
-        if (useCache && !isMutation) {
-
-          // Send query off to be destructured and found in Redis if possible //
-
-          let obsidianReturn
-          if (useQueryCache) {
-            obsidianReturn = await cache.read(body.query);
-          }
-          if (!obsidianReturn && useRebuildCache) {
-
-            const rebuildReturn = await rebuildFromQuery(body.query);
-
-
-            obsidianReturn = rebuildReturn
-          }
-
-          if (obsidianReturn) {
-
-            // detransform MC
-            obsidianReturn = await detransformResponse(body.query, obsidianReturn);
-            response.status = 200;
-            response.body = obsidianReturn;
-            var t1 = performance.now();
-            console.log(
-              '%c Obsidian retrieved data from cache and took ' +
-              (t1 - t0) +
-              ' milliseconds.', "background: #222; color: #00FF00"
-            );
-
-            if (useQueryCache) {
-              // transform for big query
-              obsidianReturn = transformResponse(obsidianReturn, customIdentifier);
-              await cache.write(body.query, obsidianReturn, false);
-            }
-            return;
-          }
-        }
-
-        // if not in cache, it will fetch a new response from database
-        const result = await (graphql as any)(
+      // Is query in cache? 
+      // If not in cache and set to use rebuild cache: rebuild from query - not sure what this does
+      let cacheQueryValue = await cache.read(body.query)
+      if(!cacheQueryValue && useRebuildCache){
+        cacheQueryValue = await rebuildFromQuery(body.query);
+      }
+      // If in cache: detransform and attach cache value in response body
+      else if (useCache && useQueryCache && cacheQueryValue){
+        const detransformedCacheQueryValue = await detransformResponse(body.query, cacheQueryValue)
+        response.status = 200;
+        response.body = detransformedCacheQueryValue;
+        const t1 = performance.now();
+        console.log(
+          '%c Obsidian retrieved data from cache and took ' +
+          (t1 - t0) +
+          ' milliseconds.', "background: #222; color: #00FF00"
+        );
+      }
+      // If not in cache: 
+        // If mutation: invalidate cache
+        // If read query: run query, normalize GQL response, transform GQL response, write to cache, and write pieces of normalized GQL response objects
+      else if(useCache && useQueryCache && !cacheQueryValue){
+        const gqlResponse = await (graphql as any)(
           schema,
           body.query,
           resolvers,
@@ -178,65 +121,36 @@ export async function ObsidianRouter<T>({
           body.variables || undefined,
           body.operationName || undefined
         );
-
-        // Send database response to client //
-        response.status = 200;
-        response.body = result;
-
-        //cache of whole query completely non normalized
-        //boolean to allow the full query cache
-        if (useQueryCache && useCache && !isMutation) {
-          const transformedResult = transformResponse(result, customIdentifier); // MC
-          await cache.write(body.query, transformedResult, false); 
-        }
-
-        // Normalize response and store in cache //
-        if (useCache && toNormalize && !result.errors && useRebuildCache && !isMutation) {
-
-          //run to map alias 
-          // let map = mapSelectionSet(body.query)
-
-          // this normalizeds the result and saves to REDIS
-          let normalized
-          // uses base id, __typename if given customIdentifer array is not populated
-          if (customIdentifier.length === 0) {
-            // normalized = await normalizeObject(response.body, customIdentifier)
-            return;
-            
-          } else {
-            // this uses the custom identifier if given
-            normalized = await normalizeObject(response.body, customIdentifier)
-            for(const key in normalized){
-              await cache.cacheWriteObject(key, normalized[key]); 
-            }
-            //loop thru normalized
-              // write to Redis
+        const normalizedGQLResponse = normalizeObject(gqlResponse, customIdentifier);
+        if(isMutation(body)) invalidateCache(normalizedGQLResponse);
+        else {
+          const transformedGQLResponse = transformResponse(normalizedGQLResponse, customIdentifier);
+          await cache.write(body.query, transformedGQLResponse, false);
+          for(const key in normalizedGQLResponse){
+            await cache.cacheWriteObject(key, normalizedGQLResponse[key]); 
           }
-
-          // await cachePrimaryFields(normalized, body.query, map) //[Movie7, Movie15, Movie21]: 
+          const t1 = performance.now();
+          console.log(
+            '%c Obsidian received new data and took ' +
+            (t1 - t0) +
+            ' milliseconds', 'background: #222; color: #FFFF00'
+          );
         }
-
-        var t1 = performance.now();
-        console.log(
-          '%c Obsidian received new data and took ' + (t1 - t0) + ' milliseconds', 'background: #222; color: #FFFF00'
-        );
-
-        return;
-      } catch (error) {
-        response.status = 200;
-        response.body = {
-          data: null,
-          errors: [
-            {
-              message: error.message ? error.message : error,
-            },
-          ],
-        };
-        console.error('Error: ', error.message);
-        return;
       }
+    } catch (error) {
+      response.status = 400;
+      response.body = {
+        data: null,
+        errors: [
+          {
+            message: error.message ? error.message : error,
+          },
+        ],
+      };
+      console.error('Error: ', error.message);
     }
   });
+
   // serve graphql playground
   await router.get(path, async (ctx: any) => {
     const { request, response } = ctx;

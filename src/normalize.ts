@@ -1,26 +1,4 @@
 
-
-/** isHashableKey - O(n) such that n is the length of hashableKeys array
- * 
- * Returns a boolean indicating that the passed in value is a hasbale key
- *
- * @param {string} key  Key to test if hashable
- * @param {Array} hashableKeys Array of hashable keys
- * @return {boolean} Hashable or not
- */
-export const isHashableKey = (key: string, hashableKeys: string[]): boolean => {
-  const hashableKeysSet = new Set(hashableKeys);
-  return hashableKeysSet.has(key)
-}
-// const arrHashableKeys = ["id", "__typename"];
-// console.log(isHashableKey("id", arrHashableKeys));
-// console.log(isHashableKey("__typename", arrHashableKeys));
-// console.log(isHashableKey(["id"], arrHashableKeys));
-// console.log(isHashableKey({ "id": "id" }, arrHashableKeys));
-// console.log(isHashableKey("Brad", arrHashableKeys));
-
-/* ----------------------------------------------------------------*/
-
 /* ----------------------------------------------------------------*/
 
 /** containsHashableObject -
@@ -162,7 +140,6 @@ export const isHashableObject = (objectInQuestion: any, hashableKeys: Array<stri
 
 /* ----------------------------------------------------------------*/
 export type GenericObject = { [key:string]: any};
-type ArrayOfObjects = GenericObject[]
 type FlatObject = { [key:string]: (string | number | boolean)};
 /** hashMaker -
  * Creates unique hash string for an object with hashable keys with hashable object passed in
@@ -174,19 +151,11 @@ type FlatObject = { [key:string]: (string | number | boolean)};
 export const hashMaker = (hashableObject: FlatObject, hashableKeys:Array<string>):string => {   
     let hash = '';
     let value = '';
-
-    // for(let i = hashableKeys.length - 1; i >= 0; i--){
-    //     value = '~';
-    //     value += hashableObject[hashableKeys[i]]
-    //     hash += value;
-    // }
-    
     for(const hashableKey of hashableKeys){
-        let value = '~';
+        value = '~';
         value += hashableObject[hashableKey]
         hash += value;
-    }
-    
+    }+
     return hash;
 }
 // const hashMaker1 = {'id': 7, '__typename': 'Movie', 'title': 'Ad Astra', 'releaseYear': 2019, 'genre': 'SCIFI'}
@@ -15493,7 +15462,6 @@ export const normalizeObject = (nestedObject: GenericObject, hashableKeys:Array<
 //                 }
 //               ]
 //             }
-//             //console.log(normalizeObject(scifiMovies, arrHashableKeys))
 //           ]
 //         }
 //     }
