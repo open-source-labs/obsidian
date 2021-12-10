@@ -19,7 +19,7 @@
     const objectInQuestionKeysSet = new Set(Object.keys(objectInQuestion));
     return hashableKeys.every(key => objectInQuestionKeysSet.has(key))
 }
-
+// const arrHashableKeys = ['id', '__typename'];
 // const containsHashableObjFalse1 =
 //   [
 //     "id",
@@ -155,7 +155,7 @@ export const hashMaker = (hashableObject: FlatObject, hashableKeys:Array<string>
         value = '~';
         value += hashableObject[hashableKey]
         hash += value;
-    }+
+    }
     return hash;
 }
 // const hashMaker1 = {'id': 7, '__typename': 'Movie', 'title': 'Ad Astra', 'releaseYear': 2019, 'genre': 'SCIFI'}

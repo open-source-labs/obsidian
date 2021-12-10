@@ -66,7 +66,7 @@ export async function ObsidianRouter<T>({
   maxQueryDepth = 0,
   useQueryCache = true,
   useRebuildCache = true,
-  customIdentifier = ["id", "__typename"],
+  customIdentifier = ["__typename", "id"],
 }: ObsidianRouterOptions<T>): Promise<T> {
   redisPortExport = redisPort;
   const router = new Router();
@@ -79,26 +79,18 @@ export async function ObsidianRouter<T>({
     cache.configSet('maxmemory', maxmemory);
   }
 
-  await router.post(path, async (ctx: any):Promise => {
+  await router.post(path, async (ctx: any) => {
     const t0 = performance.now();
     const { response, request } = ctx;
-    if (!request.hasBody) return 
+    if (!request.hasBody) return; 
     try {
-
-      // Scrub query
       const contextResult = context ? await context(ctx) : undefined;
       let body = await request.body().value;
       if (maxQueryDepth) queryDepthLimiter(body.query, maxQueryDepth); // If a securty limit is set for maxQueryDepth, invoke queryDepthLimiter, which throws error if query depth exceeds maximum
       body = { query: restructure(body) }; // Restructre gets rid of variables and fragments from the query
-
       // Is query in cache? 
-      // If not in cache and set to use rebuild cache: rebuild from query - not sure what this does
-      let cacheQueryValue = await cache.read(body.query)
-      if(!cacheQueryValue && useRebuildCache){
-        cacheQueryValue = await rebuildFromQuery(body.query);
-      }
-      // If in cache: detransform and attach cache value in response body
-      else if (useCache && useQueryCache && cacheQueryValue){
+      let cacheQueryValue = await cache.read(body.query) //problem?
+      if (useCache && useQueryCache && cacheQueryValue){
         const detransformedCacheQueryValue = await detransformResponse(body.query, cacheQueryValue)
         response.status = 200;
         response.body = detransformedCacheQueryValue;
@@ -122,20 +114,24 @@ export async function ObsidianRouter<T>({
           body.operationName || undefined
         );
         const normalizedGQLResponse = normalizeObject(gqlResponse, customIdentifier);
-        if(isMutation(body)) invalidateCache(normalizedGQLResponse);
+        if(isMutation(body)) { 
+          invalidateCache(normalizedGQLResponse);
+        }
         else {
           const transformedGQLResponse = transformResponse(normalizedGQLResponse, customIdentifier);
           await cache.write(body.query, transformedGQLResponse, false);
           for(const key in normalizedGQLResponse){
             await cache.cacheWriteObject(key, normalizedGQLResponse[key]); 
           }
-          const t1 = performance.now();
-          console.log(
-            '%c Obsidian received new data and took ' +
-            (t1 - t0) +
-            ' milliseconds', 'background: #222; color: #FFFF00'
-          );
         }
+        response.status = 200;
+        response.body = gqlResponse;
+        const t1 = performance.now();
+        console.log(
+          '%c Obsidian received new data and took ' +
+          (t1 - t0) +
+          ' milliseconds', 'background: #222; color: #FFFF00'
+        );
       }
     } catch (error) {
       response.status = 400;
