@@ -75,12 +75,12 @@ export class Cache {
   
     cacheReadObject = async (hash, field) => {
       if (field) {
-        let returnValue = await redisdb.hget(hash, JSON.stringify(field));
+        let returnValue = await redis.hget(hash, JSON.stringify(field));
   
         if (returnValue === undefined) return undefined;
         return JSON.parse(returnValue);
       } else {
-        let objArray = await redisdb.hgetall(hash);
+        let objArray = await redis.hgetall(hash);
         if (objArray.length == 0) return undefined;
         let parsedArray = objArray.map((entry) => JSON.parse(entry));
   

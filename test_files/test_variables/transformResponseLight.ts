@@ -1,6 +1,8 @@
-import { isHashableObject, containsHashableObject, hashMaker } from './normalize.ts';
-import { GenericObject } from './normalize.ts';
-import { Cache } from './quickCache.js'
+// need redis v0.23.2 to be compatible with Deno testing. That is why we need to separate transformResponseLight.ts from transformResponse.ts
+
+import { isHashableObject, containsHashableObject, hashMaker } from '../../src/normalize.ts';
+import { GenericObject } from '../../src/normalize.ts';
+import { Cache } from './quickCacheLight.js'
 const cache = new Cache;
 
 const isArrayOfHashableObjects = (arrayOfObjects: Array<GenericObject>, hashableKeys: Array<string>):boolean => {
@@ -62,11 +64,11 @@ export const detransformResponse = async (queryKey: String, transformedValue: Ge
   matches.forEach(match => {
     fields.push(match[1].trim());
   });
-  
   const recursiveDetransform = async (transformedValue: GenericObject, fields: Array<string>, depth: number = 0):Promise<GenericObject> => {
     const result: GenericObject = {}; 
     let currDepth = depth;
 
+    console.log('tv-> ', transformedValue);
     // base case: innermost object with key:value pair of hash:{}
     if (Object.keys(transformedValue).length === 0) {
       return result;
@@ -75,8 +77,9 @@ export const detransformResponse = async (queryKey: String, transformedValue: Ge
       result[currField] = [];
   
       for (let hash in transformedValue) { 
+        console.log('hash -> ', hash);
         const redisValue: GenericObject = await cache.cacheReadObject(hash);
-
+        console.log('redisVal -> ', redisValue);
         // edge case in which our eviction strategy has pushed partial Cache data out of Redis
         if (!redisValue) {
           return {'cache evicted': {}};
@@ -94,6 +97,6 @@ export const detransformResponse = async (queryKey: String, transformedValue: Ge
   }
   const detransformedResult: GenericObject = {'data' : {}};
   detransformedResult.data = await recursiveDetransform(transformedValue, fields);
-
+  console.log('dt-> ', detransformedResult);
   return detransformedResult;
 }
