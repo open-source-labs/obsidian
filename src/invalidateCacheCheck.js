@@ -7,10 +7,10 @@ import { deepEqual } from "./utils.js";
 const cache = new Cache();
 
 /**
- * Returns true if qgl querys' operation field represents mutation. Otherwise returns false.
- * @param {object} body - Object containing the query string
+ * @param {object} gqlQuery - Object containing the query string
+ * @return {boolean} Boolean indicating if it's a mutation query
  */
-export function isMutation(body) {
+export function isMutation(gqlQuery) {
   let isMutation = false;
   let ast = gql(body.query);
 
@@ -42,6 +42,7 @@ export function isMutation(body) {
  * }
  * @param {string} queryString - raw mutation query.
  * Ex: 'mutation { addMovie(input: {title: "sdfsdg", releaseYear: 1234, genre: ACTION }) { __typename  id ti...'
+ * @return {boolean} Boolean indicating if objectInQuestion is hashable or not
  */
 export async function invalidateCache(normalizedMutation, queryString) {
   // isDelete flag is a safety net for delete mutations.
@@ -62,7 +63,7 @@ export async function invalidateCache(normalizedMutation, queryString) {
     cachedVal = await cache.cacheReadObject(redisKey);
 
     // if response from mutation and cached response values are same then we assume it's a delete mutation
-    if (cachedVal !== undefined && deepEqual(normalizedData, cachedVal)) {
+    if (cachedVal !== undefined && deepEqual(normalizedData, cachedVal) || isDelete) {
       await cache.cacheDelete(redisKey)
       return 'Cached object deleted due to mutation'
     } else {
@@ -71,10 +72,6 @@ export async function invalidateCache(normalizedMutation, queryString) {
       // we put it in the backburner because it doesn't make our cache stale, we would just perform an extra operation to re-cache the missing value when a request comes in
       await cache.cacheWriteObject(redisKey, normalizedData)
       // extra check to delete the cached object if it contains certain keywords
-      if (isDelete) {
-        await cache.cacheDelete(redisKey)
-        return 'Cached object deleted due to mutation'
-      }
       return 'Cached object updated or added due to mutation'
     }
   }
