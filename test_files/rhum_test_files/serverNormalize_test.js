@@ -1,4 +1,4 @@
-import { assert, equal } from "https://deno.land/std/testing/asserts.ts";
+import { assert, equal, assertStrictEquals, assertEquals} from "https://deno.land/std/testing/asserts.ts";
 import { containsHashableObject, isHashableObject, hashMaker, printHashableObject, normalizeObject} from '../../src/normalize.ts';
 import { serverNormalizeTestVariables } from '../test_variables/serverNormalize_variables.ts';
 const arrOfHashableKeys = ['id', '__typename'];
@@ -48,10 +48,13 @@ Deno.test('normalize.ts - hashMaker - Creates unique hash when a hashable object
 
 // printHashableObject
 Deno.test('normalize.ts - printHashableObject - Prints a hashable object when object with hashable key properties and no nesting is passed through', () => {
-    const printedHashableObject1 = printHashableObject(serverNormalizeTestVariables.containsHashableObjTrue1);
-    console.log(printedHashableObject1)
-    assertEquals(printedHashableObject1, {"id": "11", "__typename": "Movie", "title": "Ad Astra"});
+    assertEquals(printHashableObject(serverNormalizeTestVariables.containsHashableObjTrue1), {"id": "11", "__typename": "Movie", "title": "Ad Astra"});
 })
-Deno.test('normalize.ts - hashMaker - Creates unique hash when a hashable object is passed through', () => {
-    assertEquals(hashMaker(serverNormalizeTestVariables.isHashableObjTrue2, arrOfHashableKeys), "~1~Actor");
+Deno.test('normalize.ts - printHashableObject - Prints a hashable object when object with hashable key properties and no nesting is passed through', () => {
+    assertEquals(printHashableObject(serverNormalizeTestVariables.containsHashableObjTrue2), {"id": "7", "__typename": "Movie", "title": "Ad Astra", "releaseYear": 2019, "genre": "SCIFI"});
 })
+Deno.test('normalize.ts - printHashableObject - Prints a hashable object when object with hashable key properties and no nesting is passed through', () => {
+    assertEquals(printHashableObject(serverNormalizeTestVariables.containsHashableObjTrue3), {"id": "1", "__typename": "Actor", "firstName": "Brad",  "lastName": "Pitt"});
+})
+
+// normalizeObject
