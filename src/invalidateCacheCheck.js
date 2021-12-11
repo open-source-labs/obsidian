@@ -12,7 +12,7 @@ const cache = new Cache();
  */
 export function isMutation(gqlQuery) {
   let isMutation = false;
-  let ast = gql(body.query);
+  let ast = gql(gqlQuery.query);
 
   const checkMutationVisitor = {
     OperationDefinition: (node) => {
