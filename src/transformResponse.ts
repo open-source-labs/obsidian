@@ -51,7 +51,7 @@ export const transformResponse = (responseObject: any, hashableKeys: Array<strin
 * @param {GenericObject} transformedValue Nested object representing of references, where the references are hashes in Redis
 * @return {GenericObject} Nested object representing the original graphQL response object for a given queryKey
 */
-export const detransformResponse = async (queryKey: String, transformedValue: GenericObject):Promise<GenericObject> => {
+export const detransformResponse = async (queryKey: String, transformedValue: any):Promise<any> => {
   // remove all text within parentheses aka '(input: ...)'
   queryKey = queryKey.replace(/\(([^)]+)\)/, '');
   // save Regex matches for line break followed by '{'
@@ -63,7 +63,7 @@ export const detransformResponse = async (queryKey: String, transformedValue: Ge
     fields.push(match[1].trim());
   });
   
-  const recursiveDetransform = async (transformedValue: GenericObject, fields: Array<string>, depth: number = 0):Promise<GenericObject> => {
+  const recursiveDetransform = async (transformedValue: any, fields: Array<string>, depth: number = 0):Promise<any> => {
     const result: GenericObject = {}; 
     let currDepth = depth;
 
@@ -79,7 +79,7 @@ export const detransformResponse = async (queryKey: String, transformedValue: Ge
 
         // edge case in which our eviction strategy has pushed partial Cache data out of Redis
         if (!redisValue) {
-          return {'cache evicted': {}};
+          return 'cacheEvicted';
         }
 
         result[currField].push(redisValue);
@@ -92,8 +92,13 @@ export const detransformResponse = async (queryKey: String, transformedValue: Ge
       return result;
     }
   }
-  const detransformedResult: GenericObject = {'data' : {}};
-  detransformedResult.data = await recursiveDetransform(transformedValue, fields);
+
+  let detransformedResult: any = {'data' : {}};
+  if (await recursiveDetransform(transformedValue, fields) === 'cacheEvicted') {
+    detransformedResult = undefined;
+  } else {
+    detransformedResult.data = await recursiveDetransform(transformedValue, fields);
+  }
 
   return detransformedResult;
 }

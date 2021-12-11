@@ -88,23 +88,31 @@ export async function ObsidianRouter<T>({
       let body = await request.body().value;
       if (maxQueryDepth) queryDepthLimiter(body.query, maxQueryDepth); // If a securty limit is set for maxQueryDepth, invoke queryDepthLimiter, which throws error if query depth exceeds maximum
       body = { query: restructure(body) }; // Restructre gets rid of variables and fragments from the query
+      let cacheEvicted = false;
+      let cacheQueryValue = await cache.read(body.query)
       // Is query in cache? 
-      let cacheQueryValue = await cache.read(body.query) //problem?
       if (useCache && useQueryCache && cacheQueryValue){
-        const detransformedCacheQueryValue = await detransformResponse(body.query, cacheQueryValue)
-        response.status = 200;
-        response.body = detransformedCacheQueryValue;
-        const t1 = performance.now();
-        console.log(
-          '%c Obsidian retrieved data from cache and took ' +
-          (t1 - t0) +
-          ' milliseconds.', "background: #222; color: #00FF00"
-        );
-      }
+        let detransformedCacheQueryValue = await detransformResponse(body.query, cacheQueryValue)
+        if (!detransformedCacheQueryValue) {
+          // cache was evicted if any partial cache is missing, which causes detransformResponse to return undefined
+          console.log('cache was evicted!');
+          cacheQueryValue = undefined;
+          cacheEvicted = true;
+        } else {
+          response.status = 200;
+          response.body = detransformedCacheQueryValue;
+          const t1 = performance.now();
+          console.log(
+            '%c Obsidian retrieved data from cache and took ' +
+            (t1 - t0) +
+            ' milliseconds.', "background: #222; color: #00FF00"
+          );
+        }
+        
+      };
       // If not in cache: 
-        // If mutation: invalidate cache
-        // If read query: run query, normalize GQL response, transform GQL response, write to cache, and write pieces of normalized GQL response objects
-      else if(useCache && useQueryCache && !cacheQueryValue){
+      if(useCache && useQueryCache && !cacheQueryValue){
+        console.log('cacheQueryValue is undefined 111');
         const gqlResponse = await (graphql as any)(
           schema,
           body.query,
@@ -114,12 +122,19 @@ export async function ObsidianRouter<T>({
           body.operationName || undefined
         );
         const normalizedGQLResponse = normalizeObject(gqlResponse, customIdentifier);
+
+        // If mutation: invalidate cache
         if(isMutation(body)) { 
           invalidateCache(normalizedGQLResponse);
         }
+        // If read query: run query, normalize GQL response, transform GQL response, write to cache, and write pieces of normalized GQL response objects
         else {
-          const transformedGQLResponse = transformResponse(gqlResponse, customIdentifier);
-          await cache.write(body.query, transformedGQLResponse, false);
+          if (!cacheEvicted) {
+            // if cache was not evicted, then this is the first time running this read query. Transform original GQL response to object of references:
+            console.log('cache not evicted 132')
+            const transformedGQLResponse = transformResponse(gqlResponse, customIdentifier);
+            await cache.write(body.query, transformedGQLResponse, false);
+          }
           for(const key in normalizedGQLResponse){
             await cache.cacheWriteObject(key, normalizedGQLResponse[key]); 
           }
