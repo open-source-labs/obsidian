@@ -1,4 +1,4 @@
-import { Rhum } from 'https://deno.land/x/rhum@v1.1.4/mod.ts';
+import { Rhum } from 'https://deno.land/x/rhum@v1.1.11/mod.ts';
 import destructureQueries, {
   findQueryStrings,
   createQueriesObj,
