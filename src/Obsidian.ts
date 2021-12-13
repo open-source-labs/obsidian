@@ -4,12 +4,10 @@ import { makeExecutableSchema } from 'https://deno.land/x/oak_graphql@0.6.2/grap
 import { Cache } from './quickCache.js';
 import queryDepthLimiter from './DoSSecurity.ts';
 import { restructure } from './restructure.ts';
-import { invalidateCache } from './invalidateCacheCheck.js';
 import { rebuildFromQuery } from './rebuild.js'
 import { normalizeObject } from './normalize.ts'
 import { transformResponse, detransformResponse } from './transformResponse.ts'
-import { isMutation } from './invalidateCacheCheck.js'
-// import LFUCache from './Browser/lfuBrowserCache.js';
+import { isMutation, invalidateCache } from './invalidateCacheCheck.ts'
 
 interface Constructable<T> {
   new(...args: any): T & OakRouter;
@@ -114,8 +112,9 @@ export async function ObsidianRouter<T>({
           body.operationName || undefined
         );
         const normalizedGQLResponse = normalizeObject(gqlResponse, customIdentifier);
-        if(isMutation(body)) { 
-          invalidateCache(normalizedGQLResponse);
+        if(isMutation(body)) {
+          const queryString = await request.body().value;
+          invalidateCache(normalizedGQLResponse, queryString.query);
         }
         else {
           const transformedGQLResponse = transformResponse(gqlResponse, customIdentifier);
