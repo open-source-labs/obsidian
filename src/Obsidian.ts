@@ -109,7 +109,6 @@ export async function ObsidianRouter<T>({
       };
       // If not in cache: 
       if(useCache && useQueryCache && !cacheQueryValue){
-        console.log('cacheQueryValue is undefined 111');
         const gqlResponse = await (graphql as any)(
           schema,
           body.query,
