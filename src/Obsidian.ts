@@ -93,7 +93,6 @@ export async function ObsidianRouter<T>({
         let detransformedCacheQueryValue = await detransformResponse(body.query, cacheQueryValue)
         if (!detransformedCacheQueryValue) {
           // cache was evicted if any partial cache is missing, which causes detransformResponse to return undefined
-          console.log('cache was evicted!');
           cacheQueryValue = undefined;
           cacheEvicted = true;
         } else {
@@ -128,7 +127,6 @@ export async function ObsidianRouter<T>({
         else {
           if (!cacheEvicted) {
             // if cache was not evicted, then this is the first time running this read query. Transform original GQL response to object of references:
-            console.log('cache not evicted 132')
             const transformedGQLResponse = transformResponse(gqlResponse, customIdentifier);
             await cache.write(body.query, transformedGQLResponse, false);
           }

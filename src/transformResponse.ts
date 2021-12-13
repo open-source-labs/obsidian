@@ -63,11 +63,12 @@ export const detransformResponse = async (queryKey: String, transformedValue: an
     fields.push(match[1].trim());
   });
   
+  // define recursiveDetransform function body for use later
   const recursiveDetransform = async (transformedValue: any, fields: Array<string>, depth: number = 0):Promise<any> => {
-    const result: GenericObject = {}; 
+    let result: any = {}; 
     let currDepth = depth;
 
-    // base case: innermost object with key:value pair of hash:{}
+    // base case: transformedValue is innermost object aka empty object 
     if (Object.keys(transformedValue).length === 0) {
       return result;
     } else {
@@ -84,17 +85,26 @@ export const detransformResponse = async (queryKey: String, transformedValue: an
 
         result[currField].push(redisValue);
         
-        result[currField][result[currField].length - 1] = Object.assign(
-          result[currField][result[currField].length - 1], 
-          await recursiveDetransform(transformedValue[hash], fields, depth = currDepth + 1)
-        )
+        let recursiveResult = await recursiveDetransform(transformedValue[hash], fields, depth = currDepth + 1)
+
+        // edge case in which our eviction strategy has pushed partial Cache data out of Redis, for recursive call
+        if (recursiveResult === 'cacheEvicted') {
+          return 'cacheEvicted';
+        // normal case with no cache eviction
+        } else {
+          result[currField][result[currField].length - 1] = Object.assign(
+            result[currField][result[currField].length - 1], recursiveResult);
+        }
+
       }
       return result;
     }
   }
 
+  // actually call recursiveDetransform
   let detransformedResult: any = {'data' : {}};
-  if (await recursiveDetransform(transformedValue, fields) === 'cacheEvicted') {
+  const detransformedSubresult = await recursiveDetransform(transformedValue, fields)
+  if (detransformedSubresult === 'cacheEvicted') {
     detransformedResult = undefined;
   } else {
     detransformedResult.data = await recursiveDetransform(transformedValue, fields);
