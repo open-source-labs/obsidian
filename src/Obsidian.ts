@@ -114,6 +114,8 @@ export async function ObsidianRouter<T>({
           body.variables || undefined,
           body.operationName || undefined
         );
+        response.status = 200;
+        response.body = gqlResponse;
         const normalizedGQLResponse = normalizeObject(gqlResponse, customIdentifier);
         if(isMutation(body)) { 
           invalidateCache(normalizedGQLResponse);
@@ -125,8 +127,6 @@ export async function ObsidianRouter<T>({
             await cache.cacheWriteObject(key, normalizedGQLResponse[key]); 
           }
         }
-        response.status = 200;
-        response.body = gqlResponse;
         const t1 = performance.now();
         console.log(
           '%c Obsidian received new data and took ' +
