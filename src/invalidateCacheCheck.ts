@@ -73,7 +73,7 @@ export async function invalidateCache(normalizedMutation: { [key: string]: objec
  * Ex: 'mutation { addMovie(input: {title: "sdfsdg", releaseYear: 1234, genre: ACTION }) { __typename  id ti...'
  * @return {boolean} isDeleteFlag
  */
-function isDelete(queryString: string) {
+export function isDelete(queryString: string) {
   // Because we check if response object from delete mutation equals to cached object to determine if it's a delete mutation 
   // but there may be instances that the object is evicted from cache or never cached previously which would be treated as add or update mutation
   // if we find any keywords we're looking for in the mutation query that infer deletion we force the deletion
