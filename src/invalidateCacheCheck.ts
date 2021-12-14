@@ -41,33 +41,22 @@ export function isMutation(gqlQuery: { query: any; }): boolean {
  * Ex: {
  * ~7~Movie: {id: 7, __typename: Movie, title: Ad Astra, releaseYear: 2019}
  * }
- * @param {string} queryString - raw mutation query.
+ * @param {string} queryString - raw mutation query. Passed onto isDelete function
  * Ex: 'mutation { addMovie(input: {title: "sdfsdg", releaseYear: 1234, genre: ACTION }) { __typename  id ti...'
  * @return {void}
  */
-export async function invalidateCache(normalizedMutation: { [x: string]: object; }, queryString: string) {
-  // isDelete flag is a safety net for delete mutations.
-  // it's set to true if certain keywords such as 'delete' are found in the mutation query
-  // Because we check if response object from delete mutation equals to cached object to determine if it's a delete mutation 
-  // but there may be instances that the object is evicted from cache or never cached previously.
-  const deleteKeywords: Array<string> = ['delete', 'remove'];
-  let isDelete: boolean = false;
-
-  for (const keyword of deleteKeywords) {
-    const regex = new RegExp(keyword);
-    if (queryString.search(regex) !== -1) isDelete = true;
-  }
-
-
+export async function invalidateCache(normalizedMutation: { [key: string]: object; }, queryString: string) {
   let normalizedData: object;
   let cachedVal: any;
-  
+
+  // Common case is that we get one mutation at a time. But it's possible to group multiple mutation queries into one.
+  // That's why the for loop is needed
   for (const redisKey in normalizedMutation) {
     normalizedData = normalizedMutation[redisKey];
     cachedVal = await cache.cacheReadObject(redisKey);
 
-    // if response objects from mutation and cache are deeply equal then we delete it from cache because it infers that a mutation is of type delete...
-    if (cachedVal !== undefined && deepEqual(normalizedData, cachedVal) || isDelete) {
+    // if response objects from mutation and cache are deeply equal then we delete it from cache because it infers that it's a delete mutation
+    if (cachedVal !== undefined && deepEqual(normalizedData, cachedVal) || isDelete(queryString)) {
       await cache.cacheDelete(redisKey);
     } else {
       // otherwise it's an update or add mutation because response objects from mutation and cache don't match so we overwrite the existing cache value or write new data if cache at that key doesn't exist
@@ -76,4 +65,29 @@ export async function invalidateCache(normalizedMutation: { [x: string]: object;
       await cache.cacheWriteObject(redisKey, normalizedData);
     }
   }
+}
+
+/**
+ * Returns a boolean that's used to decide on deleting a value from cache 
+ * @param {string} queryString - raw mutation query.
+ * Ex: 'mutation { addMovie(input: {title: "sdfsdg", releaseYear: 1234, genre: ACTION }) { __typename  id ti...'
+ * @return {boolean} isDeleteFlag
+ */
+export function isDelete(queryString: string) {
+  // Because we check if response object from delete mutation equals to cached object to determine if it's a delete mutation 
+  // but there may be instances that the object is evicted from cache or never cached previously which would be treated as add or update mutation
+  // if we find any keywords we're looking for in the mutation query that infer deletion we force the deletion
+  const deleteKeywords: Array<string> = ['delete', 'remove'];
+  let isDeleteFlag: boolean = false;
+
+  for (const keyword of deleteKeywords) {
+    const regex = new RegExp(keyword);
+    // if query string contains any of the keywords in the deleteKeywords array we set the flag to true and break out of the loop
+    if (queryString.search(regex) !== -1) {
+      console.log('setting isdelete to True!')
+      isDeleteFlag = true;
+      break;
+    }
+  }
+  return isDeleteFlag
 }
