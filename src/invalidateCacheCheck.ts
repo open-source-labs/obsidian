@@ -84,7 +84,6 @@ export function isDelete(queryString: string) {
     const regex = new RegExp(keyword);
     // if query string contains any of the keywords in the deleteKeywords array we set the flag to true and break out of the loop
     if (queryString.search(regex) !== -1) {
-      console.log('setting isdelete to True!')
       isDeleteFlag = true;
       break;
     }
