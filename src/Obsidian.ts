@@ -86,7 +86,6 @@ export async function ObsidianRouter<T>({
       let body = await request.body().value;
       if (maxQueryDepth) queryDepthLimiter(body.query, maxQueryDepth); // If a securty limit is set for maxQueryDepth, invoke queryDepthLimiter, which throws error if query depth exceeds maximum
       body = { query: restructure(body) }; // Restructre gets rid of variables and fragments from the query
-      let cacheEvicted = false;
       let cacheQueryValue = await cache.read(body.query)
       // Is query in cache? 
       if (useCache && useQueryCache && cacheQueryValue) {
@@ -94,7 +93,6 @@ export async function ObsidianRouter<T>({
         if (!detransformedCacheQueryValue) {
           // cache was evicted if any partial cache is missing, which causes detransformResponse to return undefined
           cacheQueryValue = undefined;
-          cacheEvicted = true;
         } else {
           response.status = 200;
           response.body = detransformedCacheQueryValue;
