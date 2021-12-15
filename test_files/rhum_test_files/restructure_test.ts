@@ -1,4 +1,4 @@
-import { Rhum } from 'https://deno.land/x/rhum@v1.1.4/mod.ts';
+import { Rhum } from 'https://deno.land/x/rhum@v1.1.11/mod.ts';
 //import { assert } from "https://deno.land/std@0.102.0/testing/asserts.ts";
 import { restructure } from '../../src/restructure.ts';
 import { test } from '../test_variables/restructure_variables.ts';

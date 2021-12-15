@@ -4,12 +4,10 @@ import { makeExecutableSchema } from 'https://deno.land/x/oak_graphql@0.6.2/grap
 import { Cache } from './quickCache.js';
 import queryDepthLimiter from './DoSSecurity.ts';
 import { restructure } from './restructure.ts';
-import { invalidateCache } from './invalidateCacheCheck.js';
 import { rebuildFromQuery } from './rebuild.js'
 import { normalizeObject } from './normalize.ts'
 import { transformResponse, detransformResponse } from './transformResponse.ts'
-import { isMutation } from './invalidateCacheCheck.js'
-// import LFUCache from './Browser/lfuBrowserCache.js';
+import { isMutation, invalidateCache } from './invalidateCacheCheck.ts'
 
 interface Constructable<T> {
   new(...args: any): T & OakRouter;
@@ -82,30 +80,32 @@ export async function ObsidianRouter<T>({
   await router.post(path, async (ctx: any) => {
     const t0 = performance.now();
     const { response, request } = ctx;
-    if (!request.hasBody) return; 
+    if (!request.hasBody) return;
     try {
       const contextResult = context ? await context(ctx) : undefined;
       let body = await request.body().value;
       if (maxQueryDepth) queryDepthLimiter(body.query, maxQueryDepth); // If a securty limit is set for maxQueryDepth, invoke queryDepthLimiter, which throws error if query depth exceeds maximum
       body = { query: restructure(body) }; // Restructre gets rid of variables and fragments from the query
+      let cacheQueryValue = await cache.read(body.query)
       // Is query in cache? 
-      let cacheQueryValue = await cache.read(body.query) //problem?
-      // If in cache: read from cache 
-      if (useCache && useQueryCache && cacheQueryValue){
-        const detransformedCacheQueryValue = await detransformResponse(body.query, cacheQueryValue) // add feature to know if partial cache isn't in cache, so whole query can be run and enter next if block
-        response.status = 200;
-        response.body = detransformedCacheQueryValue;
-        const t1 = performance.now();
-        console.log(
-          '%c Obsidian retrieved data from cache and took ' +
-          (t1 - t0) +
-          ' milliseconds.', "background: #222; color: #00FF00"
-        );
-      }
-      // If not in cache: 
-        // If mutation: invalidate cache
-        // If read query: run query, normalize GQL response, transform GQL response, write to cache, and write pieces of normalized GQL response objects
-      else if(useCache && useQueryCache && !cacheQueryValue){
+      if (useCache && useQueryCache && cacheQueryValue) {
+        let detransformedCacheQueryValue = await detransformResponse(body.query, cacheQueryValue)
+        if (!detransformedCacheQueryValue) {
+          // cache was evicted if any partial cache is missing, which causes detransformResponse to return undefined
+          cacheQueryValue = undefined;
+        } else {
+          response.status = 200;
+          response.body = detransformedCacheQueryValue;
+          const t1 = performance.now();
+          console.log(
+            '%c Obsidian retrieved data from cache and took ' +
+            (t1 - t0) +
+            ' milliseconds.', "background: #222; color: #00FF00"
+          );
+        }
+
+      };      // If not in cache: 
+      if (useCache && useQueryCache && !cacheQueryValue) {
         const gqlResponse = await (graphql as any)(
           schema,
           body.query,
@@ -115,14 +115,16 @@ export async function ObsidianRouter<T>({
           body.operationName || undefined
         );
         const normalizedGQLResponse = normalizeObject(gqlResponse, customIdentifier);
-        if(isMutation(body)) { 
-          invalidateCache(normalizedGQLResponse);
+        if (isMutation(body)) {
+          const queryString = await request.body().value;
+          invalidateCache(normalizedGQLResponse, queryString.query);
         }
+        // If read query: run query, normalize GQL response, transform GQL response, write to cache, and write pieces of normalized GQL response objects
         else {
-          const transformedGQLResponse = transformResponse(normalizedGQLResponse, customIdentifier);
+          const transformedGQLResponse = transformResponse(gqlResponse, customIdentifier);
           await cache.write(body.query, transformedGQLResponse, false);
-          for(const key in normalizedGQLResponse){
-            await cache.cacheWriteObject(key, normalizedGQLResponse[key]); 
+          for (const key in normalizedGQLResponse) {
+            await cache.cacheWriteObject(key, normalizedGQLResponse[key]);
           }
         }
         response.status = 200;

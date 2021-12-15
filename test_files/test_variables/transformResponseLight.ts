@@ -1,6 +1,8 @@
-import { isHashableObject, containsHashableObject, hashMaker } from './normalize.ts';
-import { GenericObject } from './normalize.ts';
-import { Cache } from './quickCache.js'
+// need redis v0.23.2 to be compatible with Deno testing. That is why we need to separate transformResponseLight.ts from transformResponse.ts
+
+import { isHashableObject, containsHashableObject, hashMaker } from '../../src/normalize.ts';
+import { GenericObject } from '../../src/normalize.ts';
+import { Cache } from './quickCacheLight.js'
 const cache = new Cache;
 
 const isArrayOfHashableObjects = (arrayOfObjects: Array<GenericObject>, hashableKeys: Array<string>):boolean => {
@@ -51,7 +53,7 @@ export const transformResponse = (responseObject: any, hashableKeys: Array<strin
 * @param {GenericObject} transformedValue Nested object representing of references, where the references are hashes in Redis
 * @return {GenericObject} Nested object representing the original graphQL response object for a given queryKey
 */
-export const detransformResponse = async (queryKey: String, transformedValue: any):Promise<any> => {
+export const detransformResponse = async (queryKey: String, transformedValue: GenericObject):Promise<GenericObject> => {
   // remove all text within parentheses aka '(input: ...)'
   queryKey = queryKey.replace(/\(([^)]+)\)/, '');
   // save Regex matches for line break followed by '{'
@@ -62,13 +64,12 @@ export const detransformResponse = async (queryKey: String, transformedValue: an
   matches.forEach(match => {
     fields.push(match[1].trim());
   });
-  
-  // define recursiveDetransform function body for use later
-  const recursiveDetransform = async (transformedValue: any, fields: Array<string>, depth: number = 0):Promise<any> => {
-    let result: any = {}; 
+  const recursiveDetransform = async (transformedValue: GenericObject, fields: Array<string>, depth: number = 0):Promise<GenericObject> => {
+    const result: GenericObject = {}; 
     let currDepth = depth;
 
-    // base case: transformedValue is innermost object aka empty object 
+    console.log('tv-> ', transformedValue);
+    // base case: innermost object with key:value pair of hash:{}
     if (Object.keys(transformedValue).length === 0) {
       return result;
     } else {
@@ -76,39 +77,26 @@ export const detransformResponse = async (queryKey: String, transformedValue: an
       result[currField] = [];
   
       for (let hash in transformedValue) { 
+        console.log('hash -> ', hash);
         const redisValue: GenericObject = await cache.cacheReadObject(hash);
-
+        console.log('redisVal -> ', redisValue);
         // edge case in which our eviction strategy has pushed partial Cache data out of Redis
         if (!redisValue) {
-          return 'cacheEvicted';
+          return {'cache evicted': {}};
         }
 
         result[currField].push(redisValue);
         
-        let recursiveResult = await recursiveDetransform(transformedValue[hash], fields, depth = currDepth + 1)
-
-        // edge case in which our eviction strategy has pushed partial Cache data out of Redis, for recursive call
-        if (recursiveResult === 'cacheEvicted') {
-          return 'cacheEvicted';
-        // normal case with no cache eviction
-        } else {
-          result[currField][result[currField].length - 1] = Object.assign(
-            result[currField][result[currField].length - 1], recursiveResult);
-        }
-
+        result[currField][result[currField].length - 1] = Object.assign(
+          result[currField][result[currField].length - 1], 
+          await recursiveDetransform(transformedValue[hash], fields, depth = currDepth + 1)
+        )
       }
       return result;
     }
   }
-
-  // actually call recursiveDetransform
-  let detransformedResult: any = {'data' : {}};
-  const detransformedSubresult = await recursiveDetransform(transformedValue, fields)
-  if (detransformedSubresult === 'cacheEvicted') {
-    detransformedResult = undefined;
-  } else {
-    detransformedResult.data = await recursiveDetransform(transformedValue, fields);
-  }
-
+  const detransformedResult: GenericObject = {'data' : {}};
+  detransformedResult.data = await recursiveDetransform(transformedValue, fields);
+  console.log('dt-> ', detransformedResult);
   return detransformedResult;
 }
