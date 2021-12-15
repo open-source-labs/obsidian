@@ -80,21 +80,19 @@ export async function ObsidianRouter<T>({
   await router.post(path, async (ctx: any) => {
     const t0 = performance.now();
     const { response, request } = ctx;
-    if (!request.hasBody) return; 
+    if (!request.hasBody) return;
     try {
       const contextResult = context ? await context(ctx) : undefined;
       let body = await request.body().value;
       if (maxQueryDepth) queryDepthLimiter(body.query, maxQueryDepth); // If a securty limit is set for maxQueryDepth, invoke queryDepthLimiter, which throws error if query depth exceeds maximum
       body = { query: restructure(body) }; // Restructre gets rid of variables and fragments from the query
-      let cacheEvicted = false;
       let cacheQueryValue = await cache.read(body.query)
       // Is query in cache? 
-      if (useCache && useQueryCache && cacheQueryValue){
+      if (useCache && useQueryCache && cacheQueryValue) {
         let detransformedCacheQueryValue = await detransformResponse(body.query, cacheQueryValue)
         if (!detransformedCacheQueryValue) {
           // cache was evicted if any partial cache is missing, which causes detransformResponse to return undefined
           cacheQueryValue = undefined;
-          cacheEvicted = true;
         } else {
           response.status = 200;
           response.body = detransformedCacheQueryValue;
@@ -105,10 +103,10 @@ export async function ObsidianRouter<T>({
             ' milliseconds.', "background: #222; color: #00FF00"
           );
         }
-        
+
       };
       // If not in cache: 
-      if(useCache && useQueryCache && !cacheQueryValue){
+      if (useCache && useQueryCache && !cacheQueryValue) {
         const gqlResponse = await (graphql as any)(
           schema,
           body.query,
@@ -118,19 +116,16 @@ export async function ObsidianRouter<T>({
           body.operationName || undefined
         );
         const normalizedGQLResponse = normalizeObject(gqlResponse, customIdentifier);
-        if(isMutation(body)) {
+        if (isMutation(body)) {
           const queryString = await request.body().value;
           invalidateCache(normalizedGQLResponse, queryString.query);
         }
         // If read query: run query, normalize GQL response, transform GQL response, write to cache, and write pieces of normalized GQL response objects
         else {
-          if (!cacheEvicted) {
-            // if cache was not evicted, then this is the first time running this read query. Transform original GQL response to object of references:
-            const transformedGQLResponse = transformResponse(gqlResponse, customIdentifier);
-            await cache.write(body.query, transformedGQLResponse, false);
-          }
-          for(const key in normalizedGQLResponse){
-            await cache.cacheWriteObject(key, normalizedGQLResponse[key]); 
+          const transformedGQLResponse = transformResponse(gqlResponse, customIdentifier);
+          await cache.write(body.query, transformedGQLResponse, false);
+          for (const key in normalizedGQLResponse) {
+            await cache.cacheWriteObject(key, normalizedGQLResponse[key]);
           }
         }
         response.status = 200;
