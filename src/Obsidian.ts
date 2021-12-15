@@ -104,8 +104,7 @@ export async function ObsidianRouter<T>({
           );
         }
 
-      };
-      // If not in cache: 
+      };      // If not in cache: 
       if (useCache && useQueryCache && !cacheQueryValue) {
         const gqlResponse = await (graphql as any)(
           schema,
