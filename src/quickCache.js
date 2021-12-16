@@ -76,7 +76,7 @@ export class Cache {
     await redis.hset(hash, ...entries);
   };
 
-  cacheReadObject = async (hash, field) => {
+  cacheReadObject = async (hash, field = false) => {
     if (field) {
       let returnValue = await redisdb.hget(hash, JSON.stringify(field));
 

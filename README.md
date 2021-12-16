@@ -27,6 +27,7 @@
 - Configurable caching options, giving you complete control over your cache
 - Fullstack integration, leveraging client-side and server-side caching to streamline your caching strategy
 - Support for the full GraphQL convention
+- Support for server-side cache invalidation
 - Optional GraphQL DoS attack mitigation security module
 
 ## Overview
@@ -164,6 +165,10 @@ github for a demo with some example code to play with:
 
 ## Authors
 
+[Yogi Paturu](https://github.com/YogiPaturu)   
+[Michael Chin](https://github.com/mikechin37)   
+[Dana Flury](https://github.com/dmflury)   
+[Sardor Akhmedov](https://github.com/sarkamedo)   
 [Christopher Berry](https://github.com/cjamesb)   
 [Olivia Yeghiazarian](https://github.com/Olivia-code)  
 [Michael Melville](https://github.com/meekle)   
