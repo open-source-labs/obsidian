@@ -10,7 +10,7 @@
 
 import Cache from '../../src/Browser/CacheClassBrowser.js';
 import { Cache as CacheServer } from '../../src/quickCache.js';
-import { Rhum } from 'https://deno.land/x/rhum@v1.1.4/mod.ts';
+import { Rhum } from 'https://deno.land/x/rhum@v1.1.11/mod.ts';
 import { test } from '../test_variables/writeCache_variables.ts';
 
 Rhum.testPlan('write method on Cache class', () => {
