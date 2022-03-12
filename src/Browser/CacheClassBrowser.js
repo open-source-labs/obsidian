@@ -3,11 +3,13 @@
 import normalizeResult from "./normalize.js";
 import destructureQueries from "./destructure.js";
 
-export default class Cache {
+export default class BrowserCache {
   constructor(
     initialCache = {
       ROOT_QUERY: {},
       ROOT_MUTATION: {},
+      // match resolvers to types in order to add them in write-through
+      types: {}
     }
   ) {
     this.storage = initialCache;
@@ -49,14 +51,46 @@ export default class Cache {
     return { data: responseObject };
   }
 
-  async write(queryStr, respObj, deleteFlag) {
+  async write(queryStr, respObj, deleteFlag, writeThrough=false) {
     const queryObj = destructureQueries(queryStr);
+    // if it's not already included in types, skip write-through and make graphQL call
+    console.log('WriteThrough before :' , writeThrough)
+    if(writeThrough && queryObj.mutations){
+      if (!this.storage.types.hasOwnProperty(queryObj.mutations[0].name)){
+        console.log('Skipping first write through')
+        return false;
+      } 
+      console.log('Second time delete')
+      let mut = queryObj.mutations[0].name;
+      let idAndVal = queryObj.mutations[0].arguments;
+      idAndVal = idAndVal.split(':');
+      let id = idAndVal[0].substring(1);
+      let val = idAndVal[1].substring(0,idAndVal[1].length-1);
+      let __typename = this.storage.types[queryObj.mutations[0].name];
+      respObj.data = {
+      };
+      let obj = {};
+      obj[id] = val;
+      obj.__typename = __typename;
+      respObj.data[mut] = obj;
+      console.log('respObj: ',respObj)
+    }
     const resFromNormalize = normalizeResult(queryObj, respObj, deleteFlag);
+    console.log('WriteThrough After :' , writeThrough)
+    console.log('Query :' , queryObj)
+    if(!writeThrough && queryObj.mutations){
+      console.log('First time delete')
+      console.log('queryObj: ',queryObj);
+      this.storage.types[queryObj.mutations[0].name] = respObj.data[queryObj.mutations[0].name].__typename;
+    }
     // update the original cache with same reference
     for (const hash in resFromNormalize) {
+
       const resp = await this.cacheRead(hash);
+      // console.log(resp)
       if (resFromNormalize[hash] === "DELETED") {
         await this.cacheWrite(hash, "DELETED");
+        return resp;
       } else if (resp) {
         const newObj = Object.assign(resp, resFromNormalize[hash]);
         await this.cacheWrite(hash, newObj);
@@ -64,6 +98,7 @@ export default class Cache {
         await this.cacheWrite(hash, resFromNormalize[hash]);
       }
     }
+    return true;
   }
 
   gc() {

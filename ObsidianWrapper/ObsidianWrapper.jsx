@@ -1,12 +1,11 @@
 import React from 'https://dev.jspm.io/react';
-import Cache from '../src/Browser/CacheClassBrowser.js';
+import BrowserCache from '../src/Browser/CacheClassBrowser.js';
 import { insertTypenames } from '../src/Browser/insertTypenames.js';
 
 const cacheContext = React.createContext();
 
 function ObsidianWrapper(props) {
-  const [cache, setCache] = React.useState(new Cache());
-
+  const [cache, setCache] = React.useState(new BrowserCache());
   async function query(query, options = {}) {
     // set the options object default properties if not provided
     const {
@@ -84,14 +83,19 @@ function ObsidianWrapper(props) {
   async function mutate(mutation, options = {}) {
     // set the options object default properties if not provided
     mutation = insertTypenames(mutation);
-    const {
+    let {
       endpoint = '/graphql',
       cacheWrite = true,
       toDelete = false,
       update = null,
+      writeThrough = true,
     } = options;
     // for any mutation a request to the server is made
     try {
+      // one-time check to add types to cache
+      if(writeThrough){
+        writeThrough = await cache.write(mutation, {}, toDelete, writeThrough);
+      }
       const responseObj = await fetch(endpoint, {
         method: 'POST',
         headers: {
@@ -102,7 +106,9 @@ function ObsidianWrapper(props) {
       }).then((resp) => resp.json());
       if (!cacheWrite) return responseObj;
       // first behaviour when delete cache is set to true
-      if (toDelete) {
+      console.log('writeThrough before toDelete: ', writeThrough)
+      if (!writeThrough && toDelete) {
+        console.log('in the toDelete')
         cache.write(mutation, responseObj, true);
         return responseObj;
       }
@@ -111,7 +117,14 @@ function ObsidianWrapper(props) {
         update(cache, responseObj);
       }
       // third behaviour just for normal update (no-delete, no update function)
-      cache.write(mutation, responseObj);
+      if(!writeThrough){
+        console.log('in the !writeThrough')
+        cache.write(mutation, responseObj);
+      }
+      if (writeThrough) {
+        console.log('Here\'s the response from cache: ', writeThrough);
+        return writeThrough;
+      }
       return responseObj;
     } catch (e) {
       console.log(e);
