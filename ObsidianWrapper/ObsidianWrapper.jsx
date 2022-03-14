@@ -148,7 +148,7 @@ function ObsidianWrapper(props) {
 					return responseObj;
 				}
 			} else {
-				mutation = insertTypenames(mutation);
+				// old mutate logic
 			}
 		} catch(e) {
 			console.log(e)
