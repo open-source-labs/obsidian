@@ -9,7 +9,7 @@ export default class BrowserCache {
 			ROOT_QUERY: {},
 			ROOT_MUTATION: {},
 			// match resolvers to types in order to add them in write-through
-			types: {},
+			writeThroughInfo: {},
 		}
 	) {
 		this.storage = initialCache;
@@ -51,45 +51,62 @@ export default class BrowserCache {
 		return { data: responseObject };
 	}
 
-	async write(queryStr, respObj, deleteFlag, writeThrough = false) {
-		const queryObj = destructureQueries(queryStr);
-		// if it's not already included in types, skip write-through and make graphQL call
-		console.log('WriteThrough before :', writeThrough);
-		if (writeThrough && queryObj.mutations) {
-			if (!this.storage.types.hasOwnProperty(queryObj.mutations[0].name)) {
-				console.log('Skipping first write through');
-				return false;
+	async writeThrough(queryStr, respObj, deleteFlag) {
+		try {
+			const queryObj = destructureQueries(queryStr);
+			console.log("Here's the query object: ", queryObj);
+			const mutationName = queryObj.mutations[0].name;
+			// check if it's a mutation
+			if (queryObj.mutations) {
+				// check to see if the mutation/type has been stored in the cache yet
+				// if so, make the graphQL call
+				if (!this.storage.writeThroughInfo.hasOwnProperty(mutationName)) {
+					respObj = await fetch('/graphql', {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							Accept: 'application/json',
+						},
+						body: JSON.stringify({ query: queryStr }),
+					}).then((resp) => resp.json());
+					// store the mutation/type in cache
+					this.storage.writeThroughInfo[mutationName] = {};
+					this.storage.writeThroughInfo[mutationName].type =
+						respObj.data[mutationName].__typename;
+					this.storage.writeThroughInfo[mutationName].lastId =
+						respObj.data[mutationName].id;
+					// below is for situations when the type is already stored
+				} else {
+					// construct the response object ourselves
+					this.constructResponseObject(queryObj, respObj, deleteFlag);
+					await fetch('/graphql', {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							Accept: 'application/json',
+						},
+						body: JSON.stringify({ query: queryStr }),
+					});
+				}
+				console.log('Here is response from Data base ',  respObj);
+				// same logic for both situations
+				// normalize the result, invalidate the cache and return the appropriate object
+				this.write(queryStr, respObj, deleteFlag);
+				return respObj;
 			}
-			console.log('Second time delete');
-			let mut = queryObj.mutations[0].name;
-			let idAndVal = queryObj.mutations[0].arguments;
-			idAndVal = idAndVal.split(':');
-			let id = idAndVal[0].substring(1);
-			let val = idAndVal[1].substring(0, idAndVal[1].length - 1);
-			let __typename = this.storage.types[queryObj.mutations[0].name];
-			respObj.data = {};
-			let obj = {};
-			obj[id] = val;
-			obj.__typename = __typename;
-			respObj.data[mut] = obj;
-			console.log('respObj: ', respObj);
+		} catch (e) {
+			console.log(e);
 		}
+	}
+
+	async write(queryStr, respObj, deleteFlag) {
+		const queryObj = destructureQueries(queryStr);
 		const resFromNormalize = normalizeResult(queryObj, respObj, deleteFlag);
-		console.log('WriteThrough After :', writeThrough);
-		console.log('Query :', queryObj);
-		if (!writeThrough && queryObj.mutations) {
-			console.log('First time delete');
-			console.log('queryObj: ', queryObj);
-			this.storage.types[queryObj.mutations[0].name] =
-				respObj.data[queryObj.mutations[0].name].__typename;
-		}
 		// update the original cache with same reference
 		for (const hash in resFromNormalize) {
 			const resp = await this.cacheRead(hash);
-			// console.log(resp)
 			if (resFromNormalize[hash] === 'DELETED') {
 				await this.cacheWrite(hash, 'DELETED');
-				return resp;
 			} else if (resp) {
 				const newObj = Object.assign(resp, resFromNormalize[hash]);
 				await this.cacheWrite(hash, newObj);
@@ -97,72 +114,75 @@ export default class BrowserCache {
 				await this.cacheWrite(hash, resFromNormalize[hash]);
 			}
 		}
-		return true;
 	}
 
-	async writeThrough(queryStr, respObj, deleteFlag) {
-		const queryObj = destructureQueries(queryStr);
-		// check if it's a mutation
-		if (queryObj.mutations) {
-			// check to see if the mutation/type has been stored in the cache yet
-			// if so, make the graphQL call
-			if (!this.storage.types.hasOwnProperty(queryObj.mutations[0].name)) {
-				const responseObj = await fetch(endpoint, {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						Accept: 'application/json',
-					},
-					body: JSON.stringify({ query: mutation }),
-				}).then((resp) => resp.json());
-				// normalize the result, invalidate the cache and return the appropriate object
-				const resFromNormalize = normalizeResult(queryObj, respObj, deleteFlag);
-				for (const hash in resFromNormalize) {
-					const resp = await this.cacheRead(hash);
-					if (resFromNormalize[hash] === 'DELETED') {
-						await this.cacheWrite(hash, 'DELETED');
-						return resp;
-					} else if (resp) {
-						const newObj = Object.assign(resp, resFromNormalize[hash]);
-						await this.cacheWrite(hash, newObj);
-					} else {
-						await this.cacheWrite(hash, resFromNormalize[hash]);
-					}
+	constructResponseObject(queryObj, respObj, deleteFlag) {
+		const mutationData = queryObj.mutations[0];
+		const mutationName = mutationData.name;
+		const __typename = (this.storage.writeThroughInfo[mutationName] = {});
+		writeThroughInfo[mutationName].type;
+		respObj.data = {};
+		let obj = {};
+		respObj.data[mutationName] = obj;
+		obj.__typename = __typename;
+		// delete logic
+		if (deleteFlag) {
+			// add id and value from the queryObj
+			let idAndVal = mutationData.arguments;
+			idAndVal = idAndVal.split(':');
+			const id = idAndVal[0].substring(1);
+			const val = idAndVal[1].substring(0, idAndVal[1].length - 1);
+			obj[id] = val;
+			// return out of this function so we don't continue
+			// onto add/update logic
+			return respObj;
+		}
+		// increment ID for ADD mutations only
+		obj.id = (++this.storage.writeThroughInfo[mutationName].lastId).toString();
+
+		// ADD mutation logic
+		// grab arguments (which is a string)
+		const argumentsStr = mutationData.arguments;
+		addNonScalarFields(argumentsStr);
+		separateArguments(argumentsStr);
+		console.log('Final obj', respObj);
+
+		function separateArguments(str) {
+			const startIndex = str.indexOf('{');
+			const slicedStr = str.slice(startIndex + 1, str.length - 2);
+			console.log('slicedStr: ', slicedStr);
+			const argumentPairs = slicedStr.split(',');
+			console.log('argumentPairs', argumentPairs);
+			for (const argumentPair of argumentPairs) {
+				const argumentKeyAndValue = argumentPair.split(':');
+				const argumentKey = argumentKeyAndValue[0];
+				let argumentValue = Number(argumentKeyAndValue[1])
+					? Number(argumentKeyAndValue[1])
+					: argumentKeyAndValue[1];
+				if (typeof argumentValue === 'string') {
+					console.log("It's a string");
+					argumentValue = argumentValue.replace(/\"/g, '');
 				}
-				// store the mutation/type in cache
-				this.storage.types[queryObj.mutations[0].name] =
-					respObj.data[queryObj.mutations[0].name].__typename;
-				return responseObj;
-				// below is for situations when the type is already stored
-			} else {
-				// construct the response object ourselves
-				let mutation = queryObj.mutations[0].name;
-				let idAndVal = queryObj.mutations[0].arguments;
-				idAndVal = idAndVal.split(':');
-				let id = idAndVal[0].substring(1);
-				let val = idAndVal[1].substring(0, idAndVal[1].length - 1);
-				let __typename = this.storage.types[queryObj.mutations[0].name];
-				respObj.data = {};
-				let obj = {};
-				obj[id] = val;
-				obj.__typename = __typename;
-				respObj.data[mutation] = obj;
-				// complete respObj for ADD mutation (queryStr should contain necessary fields)
-				const resFromNormalize = normalizeResult(queryObj, respObj, deleteFlag);
-				for (const hash in resFromNormalize) {
-					const resp = await this.cacheRead(hash);
-					if (resFromNormalize[hash] === 'DELETED') {
-						await this.cacheWrite(hash, 'DELETED');
-						return resp;
-					} else if (resp) {
-						const newObj = Object.assign(resp, resFromNormalize[hash]);
-						await this.cacheWrite(hash, newObj);
-					} else {
-						await this.cacheWrite(hash, resFromNormalize[hash]);
-					}
-				}
-				return respObj;
+				respObj.data[mutationName][argumentKey] = argumentValue;
 			}
+			console.log("Here's after adding arguments: ", respObj);
+		}
+
+		function addNonScalarFields(str) {
+			for (const field in mutationData.fields) {
+				console.log(
+					'in addNonScalarFields function: ',
+					field,
+					mutationData.fields[field]
+				);
+				if (
+					mutationData.fields[field] !== 'scalar' &&
+					mutationData.fields[field] !== 'meta'
+				) {
+					respObj.data[mutationName][field] = [];
+				}
+			}
+			console.log("Here's after adding array fields: ", respObj);
 		}
 	}
 
