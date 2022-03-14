@@ -130,6 +130,30 @@ function ObsidianWrapper(props) {
       console.log(e);
     }
   }
+
+	// breaking out writethrough logic vs. non-writethrough logic
+	async function mutateRefactored(mutation, options = {}) {
+    const {
+      endpoint = '/graphql',
+      cacheWrite = true,
+      toDelete = false,
+      update = null,
+      writeThrough = true,
+    } = options;
+		try {
+			if (writeThrough) {
+				// helper function to check if we've stored the type yet
+				if (toDelete) {
+					const responseObj = cache.writeThrough(mutation, {}, true);
+					return responseObj;
+				}
+			} else {
+				mutation = insertTypenames(mutation);
+			}
+		} catch(e) {
+			console.log(e)
+		}
+	}
   // Returning Provider React component that allows consuming components to subscribe to context changes
   return (
     <cacheContext.Provider
