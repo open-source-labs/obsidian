@@ -102,6 +102,7 @@ export default class BrowserCache {
 
 	async writeThrough(queryStr, respObj, deleteFlag) {
 		const queryObj = destructureQueries(queryStr);
+		// check if it's a mutation
 		if (queryObj.mutations) {
 			// check to see if the mutation/type has been stored in the cache yet
 			// if so, make the graphQL call
@@ -132,6 +133,7 @@ export default class BrowserCache {
 				this.storage.types[queryObj.mutations[0].name] =
 					respObj.data[queryObj.mutations[0].name].__typename;
 				return responseObj;
+				// below is for situations when the type is already stored
 			} else {
 				// construct the response object ourselves
 				let mutation = queryObj.mutations[0].name;
@@ -145,7 +147,7 @@ export default class BrowserCache {
 				obj[id] = val;
 				obj.__typename = __typename;
 				respObj.data[mutation] = obj;
-				// same as above
+				// complete respObj for ADD mutation (queryStr should contain necessary fields)
 				const resFromNormalize = normalizeResult(queryObj, respObj, deleteFlag);
 				for (const hash in resFromNormalize) {
 					const resp = await this.cacheRead(hash);

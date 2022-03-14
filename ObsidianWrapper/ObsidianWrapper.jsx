@@ -146,9 +146,17 @@ function ObsidianWrapper(props) {
 				if (toDelete) {
 					const responseObj = cache.writeThrough(mutation, {}, true);
 					return responseObj;
+				} else {
+					if (update) {
+						// run the update function
+					}
+					// always write/over-write to cache (add/update)
+					const responseObj = cache.writeThrough(mutation, {});
+					return responseObj;
 				}
 			} else {
-				// old mutate logic
+				// copy-paste mutate logic from 4.0
+				// use cache.write instead of cache.writeThrough
 			}
 		} catch(e) {
 			console.log(e)
