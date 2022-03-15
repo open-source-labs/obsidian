@@ -139,22 +139,23 @@ function ObsidianWrapper(props) {
 			cacheWrite = true,
 			toDelete = false,
 			update = null,
-			writeThrough = true,
+			writeThrough = false,
 		} = options;
 		try {
+			console.log('Lets see endpoint ' , endpoint);
 			if (writeThrough) {
 				// helper function to check if we've stored the type yet
 				if (toDelete) {
-					const responseObj = cache.writeThrough(mutation, {}, true);
+					const responseObj = cache.writeThrough(mutation, {}, true, endpoint);
 					return responseObj;
 				} else {
 					if (update) {
 						// run the update function
 					}
 					// always write/over-write to cache (add/update)
-					const responseObj = cache.writeThrough(mutation, {});
+					const responseObj = cache.writeThrough(mutation, {},false,endpoint);
 					// GQL call to make changes and synchronize database
-
+					console.log('WriteThrough - true ', responseObj);
 					return responseObj;
 				}
 			} else {
@@ -180,6 +181,7 @@ function ObsidianWrapper(props) {
 				}
 				// third behaviour just for normal update (no-delete, no update function)
 				cache.write(mutation, responseObj);
+				console.log('WriteThrough - false ', responseObj);
 				return responseObj;
 			}
 		} catch (e) {

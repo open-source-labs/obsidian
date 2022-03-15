@@ -51,7 +51,8 @@ export default class BrowserCache {
 		return { data: responseObject };
 	}
 
-	async writeThrough(queryStr, respObj, deleteFlag) {
+	async writeThrough(queryStr, respObj, deleteFlag, endpoint) {
+		console.log('Endpoint in writeThrough ', endpoint);
 		try {
 			const queryObj = destructureQueries(queryStr);
 			console.log("Here's the query object: ", queryObj);
@@ -61,7 +62,7 @@ export default class BrowserCache {
 				// check to see if the mutation/type has been stored in the cache yet
 				// if so, make the graphQL call
 				if (!this.storage.writeThroughInfo.hasOwnProperty(mutationName)) {
-					respObj = await fetch('/graphql', {
+					respObj = await fetch(endpoint, {
 						method: 'POST',
 						headers: {
 							'Content-Type': 'application/json',
@@ -79,7 +80,7 @@ export default class BrowserCache {
 				} else {
 					// construct the response object ourselves
 					this.constructResponseObject(queryObj, respObj, deleteFlag);
-					await fetch('/graphql', {
+					await fetch(endpoint, {
 						method: 'POST',
 						headers: {
 							'Content-Type': 'application/json',
@@ -87,8 +88,9 @@ export default class BrowserCache {
 						},
 						body: JSON.stringify({ query: queryStr }),
 					});
+					console.log('Successful fetch request');
 				}
-				console.log('Here is response from Data base ',  respObj);
+				console.log('Here is response from Data base ', respObj);
 				// same logic for both situations
 				// normalize the result, invalidate the cache and return the appropriate object
 				this.write(queryStr, respObj, deleteFlag);
@@ -119,8 +121,8 @@ export default class BrowserCache {
 	constructResponseObject(queryObj, respObj, deleteFlag) {
 		const mutationData = queryObj.mutations[0];
 		const mutationName = mutationData.name;
-		const __typename = (this.storage.writeThroughInfo[mutationName] = {});
-		writeThroughInfo[mutationName].type;
+		const __typename = this.storage.writeThroughInfo[mutationName].type;
+		// this.storage.writeThroughInfo[mutationName].type;
 		respObj.data = {};
 		let obj = {};
 		respObj.data[mutationName] = obj;
@@ -138,6 +140,10 @@ export default class BrowserCache {
 			return respObj;
 		}
 		// increment ID for ADD mutations only
+		console.log(
+			'Line 141, F constructResponseObject,  id:',
+			this.storage.writeThroughInfo[mutationName]
+		);
 		obj.id = (++this.storage.writeThroughInfo[mutationName].lastId).toString();
 
 		// ADD mutation logic
