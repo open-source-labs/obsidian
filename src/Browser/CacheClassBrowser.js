@@ -52,7 +52,6 @@ export default class BrowserCache {
 	}
 
 	async writeThrough(queryStr, respObj, deleteFlag, endpoint) {
-		console.log('Endpoint in writeThrough ', endpoint);
 		try {
 			const queryObj = destructureQueries(queryStr);
 			console.log("Here's the query object: ", queryObj);
@@ -79,21 +78,22 @@ export default class BrowserCache {
 					// below is for situations when the type is already stored
 				} else {
 					// construct the response object ourselves
-					this.constructResponseObject(queryObj, respObj, deleteFlag);
-					await fetch(endpoint, {
+					const dummyResponse = await fetch(endpoint, {
 						method: 'POST',
 						headers: {
 							'Content-Type': 'application/json',
 							Accept: 'application/json',
 						},
 						body: JSON.stringify({ query: queryStr }),
-					});
-					console.log('Successful fetch request');
+					}).then((resp) => resp.json());
+					console.log("Here's the dummy response :", dummyResponse);
+					this.constructResponseObject(queryObj, respObj, deleteFlag);
 				}
-				console.log('Here is response from Data base ', respObj);
 				// same logic for both situations
 				// normalize the result, invalidate the cache and return the appropriate object
-				this.write(queryStr, respObj, deleteFlag);
+				console.log('Before write query :', queryStr)
+				console.log('Before write respObh :', respObj)
+				await this.write(queryStr, respObj, deleteFlag);
 				return respObj;
 			}
 		} catch (e) {
@@ -102,6 +102,8 @@ export default class BrowserCache {
 	}
 
 	async write(queryStr, respObj, deleteFlag) {
+		console.log('In write query :', queryStr)
+		console.log('In write respObj :', respObj)
 		const queryObj = destructureQueries(queryStr);
 		const resFromNormalize = normalizeResult(queryObj, respObj, deleteFlag);
 		// update the original cache with same reference

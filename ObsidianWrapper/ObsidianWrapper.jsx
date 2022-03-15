@@ -35,6 +35,7 @@ function ObsidianWrapper(props) {
 			// when the developer decides to only utilize whole query for cache
 			if (wholeQuery) resObj = await cache.readWholeQuery(query);
 			else resObj = await cache.read(query);
+			console.log('query function resObj: ', resObj)
 			// check if query is stored in cache
 			if (resObj) {
 				// returning cached response as a promise
@@ -139,27 +140,30 @@ function ObsidianWrapper(props) {
 			cacheWrite = true,
 			toDelete = false,
 			update = null,
-			writeThrough = false,
+			writeThrough = true,
 		} = options;
 		try {
-			console.log('Lets see endpoint ' , endpoint);
 			if (writeThrough) {
-				// helper function to check if we've stored the type yet
+				// if it's a deletion, then delete from cache and return the object
 				if (toDelete) {
-					const responseObj = cache.writeThrough(mutation, {}, true, endpoint);
+					const responseObj = await cache.writeThrough(mutation, {}, true, endpoint);
 					return responseObj;
 				} else {
+					// for add mutation
+					const responseObj = await cache.writeThrough(mutation, {},false,endpoint);
+					// for update mutation
 					if (update) {
 						// run the update function
+						update(cache, responseObj)
 					}
 					// always write/over-write to cache (add/update)
-					const responseObj = cache.writeThrough(mutation, {},false,endpoint);
 					// GQL call to make changes and synchronize database
 					console.log('WriteThrough - true ', responseObj);
 					return responseObj;
 				}
 			} else {
-				// copy-paste mutate logic from 4.0
+				// copy-paste mutate logic from 4.
+				
 				// use cache.write instead of cache.writeThrough
 				const responseObj = await fetch(endpoint, {
 					method: 'POST',
