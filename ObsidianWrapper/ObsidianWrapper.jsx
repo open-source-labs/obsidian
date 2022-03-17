@@ -6,10 +6,23 @@ const cacheContext = React.createContext();
 
 function ObsidianWrapper(props) {
 	const [cache, setCache] = React.useState(new BrowserCache());
+	
+	const chromeExtensionId = 'mjlkdebdclaakhcdbaapleegkoehnboj';
+	
+	window.localStorage.setItem('cache', JSON.stringify(cache));
+
+	// for (const field in cache.storage) {
+	// 	window.localStorage.setItem(field, JSON.stringify(cache.storage[field]));
+	// }
+	// window.localStorage.setItem('yasir','anthony');
+	// const testResponse = window.localStorage.getItem('yasir');
+	// console.log('Here\'s the test response from localStorage: ', testResponse)
 	async function query(query, options = {}) {
 		// dev tool messages
 		const startTime = Date.now();
-		chrome.runtime.sendMessage('mjlkdebdclaakhcdbaapleegkoehnboj', {'query': query});
+		chrome.runtime.sendMessage(chromeExtensionId, {'query': query});
+		chrome.runtime.sendMessage(chromeExtensionId, {'cache': window.localStorage.getItem('cache')})
+		console.log('Here\'s the message content: ', window.localStorage.getItem('cache'))
 		// set the options object default properties if not provided
 		const {
 			endpoint = '/graphql',
