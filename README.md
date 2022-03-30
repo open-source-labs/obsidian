@@ -155,7 +155,7 @@ const MovieApp = () => {
 
 ## Developer Tool
 information and instructions on how to use our developer tool can be found here:
-https://github.com/oslabs-beta/obsidian-developer-tool
+[oslabs-beta/obsidian-developer-tool](https://github.com/oslabs-beta/obsidian-developer-tool)
 
 ## Dockerized Demo
 working demo to install locally in docker:    
