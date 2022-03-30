@@ -7,7 +7,7 @@ const cacheContext = React.createContext();
 function ObsidianWrapper(props) {
 	const [cache, setCache] = React.useState(new BrowserCache());
 	
-	const chromeExtensionId = 'mjlkdebdclaakhcdbaapleegkoehnboj';
+	const chromeExtensionId = 'dkbfipkapkljpdbhdihnlnbieffhjdmh';
 	
 	window.localStorage.setItem('cache', JSON.stringify(cache));
 
@@ -56,7 +56,9 @@ function ObsidianWrapper(props) {
 			if (resObj) {
 				// returning cached response as a promise
 				const cacheHitResponseTime = Date.now() - startTime;
-				chrome.runtime.sendMessage('mjlkdebdclaakhcdbaapleegkoehnboj', {'cacheHitResponseTime': cacheHitResponseTime});
+				chrome.runtime.sendMessage(chromeExtensionId, {
+          cacheHitResponseTime: cacheHitResponseTime,
+        });
 				return new Promise((resolve, reject) => resolve(resObj));
 			}
 			// execute graphql fetch request if cache miss
@@ -88,7 +90,9 @@ function ObsidianWrapper(props) {
 					else cache.write(query, deepResObj);
 				}
 				const cacheMissResponseTime = Date.now() - startTime;
-				chrome.runtime.sendMessage('mjlkdebdclaakhcdbaapleegkoehnboj', {'cacheMissResponseTime': cacheMissResponseTime});
+				chrome.runtime.sendMessage(chromeExtensionId, {
+          cacheMissResponseTime: cacheMissResponseTime,
+        });
 				console.log('Here\'s the response time on the front end: ', cacheMissResponseTime);
 				return resObj;
 			} catch (e) {
@@ -156,7 +160,9 @@ function ObsidianWrapper(props) {
 	// breaking out writethrough logic vs. non-writethrough logic
 	async function mutate(mutation, options = {}) {
 		// dev tool messages
-		chrome.runtime.sendMessage('mjlkdebdclaakhcdbaapleegkoehnboj', {'mutation': mutation});
+		chrome.runtime.sendMessage(chromeExtensionId, {
+      mutation: mutation,
+    });
 		const startTime = Date.now();
 		mutation = insertTypenames(mutation);
 		const {
@@ -172,7 +178,9 @@ function ObsidianWrapper(props) {
 				if (toDelete) {
 					const responseObj = await cache.writeThrough(mutation, {}, true, endpoint);
 					const deleteMutationResponseTime = Date.now() - startTime;
-					chrome.runtime.sendMessage('mjlkdebdclaakhcdbaapleegkoehnboj', {'deleteMutationResponseTime': deleteMutationResponseTime});
+					chrome.runtime.sendMessage(chromeExtensionId, {
+            deleteMutationResponseTime: deleteMutationResponseTime,
+          });
 					return responseObj;
 				} else {
 					// for add mutation
@@ -186,7 +194,9 @@ function ObsidianWrapper(props) {
 					// GQL call to make changes and synchronize database
 					console.log('WriteThrough - true ', responseObj);
 					const addOrUpdateMutationResponseTime = Date.now() - startTime;
-					chrome.runtime.sendMessage('mjlkdebdclaakhcdbaapleegkoehnboj', {'addOrUpdateMutationResponseTime': addOrUpdateMutationResponseTime});
+					chrome.runtime.sendMessage(chromeExtensionId, {
+            addOrUpdateMutationResponseTime: addOrUpdateMutationResponseTime,
+          });
 					return responseObj;
 				}
 			} else {
