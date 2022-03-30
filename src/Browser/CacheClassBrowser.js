@@ -54,7 +54,6 @@ export default class BrowserCache {
 	async writeThrough(queryStr, respObj, deleteFlag, endpoint) {
 		try {
 			const queryObj = destructureQueries(queryStr);
-			console.log("Here's the query object: ", queryObj);
 			const mutationName = queryObj.mutations[0].name;
 			// check if it's a mutation
 			if (queryObj.mutations) {
@@ -86,13 +85,10 @@ export default class BrowserCache {
 						},
 						body: JSON.stringify({ query: queryStr }),
 					}).then((resp) => resp.json());
-					console.log("Here's the dummy response :", dummyResponse);
 					this.constructResponseObject(queryObj, respObj, deleteFlag);
 				}
 				// same logic for both situations
 				// normalize the result, invalidate the cache and return the appropriate object
-				console.log('Before write query :', queryStr)
-				console.log('Before write respObh :', respObj)
 				await this.write(queryStr, respObj, deleteFlag);
 				return respObj;
 			}
@@ -102,8 +98,6 @@ export default class BrowserCache {
 	}
 
 	async write(queryStr, respObj, deleteFlag) {
-		console.log('In write query :', queryStr)
-		console.log('In write respObj :', respObj)
 		const queryObj = destructureQueries(queryStr);
 		const resFromNormalize = normalizeResult(queryObj, respObj, deleteFlag);
 		// update the original cache with same reference
@@ -126,7 +120,7 @@ export default class BrowserCache {
 		const __typename = this.storage.writeThroughInfo[mutationName].type;
 		// this.storage.writeThroughInfo[mutationName].type;
 		respObj.data = {};
-		let obj = {};
+		const obj = {};
 		respObj.data[mutationName] = obj;
 		obj.__typename = __typename;
 		// delete logic
@@ -142,55 +136,40 @@ export default class BrowserCache {
 			return respObj;
 		}
 		// increment ID for ADD mutations only
-		console.log(
-			'Line 141, F constructResponseObject,  id:',
-			this.storage.writeThroughInfo[mutationName]
-		);
 		obj.id = (++this.storage.writeThroughInfo[mutationName].lastId).toString();
 
 		// ADD mutation logic
 		// grab arguments (which is a string)
 		const argumentsStr = mutationData.arguments;
-		addNonScalarFields(argumentsStr);
-		separateArguments(argumentsStr);
-		console.log('Final obj', respObj);
+		this.addNonScalarFields(argumentsStr, respObj, mutationData);
+		this.separateArguments(argumentsStr, respObj, mutationName );
+	}
 
-		function separateArguments(str) {
-			const startIndex = str.indexOf('{');
-			const slicedStr = str.slice(startIndex + 1, str.length - 2);
-			console.log('slicedStr: ', slicedStr);
-			const argumentPairs = slicedStr.split(',');
-			console.log('argumentPairs', argumentPairs);
-			for (const argumentPair of argumentPairs) {
-				const argumentKeyAndValue = argumentPair.split(':');
-				const argumentKey = argumentKeyAndValue[0];
-				let argumentValue = Number(argumentKeyAndValue[1])
-					? Number(argumentKeyAndValue[1])
-					: argumentKeyAndValue[1];
-				if (typeof argumentValue === 'string') {
-					console.log("It's a string");
-					argumentValue = argumentValue.replace(/\"/g, '');
-				}
-				respObj.data[mutationName][argumentKey] = argumentValue;
+	 separateArguments(str,respObj,mutationName) {
+		const startIndex = str.indexOf('{');
+		const slicedStr = str.slice(startIndex + 1, str.length - 2);
+		const argumentPairs = slicedStr.split(',');
+		for (const argumentPair of argumentPairs) {
+			const argumentKeyAndValue = argumentPair.split(':');
+			const argumentKey = argumentKeyAndValue[0];
+			let argumentValue = Number(argumentKeyAndValue[1])
+				? Number(argumentKeyAndValue[1])
+				: argumentKeyAndValue[1];
+			if (typeof argumentValue === 'string') {
+				argumentValue = argumentValue.replace(/\"/g, '');
 			}
-			console.log("Here's after adding arguments: ", respObj);
+			respObj.data[mutationName][argumentKey] = argumentValue;
 		}
+	}
 
-		function addNonScalarFields(str) {
-			for (const field in mutationData.fields) {
-				console.log(
-					'in addNonScalarFields function: ',
-					field,
-					mutationData.fields[field]
-				);
-				if (
-					mutationData.fields[field] !== 'scalar' &&
-					mutationData.fields[field] !== 'meta'
-				) {
-					respObj.data[mutationName][field] = [];
-				}
+	addNonScalarFields(str, respObj , mutationData) {
+		for (const field in mutationData.fields) {
+			if (
+				mutationData.fields[field] !== 'scalar' &&
+				mutationData.fields[field] !== 'meta'
+			) {
+				respObj.data[mutationData.name][field] = [];
 			}
-			console.log("Here's after adding array fields: ", respObj);
 		}
 	}
 
