@@ -9,7 +9,6 @@ function ObsidianWrapper(props) {
 
   // You have to put your Google Chrome Obsidian developer tool extension id to connect Obsidian Wrapper with dev tool
   const chromeExtensionId = "dkbfipkapkljpdbhdihnlnbieffhjdmh";
-
   window.localStorage.setItem("cache", JSON.stringify(cache));
 
   async function query(query, options = {}) {
