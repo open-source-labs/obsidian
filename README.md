@@ -27,7 +27,7 @@
 - Configurable caching options, giving you complete control over your cache
 - Fullstack integration, leveraging client-side and server-side caching to streamline your caching strategy
 - Support for the full GraphQL convention
-- Support for server-side cache invalidation
+- Support for client-side and server-side cache invalidation
 - Optional GraphQL DoS attack mitigation security module
 
 ## Overview
@@ -151,8 +151,11 @@ const MovieApp = () => {
 ```
 
 ## Documentation
-
 [obsidian.land](http://obsidian.land)
+
+## Developer Tool
+information and instructions on how to use our developer tool can be found here: <br/>
+[oslabs-beta/obsidian-developer-tool](https://github.com/oslabs-beta/obsidian-developer-tool)
 
 ## Dockerized Demo
 working demo to install locally in docker:    
@@ -164,7 +167,11 @@ github for a demo with some example code to play with:
 
 
 ## Authors
-
+[Yurii Shchyrba](https://github.com/YuriiShchyrba)   
+[Linda Zhao](https://github.com/lzhao15)   
+[Ali Fay](https://github.com/ali-fay)   
+[Anthony Guan](https://github.com/guananthony)   
+[Yasir Choudhury](https://github.com/Yasir-Choudhury)   
 [Yogi Paturu](https://github.com/YogiPaturu)   
 [Michael Chin](https://github.com/mikechin37)   
 [Dana Flury](https://github.com/dmflury)   
