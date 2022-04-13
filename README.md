@@ -159,7 +159,7 @@ works with Obsidian 5.0
 [oslabs-beta/obsidian-developer-tool](https://github.com/oslabs-beta/obsidian-developer-tool)
 
 ## Obsidian 5.0 Demo
-information and instructions on how to use our developer tool can be found here: <br/>
+github for a demo with some example code to play with: <br/>
 [oslabs-beta/obsidian-demo-5.0](https://github.com/oslabs-beta/obsidian-demo-5.0)
 
 ## Dockerized Demo
