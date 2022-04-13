@@ -160,7 +160,6 @@ works with Obsidian 5.0
 
 ## Obsidian 5.0 Demo
 information and instructions on how to use our developer tool can be found here: <br/>
-works with Obsidian 5.0
 [oslabs-beta/obsidian-demo-5.0](https://github.com/oslabs-beta/obsidian-demo-5.0)
 
 ## Dockerized Demo
