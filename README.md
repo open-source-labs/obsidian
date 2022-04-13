@@ -154,8 +154,8 @@ const MovieApp = () => {
 [obsidian.land](http://obsidian.land)
 
 ## Developer Tool
-information and instructions on how to use our developer tool can be found here: <br/>
-works with Obsidian 5.0
+information and instructions on how to use our developer tool can be found here <br/>
+works with Obsidian 5.0 <br/>
 [oslabs-beta/obsidian-developer-tool](https://github.com/oslabs-beta/obsidian-developer-tool)
 
 ## Obsidian 5.0 Demo
