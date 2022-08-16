@@ -18,6 +18,7 @@ export default class BrowserCache {
 
   // Main functionality methods
   async read(queryStr) {
+    console.log('CacheClassBrowser.js read 21: ',queryStr)
     if (typeof queryStr !== "string") {
       throw TypeError("input should be a string");
     }
@@ -54,6 +55,7 @@ export default class BrowserCache {
 
   async writeThrough(queryStr, respObj, deleteFlag, endpoint) {
     try {
+      console.log('CacheClassBrowser.js writeThrough 58: ',queryStr)
       const queryObj = destructureQueries(queryStr);
       const mutationName = queryObj.mutations[0].name;
       // check if it's a mutation
@@ -99,6 +101,7 @@ export default class BrowserCache {
   }
 
   async write(queryStr, respObj, deleteFlag) {
+    console.log('CacheClassBrowser.js write 104: ',queryStr)
     const queryObj = destructureQueries(queryStr);
     const resFromNormalize = normalizeResult(queryObj, respObj, deleteFlag);
     // update the original cache with same reference
@@ -116,6 +119,7 @@ export default class BrowserCache {
   }
 
   constructResponseObject(queryObj, respObj, deleteFlag) {
+    console.log('CacheClassBrowser.js constructResponseObject 122: ',queryStr)
     const mutationData = queryObj.mutations[0];
     const mutationName = mutationData.name;
     const __typename = this.storage.writeThroughInfo[mutationName].type;
@@ -147,6 +151,7 @@ export default class BrowserCache {
   }
 
   separateArguments(str, respObj, mutationName) {
+    console.log('CacheClassBrowser.js separateArguments 154: ',str)
     const startIndex = str.indexOf("{");
     const slicedStr = str.slice(startIndex + 1, str.length - 2);
     const argumentPairs = slicedStr.split(",");
@@ -164,6 +169,7 @@ export default class BrowserCache {
   }
 
   addNonScalarFields(respObj, mutationData) {
+    console.log('CacheClassBrowser.js addNonScalarFields 172: ',respObj)
     for (const field in mutationData.fields) {
       if (
         mutationData.fields[field] !== "scalar" &&
@@ -177,6 +183,7 @@ export default class BrowserCache {
   gc() {
     // garbageCollection;  garbage collection: removes any inaccessible hashes from the cache
     const badHashes = getBadHashes();
+    console.log('CacheClassBrowser.js gc 186: ',badHashes)
     const goodHashes = rootQueryCleaner(badHashes);
     const goodHashes2 = getGoodHashes(badHashes, goodHashes);
     removeInaccessibleHashes(badHashes, goodHashes2);
@@ -184,6 +191,7 @@ export default class BrowserCache {
 
   // remove hashes that are flagged for deletion and store records of them in a set badHashes for removal inside root queries
   getBadHashes() {
+    console.log('CacheClassBrowser.js getBadHashes 194: ',queryStr)
     const badHashes = new Set();
     for (let key in this.storage) {
       if (key === "ROOT_QUERY" || key === "ROOT_MUTATION") continue;
@@ -197,6 +205,7 @@ export default class BrowserCache {
 
   // go through root queries, remove all instances of bad hashes, add remaining hashes into goodHashes set
   rootQueryCleaner(badHashes) {
+    console.log('CacheClassBrowser.js rootQueryCleaner 208: ',badHashes)
     const goodHashes = new Set();
     const rootQuery = this.storage["ROOT_QUERY"];
     for (let key in rootQuery) {
@@ -215,6 +224,7 @@ export default class BrowserCache {
 
   // Go through the cache, check good hashes for any nested hashes and add them to goodHashes set
   getGoodHashes(badHashes, goodHashes) {
+    console.log('CacheClassBrowser.js getGoodHashes 227: ',goodHashes)
     for (let key in this.storage) {
       if (key === "ROOT_QUERY" || key === "ROOT_MUTATION") continue;
       for (let i in this.storage[key]) {
@@ -239,6 +249,7 @@ export default class BrowserCache {
 
   // Remove inaccessible hashes by checking if they are in goodhashes set or not
   removeInaccessibleHashes(badHashes, goodHashes) {
+    console.log('CacheClassBrowser.js removeInaccessibleHashes 252: ',this.storage)
     for (let key in this.storage) {
       if (key === "ROOT_QUERY" || key === "ROOT_MUTATION") continue;
       if (!goodHashes.has(key)) delete this.storage[key];
@@ -261,18 +272,22 @@ export default class BrowserCache {
 
   // cache read/write helper methods
   async cacheRead(hash) {
+    console.log('CacheClassBrowser.js cacheRead 275: ',hash)
     return this.storage[hash];
   }
 
   async cacheWrite(hash, value) {
+    console.log('CacheClassBrowser.js cacheWrite 280: ',hash)
     this.storage[hash] = value;
   }
 
   async cacheDelete(hash) {
+    console.log('CacheClassBrowser.js cacheDelete 285: ',hash)
     delete this.storage[hash];
   }
 
   async cacheClear() {
+    console.log('CacheClassBrowser.js cacheClear 290: ',this.storage)
     this.storage = {
       ROOT_QUERY: {},
       ROOT_MUTATION: {},
@@ -281,16 +296,19 @@ export default class BrowserCache {
 
   // functionality to stop polling
   stopPollInterval(interval) {
+    console.log('CacheClassBrowser.js stopPollInterval: ',interval)
     clearInterval(interval);
   }
 
   writeWholeQuery(queryStr, respObj) {
+    console.log('CacheClassBrowser.js writeWholeQuery 304: ',queryStr)
     const hash = queryStr.replace(/\s/g, "");
     this.cacheWrite(ROOT_QUERY[hash], respObj);
     return respObj;
   }
 
   readWholeQuery(queryStr) {
+    console.log('CacheClassBrowser.js readWholeQuery 311: ',queryStr)
     const hash = queryStr.replace(/\s/g, "");
     const root = this.cacheRead("ROOT_QUERY");
     if (root[hash]) return { data: root[hash] };
@@ -299,6 +317,7 @@ export default class BrowserCache {
 
   // specialized helper methods
   async populateAllHashes(allHashesFromQuery, fields) {
+    console.log('CacheClassBrowser.js populateAllHashes 320: ',allHashesFromQuery)
     // include the hashname for each hash
     if (!allHashesFromQuery.length) return [];
     const hyphenIdx = allHashesFromQuery[0].indexOf("~");

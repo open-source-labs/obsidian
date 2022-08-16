@@ -1,4 +1,4 @@
-import React from "https://dev.jspm.io/react";
+import React from "https://jspm.dev/react";
 import BrowserCache from "../src/Browser/CacheClassBrowser.js";
 import { insertTypenames } from "../src/Browser/insertTypenames.js";
 
@@ -8,7 +8,7 @@ function ObsidianWrapper(props) {
   const [cache, setCache] = React.useState(new BrowserCache());
 
   // You have to put your Google Chrome Obsidian developer tool extension id to connect Obsidian Wrapper with dev tool
-  const chromeExtensionId = "dkbfipkapkljpdbhdihnlnbieffhjdmh";
+  const chromeExtensionId = "dllaimdpnljhoipmgmjdnhnofgfhgajd";
   window.localStorage.setItem("cache", JSON.stringify(cache));
 
   async function query(query, options = {}) {
@@ -20,7 +20,7 @@ function ObsidianWrapper(props) {
     });
     console.log(
       "Here's the message content: ",
-      window.localStorage.getItem("cache")
+      [window.localStorage.getItem("cache")]
     );
     // set the options object default properties if not provided
     const {
@@ -55,6 +55,7 @@ function ObsidianWrapper(props) {
       if (resObj) {
         // returning cached response as a promise
         const cacheHitResponseTime = Date.now() - startTime;
+        console.log('cacheHitResponseTime',cacheHitResponseTime)
         chrome.runtime.sendMessage(chromeExtensionId, {
           cacheHitResponseTime: cacheHitResponseTime,
         });
@@ -72,6 +73,7 @@ function ObsidianWrapper(props) {
     async function hunt(query) {
       if (!wholeQuery) query = insertTypenames(query);
       try {
+        console.log('ObsidianWrapper hunt 76 query:', query)
         // send fetch request with query
         const resJSON = await fetch(endpoint, {
           method: "POST",
