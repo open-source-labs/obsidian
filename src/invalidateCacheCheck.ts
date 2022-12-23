@@ -86,9 +86,13 @@ export async function invalidateCache(
       //loop through rootQueryContents, checking if
       //staleRef === rootQueryContents[i].slice(0, staleRef.length).
       //if they're equal, delete from ROOT_QUERY hash (redisdb.hdel(ROOTQUERY, rootQueryContents[i]))
-      for (let i = 0; i < rootQueryContents.length; i += 2) {
-        if (staleRefs === rootQueryContents[i].slice(0, staleRefs.length)) {
-          redisdb.hdel('ROOT_QUERY', rootQueryContents[i]);
+      for (let j = 0; j < staleRefs.length; j++) {
+        for (let i = 0; i < rootQueryContents.length; i += 2) {
+          if (
+            staleRefs[j] === rootQueryContents[i].slice(0, staleRefs[j].length)
+          ) {
+            redisdb.hdel('ROOT_QUERY', rootQueryContents[i]);
+          }
         }
       }
       await cache.cacheWriteObject(redisKey, normalizedData);
