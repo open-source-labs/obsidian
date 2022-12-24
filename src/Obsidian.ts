@@ -68,7 +68,7 @@ export async function ObsidianRouter<T>({
   useQueryCache = true,
   useRebuildCache = true,
   customIdentifier = ['id', '__typename'],
-  mutationTableMap = {},
+  mutationTableMap = {}, // Developer passes in object where keys are add mutations and values are arrays of affected tables
 }: ObsidianRouterOptions<T>): Promise<T> {
   redisPortExport = redisPort;
   const router = new Router();
@@ -84,35 +84,36 @@ export async function ObsidianRouter<T>({
 
   //post
   await router.post(path, async (ctx: any) => {
-    const t0 = performance.now();
+    
+    const t0 = performance.now(); // Used for demonstration of cache vs. db performance times
+
     const { response, request } = ctx;
     if (!request.hasBody) return;
     try {
       const contextResult = context ? await context(ctx) : undefined;
       let body = await request.body().value;
 
-      // Gets requested data point from query and saves into an array
-      const selectionsArray = mapSelectionSet(body.query);
+      const selectedFields = mapSelectionSet(body.query); // Gets requested fields from query and saves into an array
 
       if (maxQueryDepth) queryDepthLimiter(body.query, maxQueryDepth); // If a securty limit is set for maxQueryDepth, invoke queryDepthLimiter, which throws error if query depth exceeds maximum
-      let restructuredBody = { query: restructure(body) }; // Restructre gets rid of variables and fragments from the query
+      let restructuredBody = { query: restructure(body) }; // Restructure gets rid of variables and fragments from the query
 
-      // Parses query string into query key and checks cach for that key
-      let cacheQueryValue = await cache.read(body.query);
+      let cacheQueryValue = await cache.read(body.query); // Parses query string into query key and checks cache for that key
 
       // Is query in cache?
       if (useCache && useQueryCache && cacheQueryValue) {
-        let detransformedCacheQueryValue = await detransformResponse(
+        let detransformedCacheQueryValue = await detransformResponse( // Returns a nested object representing the original graphQL response object for a given queryKey 
           restructuredBody.query,
           cacheQueryValue,
-          selectionsArray
+          selectedFields
         );
         if (!detransformedCacheQueryValue) {
           // cache was evicted if any partial cache is missing, which causes detransformResponse to return undefined
           cacheQueryValue = undefined;
-        } else {
+
+        } else { // Successful cache hit
           response.status = 200;
-          response.body = detransformedCacheQueryValue;
+          response.body = detransformedCacheQueryValue; // Returns response from cache
           const t1 = performance.now();
           console.log(
             '%c Obsidian retrieved data from cache and took ' +
@@ -131,15 +132,14 @@ export async function ObsidianRouter<T>({
           body.variables || undefined,
           body.operationName || undefined
         );
-        // console.log('gqlResponse raw: ', gqlResponse);
-        const normalizedGQLResponse = normalizeObject(
+
+        const normalizedGQLResponse = normalizeObject( // Recursively flattens an arbitrarily nested object into an objects with hash key and hashable object pairs
           gqlResponse,
           customIdentifier
         );
-        // console.log('normalized: ', normalizedGQLResponse);
-        if (isMutation(restructuredBody)) {
-          // cache.cacheClear();
-          const queryString = await request.body().value;
+
+        if (isMutation(restructuredBody)) { // If operation is mutation, invalidate relevant responses in cache
+          const queryString = body; 
           invalidateCache(
             normalizedGQLResponse,
             queryString.query,
@@ -158,7 +158,7 @@ export async function ObsidianRouter<T>({
           }
         }
         response.status = 200;
-        response.body = gqlResponse;
+        response.body = gqlResponse; // Returns response from database
         const t1 = performance.now();
         console.log(
           '%c Obsidian received new data and took ' +

@@ -25,9 +25,9 @@ export function mapSelectionSet(query) {
   };
   recursiveMap(selections);
 
-  // filter out object name from array, leaving only fields
-  const fieldsArray = Object.keys(selectionKeysMap).filter(
+  // filter out table name from array, leaving only fields
+  const selectedFields = Object.keys(selectionKeysMap).filter(
     (key) => key !== tableName
   );
-  return fieldsArray;
+  return selectedFields;
 }

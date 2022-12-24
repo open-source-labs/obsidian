@@ -2,8 +2,8 @@ import {
   isHashableObject,
   containsHashableObject,
   hashMaker,
-} from './normalize.ts';
-import { GenericObject } from './normalize.ts';
+} from './normalize';
+import { GenericObject } from './normalize';
 import { Cache } from './quickCache.js';
 const cache = new Cache();
 
@@ -63,7 +63,7 @@ export const transformResponse = (
 export const detransformResponse = async (
   queryString: String,
   transformedValue: any,
-  selectionsArray: Array<string>
+  selectedFields: Array<string>
 ): Promise<any> => {
   // remove all text within parentheses aka '(input: ...)'
   queryString = queryString.replace(/\(([^)]+)\)/, '');
@@ -80,7 +80,7 @@ export const detransformResponse = async (
   const recursiveDetransform = async (
     transformedValue: any,
     tableNames: Array<string>,
-    selectionsArray: Array<string>,
+    selectedFields: Array<string>,
     depth: number = 0
   ): Promise<any> => {
     const keys = Object.keys(transformedValue);
@@ -97,7 +97,7 @@ export const detransformResponse = async (
       for (let hash in transformedValue) {
         const redisValue: GenericObject = await cache.cacheReadObject(
           hash,
-          selectionsArray
+          selectedFields
         );
 
         // edge case in which our eviction strategy has pushed partial Cache data out of Redis
@@ -110,7 +110,7 @@ export const detransformResponse = async (
         let recursiveResult = await recursiveDetransform(
           transformedValue[hash],
           tableNames,
-          selectionsArray,
+          selectedFields,
           (depth = currDepth + 1)
         );
 
@@ -130,20 +130,20 @@ export const detransformResponse = async (
   };
 
   // actually call recursiveDetransform
+  // Formats Redis cache value into GraphQL response syntax. cacheReadObject is called and returns only fields that are present in selectedFields
   let detransformedResult: any = { data: {} };
   const detransformedSubresult = await recursiveDetransform(
     transformedValue,
     tableNames,
-    selectionsArray
+    selectedFields
   );
-  // console.log('detransformedSubresult: ', detransformedSubresult);
   if (detransformedSubresult === 'cacheEvicted') {
     detransformedResult = undefined;
   } else {
     detransformedResult.data = await recursiveDetransform(
       transformedValue,
       tableNames,
-      selectionsArray
+      selectedFields
     );
   }
 

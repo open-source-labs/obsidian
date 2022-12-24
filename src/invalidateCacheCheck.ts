@@ -11,7 +11,7 @@ const cache = new Cache();
  * @param {boolean} isMutation - Boolean indicating if it's a mutation query
  * @return {boolean} isMutation
  */
-export function isMutation(gqlQuery: { query: any }): boolean {
+export function isMutation(gqlQuery: { query: string }): boolean {
   let isMutation: boolean = false;
   let ast: any = gql(gqlQuery.query);
 
@@ -48,7 +48,7 @@ export function isMutation(gqlQuery: { query: any }): boolean {
 export async function invalidateCache(
   normalizedMutation: { [key: string]: object },
   queryString: string,
-  mutationTableMap
+  mutationTableMap: Record<string, unknown>
 ) {
   let normalizedData: object;
   let cachedVal: any;
@@ -65,37 +65,31 @@ export async function invalidateCache(
       isDelete(queryString)
     ) {
       await cache.cacheDelete(redisKey);
-    } else {
-      // otherwise it's an update or add mutation because response objects from mutation and cache don't match so we overwrite the existing cache value or write new data if cache at that key doesn't exist
+    } 
+    else {
+      // Otherwise it's an update or add mutation because response objects from mutation and cache don't match. 
+      // We overwrite the existing cache value or write new data if cache at that key doesn't exist
       // Edge case: update is done without changing any values... cache will be deleted from redis because the response obj and cached obj will be equal
-      // we put it in the backburner because it doesn't make our cache stale, we would just perform an extra operation to re-cache the missing value when a request comes in
-      // mutationTableMap.mutationType
-      console.log('normalizedMutation is: ', normalizedMutation);
-      console.log('queryString is: ', queryString);
-      let ast = gql(queryString);
-      const mutationType =
-        ast.definitions[0].selectionSet.selections[0].name.value;
-      console.log('mutationType is: ', mutationType);
-      console.log('mutationTableMap is: ', mutationTableMap);
-      const staleRefs = mutationTableMap[mutationType];
-      console.log('staleRefs is: ', staleRefs);
+      if (cachedVal === undefined) { // checks if add mutation
+        let ast = gql(queryString);
+        const mutationType =
+          ast.definitions[0].selectionSet.selections[0].name.value; // Extracts mutationType from query string
 
-      //loop through refs in ROOT_QUERY hash in redis
-      const rootQueryContents = await redisdb.hgetall('ROOT_QUERY');
-      console.log('rootQueryContents is: ', rootQueryContents);
-      //loop through rootQueryContents, checking if
-      //staleRef === rootQueryContents[i].slice(0, staleRef.length).
-      //if they're equal, delete from ROOT_QUERY hash (redisdb.hdel(ROOTQUERY, rootQueryContents[i]))
-      for (let j = 0; j < staleRefs.length; j++) {
-        for (let i = 0; i < rootQueryContents.length; i += 2) {
-          if (
-            staleRefs[j] === rootQueryContents[i].slice(0, staleRefs[j].length)
-          ) {
-            redisdb.hdel('ROOT_QUERY', rootQueryContents[i]);
+        const staleRefs: Array<string> = mutationTableMap[mutationType]; // Grabs array of affected data tables from dev specified mutationTableMap
+
+        const rootQueryContents = await redisdb.hgetall('ROOT_QUERY'); // Creates array of all query keys and values in ROOT_QUERY from Redis
+
+        for (let j = 0; j < staleRefs.length; j++) {                // Checks for all query keys that refer to the affected tables and deletes them from Redis
+          for (let i = 0; i < rootQueryContents.length; i += 2) {
+            if (
+              staleRefs[j] === rootQueryContents[i].slice(0, staleRefs[j].length)
+            ) {
+              redisdb.hdel('ROOT_QUERY', rootQueryContents[i]);
+            }
           }
         }
       }
-      await cache.cacheWriteObject(redisKey, normalizedData);
+      await cache.cacheWriteObject(redisKey, normalizedData); // Adds or updates reference in redis cache
     }
   }
 }
