@@ -50,7 +50,6 @@ function ObsidianWrapper(props) {
       // when the developer decides to only utilize whole query for cache
       if (wholeQuery) resObj = await cache.readWholeQuery(query);
       else resObj = await cache.read(query);
-      console.log('query function resObj: ', resObj);
       // check if query is stored in cache
       if (resObj) {
         // returning cached response as a promise
