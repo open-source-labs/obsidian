@@ -22,6 +22,9 @@
 
 ## Features
 
+- (New!) Server-side cache invalidation only on affected entries
+- (New!) Flexible cache responds with only data requested from selected fields
+- (New!) Developer tool for Obsidian is now updated to Manifest version 3 and invalid Bootstrap module imports were also fixed along with CodeMirror dependencies
 - GraphQL query abstraction and caching improving the performance of your app
 - SSR React wrapper, allowing you to cache in browser
 - Configurable caching options, giving you complete control over your cache
@@ -36,7 +39,6 @@ Obsidian is Deno's first native GraphQL caching client and server module. Boasti
 
 With additional support for use in server-side rendered React apps built with Deno, full stack integration of Obsidian enables a fast and flexible caching solution.
 
-
 ## Installation
 
 <div align="center"><strong>QUICK START</strong></div>
@@ -47,29 +49,31 @@ With additional support for use in server-side rendered React apps built with De
 ```javascript
 import { Application, Router } from 'https://deno.land/x/oak@v6.0.1/mod.ts';
 import { ObsidianRouter, gql } from 'https://deno.land/x/obsidian/mod.ts';
-import { resolvers } from './ import from your resolvers file'
-import { types } from './ import your schema/types from schema/types file'
-
+import { resolvers } from './ import from your resolvers file';
+import { types } from './ import your schema/types from schema/types file';
 
 interface ObsRouter extends Router {
   obsidianSchema?: any;
 }
 
-const GraphQLRouter = await ObsidianRouter<ObsRouter>({
-  Router,
-  typeDefs: types,
-  resolvers: resolvers,   
-  redisPort: 6379,        //Desired redis port
-  useCache: true,         //Boolean to toggle all cache functionality
-  usePlayground: true,    //Boolean to allow for graphQL playground
-  useQueryCache: true,    //Boolean to toogle full query cache
-  useRebuildCache: true,  //Boolean to toggle rebuilding from normalized data
-  customIdentifier: ["id", "__typename"]  
-        
-});
+const GraphQLRouter =
+  (await ObsidianRouter) <
+  ObsRouter >
+  {
+    Router,
+    typeDefs: types,
+    resolvers: resolvers,
+    redisPort: 6379, //Desired redis port
+    useCache: true, //Boolean to toggle all cache functionality
+    usePlayground: true, //Boolean to allow for graphQL playground
+    useQueryCache: true, //Boolean to toogle full query cache
+    useRebuildCache: true, //Boolean to toggle rebuilding from normalized data
+    customIdentifier: ['id', '__typename'],
+    mutationTableMap = {}, //Object where keys are add mutation types and value is an array of affected tables (e.g. {addPlants: ['plants'], addMovie: ['movies']})
+  };
 
 // attach the graphql routers routes to our app
-  app.use(GraphQLRouter.routes(), GraphQLRouter.allowedMethods());
+app.use(GraphQLRouter.routes(), GraphQLRouter.allowedMethods());
 ```
 
 ## Creating the Wrapper
@@ -151,46 +155,56 @@ const MovieApp = () => {
 ```
 
 ## Documentation
+
 [obsidian.land](http://obsidian.land)
 
 ## Developer Tool
-information and instructions on how to use our developer tool can be found here <br/>
+
+Information and instructions on how to use our developer tool can be found here <br/>
 works with Obsidian 5.0 <br/>
 [oslabs-beta/obsidian-developer-tool](https://github.com/oslabs-beta/obsidian-developer-tool)
 
 ## Obsidian 5.0 Demo
-github for a demo with some example code to play with: <br/>
+
+Github for a demo with some example code to play with: <br/>
 [oslabs-beta/obsidian-demo-5.0](https://github.com/oslabs-beta/obsidian-demo-5.0)
 
 ## Dockerized Demo
-working demo to install locally in docker:    
+
+Working demo to install locally in docker:  
 [oslabs-beta/obsidian-demo-docker](https://github.com/oslabs-beta/obsidian-demo-docker)
 
-## Working Example Demo Code
-github for a demo with some example code to play with:    
-[oslabs-beta/obsidian-demo-3.2](https://github.com/oslabs-beta/obsidian-demo-3.2)
+## Features In Progress
 
+- Ability to query the database for only those fields missing from the cache
+- Developer Tool Settings component, fully functioning Playground component
 
 ## Authors
-[Yurii Shchyrba](https://github.com/YuriiShchyrba)   
-[Linda Zhao](https://github.com/lzhao15)   
-[Ali Fay](https://github.com/ali-fay)   
-[Anthony Guan](https://github.com/guananthony)   
-[Yasir Choudhury](https://github.com/Yasir-Choudhury)   
-[Yogi Paturu](https://github.com/YogiPaturu)   
-[Michael Chin](https://github.com/mikechin37)   
-[Dana Flury](https://github.com/dmflury)   
-[Sardor Akhmedov](https://github.com/sarkamedo)   
-[Christopher Berry](https://github.com/cjamesb)   
+
+[Derek Okuno](https://github.com/okunod)  
+[Liam Johnson](https://github.com/liamdimitri)  
+[Josh Reed](https://github.com/joshreed104)  
+[Jonathan Fangon](https://github.com/jonathanfangon)  
+[Liam Jeon](https://github.com/laj52)  
+[Yurii Shchyrba](https://github.com/YuriiShchyrba)  
+[Linda Zhao](https://github.com/lzhao15)  
+[Ali Fay](https://github.com/ali-fay)  
+[Anthony Guan](https://github.com/guananthony)  
+[Yasir Choudhury](https://github.com/Yasir-Choudhury)  
+[Yogi Paturu](https://github.com/YogiPaturu)  
+[Michael Chin](https://github.com/mikechin37)  
+[Dana Flury](https://github.com/dmflury)  
+[Sardor Akhmedov](https://github.com/sarkamedo)  
+[Christopher Berry](https://github.com/cjamesb)  
 [Olivia Yeghiazarian](https://github.com/Olivia-code)  
-[Michael Melville](https://github.com/meekle)   
-[John Wong](https://github.com/johnwongfc)    
-[Kyung Lee](https://github.com/kyunglee1)   
-[Justin McKay](https://github.com/justinwmckay)   
+[Michael Melville](https://github.com/meekle)  
+[John Wong](https://github.com/johnwongfc)  
+[Kyung Lee](https://github.com/kyunglee1)  
+[Justin McKay](https://github.com/justinwmckay)  
 [Patrick Sullivan](https://github.com/pjmsullivan)  
 [Cameron Simmons](https://github.com/cssim22)  
 [Raymond Ahn](https://github.com/raymondcodes)  
-[Alonso Garza](https://github.com/Alonsog66)   
+[Alonso Garza](https://github.com/Alonsog66)  
 [Burak Caliskan](https://github.com/CaliskanBurak)  
 [Matt Meigs](https://github.com/mmeigs)  
 [Travis Frank](https://github.com/TravisFrankMTG/)  
@@ -198,4 +212,4 @@ github for a demo with some example code to play with:
 [Esma Sahraoui](https://github.com/EsmaShr)  
 [Derek Miller](https://github.com/dsymiller)  
 [Eric Marcatoma](https://github.com/ericmarc159)  
-[Spencer Stockton](https://github.com/tonstock)  
+[Spencer Stockton](https://github.com/tonstock)

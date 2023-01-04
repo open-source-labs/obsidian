@@ -1,6 +1,6 @@
-import React from "https://dev.jspm.io/react";
-import BrowserCache from "../src/Browser/CacheClassBrowser.js";
-import { insertTypenames } from "../src/Browser/insertTypenames.js";
+import React from 'https://dev.jspm.io/react';
+import BrowserCache from '../src/Browser/CacheClassBrowser.js';
+import { insertTypenames } from '../src/Browser/insertTypenames.js';
 
 const cacheContext = React.createContext();
 
@@ -8,23 +8,23 @@ function ObsidianWrapper(props) {
   const [cache, setCache] = React.useState(new BrowserCache());
 
   // You have to put your Google Chrome Obsidian developer tool extension id to connect Obsidian Wrapper with dev tool
-  const chromeExtensionId = "dkbfipkapkljpdbhdihnlnbieffhjdmh";
-  window.localStorage.setItem("cache", JSON.stringify(cache));
+  const chromeExtensionId = 'apcpdmmbhhephobnmnllbklplpaoiemo';
+  window.localStorage.setItem('cache', JSON.stringify(cache));
 
   async function query(query, options = {}) {
     // dev tool messages
     const startTime = Date.now();
     chrome.runtime.sendMessage(chromeExtensionId, { query: query });
     chrome.runtime.sendMessage(chromeExtensionId, {
-      cache: window.localStorage.getItem("cache"),
+      cache: window.localStorage.getItem('cache'),
     });
     console.log(
       "Here's the message content: ",
-      window.localStorage.getItem("cache")
+      window.localStorage.getItem('cache')
     );
     // set the options object default properties if not provided
     const {
-      endpoint = "/graphql",
+      endpoint = '/graphql',
       cacheRead = true,
       cacheWrite = true,
       pollInterval = null,
@@ -50,7 +50,6 @@ function ObsidianWrapper(props) {
       // when the developer decides to only utilize whole query for cache
       if (wholeQuery) resObj = await cache.readWholeQuery(query);
       else resObj = await cache.read(query);
-      console.log("query function resObj: ", resObj);
       // check if query is stored in cache
       if (resObj) {
         // returning cached response as a promise
@@ -74,10 +73,10 @@ function ObsidianWrapper(props) {
       try {
         // send fetch request with query
         const resJSON = await fetch(endpoint, {
-          method: "POST",
+          method: 'POST',
           headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
           },
           body: JSON.stringify({ query }),
         });
@@ -117,7 +116,7 @@ function ObsidianWrapper(props) {
     const startTime = Date.now();
     mutation = insertTypenames(mutation);
     const {
-      endpoint = "/graphql",
+      endpoint = '/graphql',
       cacheWrite = true,
       toDelete = false,
       update = null,
@@ -153,7 +152,7 @@ function ObsidianWrapper(props) {
           }
           // always write/over-write to cache (add/update)
           // GQL call to make changes and synchronize database
-          console.log("WriteThrough - true ", responseObj);
+          console.log('WriteThrough - true ', responseObj);
           const addOrUpdateMutationResponseTime = Date.now() - startTime;
           chrome.runtime.sendMessage(chromeExtensionId, {
             addOrUpdateMutationResponseTime: addOrUpdateMutationResponseTime,
@@ -165,10 +164,10 @@ function ObsidianWrapper(props) {
 
         // use cache.write instead of cache.writeThrough
         const responseObj = await fetch(endpoint, {
-          method: "POST",
+          method: 'POST',
           headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
           },
           body: JSON.stringify({ query: mutation }),
         }).then((resp) => resp.json());
@@ -184,7 +183,7 @@ function ObsidianWrapper(props) {
         }
         // third behaviour just for normal update (no-delete, no update function)
         cache.write(mutation, responseObj);
-        console.log("WriteThrough - false ", responseObj);
+        console.log('WriteThrough - false ', responseObj);
         return responseObj;
       }
     } catch (e) {

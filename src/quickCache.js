@@ -1,16 +1,16 @@
 /** @format */
 
-import "https://deno.land/x/dotenv/load.ts";
-import { connect } from "https://deno.land/x/redis/mod.ts";
-import { gql } from "https://deno.land/x/oak_graphql/mod.ts";
-import { print, visit } from "https://deno.land/x/graphql_deno/mod.ts";
+import 'https://deno.land/x/dotenv/load.ts';
+import { connect } from 'https://deno.land/x/redis/mod.ts';
+import { gql } from 'https://deno.land/x/oak_graphql/mod.ts';
+import { print, visit } from 'https://deno.land/x/graphql_deno/mod.ts';
 
 let redis;
-const context = window.Deno ? "server" : "client";
+const context = window.Deno ? 'server' : 'client';
 
-if (context === "server") {
+if (context === 'server') {
   redis = await connect({
-    hostname: Deno.env.get("REDIS_HOST"),
+    hostname: Deno.env.get('REDIS_HOST'),
     port: 6379,
   });
 }
@@ -25,7 +25,7 @@ export class Cache {
     }
   ) {
     this.storage = initialCache;
-    this.context = window.Deno ? "server" : "client";
+    this.context = window.Deno ? 'server' : 'client';
   }
 
   // set cache configurations
@@ -33,13 +33,13 @@ export class Cache {
     return await redis.configSet(parameter, value);
   }
 
-  // Main functionality methods
+  // Main functionality methods below
   // for reading the inital query
   async read(queryStr) {
     //the queryStr it gets is the JSON stringified
     const returnedValue = await this.cacheRead(queryStr);
 
-    if (("returnedValue", returnedValue)) {
+    if (('returnedValue', returnedValue)) {
       return JSON.parse(returnedValue);
     } else {
       return undefined;
@@ -47,7 +47,8 @@ export class Cache {
   }
   async write(queryStr, respObj, deleteFlag) {
     // update the original cache with same reference
-    await this.cacheWrite(queryStr, JSON.stringify(respObj));
+    const cacheHash = this.createQueryKey(queryStr);
+    await this.cacheWrite(cacheHash, JSON.stringify(respObj));
   }
 
   //will overwrite a list at the given hash by default
@@ -72,16 +73,19 @@ export class Cache {
   cacheWriteObject = async (hash, obj) => {
     let entries = Object.entries(obj).flat();
     entries = entries.map((entry) => JSON.stringify(entry));
-
+    // adding as nested strings? take out one layer for clarity.
     await redis.hset(hash, ...entries);
   };
 
-  cacheReadObject = async (hash, field = false) => {
-    if (field) {
-      let returnValue = await redisdb.hget(hash, JSON.stringify(field));
-
-      if (returnValue === undefined) return undefined;
-      return JSON.parse(returnValue);
+  cacheReadObject = async (hash, fields = []) => {
+    // Checks for the fields requested, then queries cache for those specific keys in the hashes
+    if (fields.length !== 0) {
+      const fieldObj = {};
+      for (const field of fields) {
+        const rawCacheValue = await redisdb.hget(hash, JSON.stringify(field));
+        fieldObj[field] = JSON.parse(rawCacheValue);
+      }
+      return fieldObj;
     } else {
       let objArray = await redisdb.hgetall(hash);
       if (objArray.length == 0) return undefined;
@@ -107,36 +111,66 @@ export class Cache {
     return JSON.stringify(finalReturn);
   }
 
-  async cacheRead(hash) {
-    if (this.context === "client") {
-      return this.storage[hash];
+  async cacheRead(queryStr) {
+    if (this.context === 'client') {
+      return this.storage[queryStr];
     } else {
-      if (hash === "ROOT_QUERY" || hash === "ROOT_MUTATION") {
-        const hasRootQuery = await redis.get("ROOT_QUERY");
+      if (queryStr === 'ROOT_QUERY' || queryStr === 'ROOT_MUTATION') {
+        const hasRootQuery = await redis.get('ROOT_QUERY');
 
         if (!hasRootQuery) {
-          await redis.set("ROOT_QUERY", JSON.stringify({}));
+          await redis.set('ROOT_QUERY', JSON.stringify({}));
         }
-        const hasRootMutation = await redis.get("ROOT_MUTATION");
+        const hasRootMutation = await redis.get('ROOT_MUTATION');
 
         if (!hasRootMutation) {
-          await redis.set("ROOT_MUTATION", JSON.stringify({}));
+          await redis.set('ROOT_MUTATION', JSON.stringify({}));
         }
       }
-      let hashedQuery = await redis.get(hash);
+      // use cacheQueryKey to create a key with object name and inputs to save in cache
+      const queryKey = this.createQueryKey(queryStr);
+      const cacheResponse = await redis.hget('ROOT_QUERY', queryKey);
 
-      if (hashedQuery === undefined) return undefined;
-      return JSON.parse(hashedQuery);
+      if (!cacheResponse === undefined) return;
+      return JSON.parse(cacheResponse);
     }
+  }
+
+  /*
+  Creates a string to search the cache or add as a key in the cache.
+  If GraphQL query string is query{plants(input:{maintenance:"Low"}) name id ...}
+  returned queryKey will be plants:maintenance:Low
+  */
+  createQueryKey(queryStr) {
+    // traverses AST and gets object name, and any filter keys in the query
+    const ast = gql(queryStr);
+    const tableName = ast.definitions[0].selectionSet.selections[0].name.value;
+    let queryKey = `${tableName}`;
+
+    if (ast.definitions[0].operation === 'mutation') return queryKey;
+    if (ast.definitions[0].selectionSet.selections[0].arguments.length) {
+      const fieldsArray =
+        ast.definitions[0].selectionSet.selections[0].arguments[0].value.fields;
+      const resultsObj = {};
+      fieldsArray.forEach((el) => {
+        const name = el.name.value;
+        const value = el.value.value;
+        resultsObj[name] = value;
+      });
+
+      for (let key in resultsObj) {
+        queryKey += `:${key}:${resultsObj[key]}`;
+      }
+    }
+    return queryKey;
   }
   async cacheWrite(hash, value) {
     // writes value to object cache or JSON.stringified value to redis cache
-    if (this.context === "client") {
+    if (this.context === 'client') {
       this.storage[hash] = value;
     } else {
       value = JSON.stringify(value);
-      await redis.setex(hash, 6000, value);
-      let hashedQuery = await redis.get(hash);
+      await redis.hset('ROOT_QUERY', hash, value);
     }
   }
 
@@ -151,21 +185,21 @@ export class Cache {
 
   async cacheDelete(hash) {
     // deletes the hash/value pair on either object cache or redis cache
-    if (this.context === "client") {
+    if (this.context === 'client') {
       delete this.storage[hash];
     } else await redis.del(hash);
   }
   async cacheClear() {
     // erases either object cache or redis cache
-    if (this.context === "client") {
+    if (this.context === 'client') {
       this.storage = { ROOT_QUERY: {}, ROOT_MUTATION: {} };
     } else {
       await redis.flushdb((err, successful) => {
-        if (err) console.log("redis error", err);
-        console.log(successful, "clear");
+        if (err) console.log('redis error', err);
+        console.log(successful, 'clear');
       });
-      await redis.set("ROOT_QUERY", JSON.stringify({}));
-      await redis.set("ROOT_MUTATION", JSON.stringify({}));
+      await redis.hset('ROOT_QUERY', 'blank', JSON.stringify({}));
+      await redis.set('ROOT_MUTATION', 'blank', JSON.stringify({}));
     }
   }
 
