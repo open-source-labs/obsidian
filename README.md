@@ -181,11 +181,11 @@ Working demo to install locally in docker:
 
 ## Authors
 
-[Derek Okuno](https://github.com/okunod)
-[Liam Johnson](https://github.com/liamdimitri)
-[Josh Reed](https://github.com/joshreed104)
-[Jonathan Fangon](https://github.com/jonathanfangon)
-[Liam Jeon](https://github.com/laj52)
+[Derek Okuno](https://github.com/okunod)  
+[Liam Johnson](https://github.com/liamdimitri)  
+[Josh Reed](https://github.com/joshreed104)  
+[Jonathan Fangon](https://github.com/jonathanfangon)  
+[Liam Jeon](https://github.com/laj52)  
 [Yurii Shchyrba](https://github.com/YuriiShchyrba)  
 [Linda Zhao](https://github.com/lzhao15)  
 [Ali Fay](https://github.com/ali-fay)  
