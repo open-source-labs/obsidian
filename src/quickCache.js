@@ -141,8 +141,13 @@ export class Cache {
     }
   }
 
+  /*
+  Creates a string to search the cache or add as a key in the cache.
+  If GraphQL query string is query{plants(input:{maintenance:"Low"}) name id ...}
+  returned queryKey will be plants:maintenance:Low
+  */
   createQueryKey(queryStr) {
-    // traverses AST and gets object name ("plants"), and any filter keys in the query ("maintenance:Low")
+    // traverses AST and gets object name, and any filter keys in the query
     const ast = gql(queryStr);
     const tableName = ast.definitions[0].selectionSet.selections[0].name.value;
     let queryKey = `${tableName}`;
@@ -162,7 +167,6 @@ export class Cache {
         queryKey += `:${key}:${resultsObj[key]}`;
       }
     }
-    // console.log('finished getCacheHash');
     return queryKey;
   }
   async cacheWrite(hash, value) {
@@ -172,7 +176,6 @@ export class Cache {
     } else {
       value = JSON.stringify(value);
       await redis.hset('ROOT_QUERY', hash, value);
-      // let hashedQuery = await redis.hget('ROOT_QUERY', hash);
     }
   }
 
