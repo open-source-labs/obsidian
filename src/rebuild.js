@@ -1,7 +1,7 @@
 /** @format */
 
-import { redisdb } from "./quickCache.js";
-import { gql } from "https://deno.land/x/oak_graphql/mod.ts";
+import { redisdb } from './quickCache.js';
+import { gql } from 'https://deno.land/x/oak_graphql/mod.ts';
 
 let localCacheObject = {};
 const cacheReadList = async (hash) => {
@@ -93,8 +93,8 @@ const rebuildArrays = async (cachedArray, queryArray) => {
     for (const queryField of queryArray) {
       let objKey;
       let nameyName;
-      if (queryField.kind == "InlineFragment") {
-        let __typeof = await cacheReadObject(cachedHash, "__typeof");
+      if (queryField.kind == 'InlineFragment') {
+        let __typeof = await cacheReadObject(cachedHash, '__typeof');
         if (__typeof == queryField.typeCondition.name.value) {
         }
       }

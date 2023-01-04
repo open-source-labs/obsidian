@@ -16,33 +16,6 @@ export function restructure(value: any) {
   const operationName = value.operationName;
 
   let ast = gql(value.query);
-  // console.log('ast from restructure', ast);
-  // console.log(
-  //   ast.definitions[0].selectionSet.selections[0].name,
-  //   ast.definitions[0].selectionSet.selections[0].name.value
-  // );
-  // const name = ast.definitions[0].selectionSet.selections[0].name.value;
-  // const fieldsArray =
-  //   ast.definitions[0].selectionSet.selections[0].arguments[0].value.fields;
-  // const resultsObj = {};
-  // fieldsArray.forEach((el) => {
-  //   const name = el.name.value;
-  //   const value = el.value.value;
-  //   resultsObj[name] = value;
-  // });
-  // console.log(resultsObj);
-  // let cacheHash = `${name}`;
-  // for (let key in resultsObj) {
-  //   cacheHash += `:${key}:${resultsObj[key]}`;
-  // }
-  // console.log('cacheHash: ', cacheHash);
-  // console.log(
-  //   ast.definitions[0].selectionSet.selections[0].arguments[0].value.fields[0],
-  //   ast.definitions[0].selectionSet.selections[0].arguments[0].value.fields[0]
-  //     .name.value,
-  //   ast.definitions[0].selectionSet.selections[0].arguments[0].value.fields[0]
-  //     .value.value
-  // );
 
   let fragments: { [key: string]: any } = {};
   let containsFrags: boolean = false;
