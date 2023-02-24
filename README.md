@@ -154,6 +154,14 @@ const MovieApp = () => {
 }
 ```
 
+## Selecting LFU/LRU and capacity; default (if not provided) LFU, 2000
+
+```javascript
+<ObsidianWrapper algo='LRU' capacity='5000'>
+  <Home />
+</ObsidianWrapper>
+```
+
 ## Documentation
 
 [obsidian.land](http://obsidian.land)
@@ -181,6 +189,10 @@ Working demo to install locally in docker:
 
 ## Authors
 
+[Alex Lopez](https://github.com/AlexLopez7)
+[Kevin Huang](https://github.com/kevin-06-huang)
+[Matthew Weisker](https://github.com/mweisker)
+[Ryan Ranjbaran](https://github.com/ranjrover)
 [Derek Okuno](https://github.com/okunod)  
 [Liam Johnson](https://github.com/liamdimitri)  
 [Josh Reed](https://github.com/joshreed104)  
