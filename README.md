@@ -154,6 +154,14 @@ const MovieApp = () => {
 }
 ```
 
+## Selecting LFU/LRU and capacity; default (if not provided) LFU, 2000
+
+```javascript
+<ObsidianWrapper algo='LRU' capacity='2000'>
+  <Home />
+</ObsidianWrapper>
+```
+
 ## Documentation
 
 [obsidian.land](http://obsidian.land)
