@@ -93,10 +93,10 @@ const App = () => {
 ## Making a Query
 
 ```javascript
-import { useObsidian, BrowserCache } from 'https://deno.land/x/obsidian/clientMod.ts';
+import { useObsidian } from 'https://deno.land/x/obsidian/clientMod.ts';
 
 const MovieApp = () => {
-  const { query, cache, setCache } = useObsidian();
+  const { query } = useObsidian();
   const [movies, setMovies] = (React as any).useState('');
 
   const queryStr = `query {
@@ -124,10 +124,10 @@ const MovieApp = () => {
 ## Making a Mutation
 
 ```javascript
-import { useObsidian, BrowserCache } from 'https://deno.land/x/obsidian/clientMod.ts';
+import { useObsidian } from 'https://deno.land/x/obsidian/clientMod.ts';
 
 const MovieApp = () => {
-  const { mutate, cache, setCache } = useObsidian();
+  const { mutate } = useObsidian();
   const [movies, setMovies] = (React as any).useState('');
 
   const queryStr = `mutation {
