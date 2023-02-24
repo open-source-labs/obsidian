@@ -5,7 +5,6 @@
 export default function normalizeResult(queryObj, resultObj, deleteFlag) {
   // Object to hold normalized obj
   const result = {};
-
   // checks if there is a delete mutation
   if (deleteFlag) {
     //creates the ROOT_MUTATION hash that is being deleted
@@ -16,7 +15,7 @@ export default function normalizeResult(queryObj, resultObj, deleteFlag) {
     );
 
     //iterate thru the different response objects that were mutated
-
+4
     const obj = resultObj.data;
     //checks if the current element is an array
     if (Array.isArray(obj)) {
@@ -68,7 +67,6 @@ export default function normalizeResult(queryObj, resultObj, deleteFlag) {
       }
     }
   }
-  console.log(result);
   return result;
 }
 
@@ -82,7 +80,6 @@ function createRootQuery(queryObjArr, resultObj) {
     const args = query.arguments;
     const queryHash = name + args;
     const result = resultObj.data[alias] ?? resultObj.data[name];
-
     // iterate thru the array of current query response
     // and store the hash of that response in an array
 
@@ -91,6 +88,7 @@ function createRootQuery(queryObjArr, resultObj) {
       result.forEach((obj) => {
         arrOfHashes.push(labelId(obj));
       });
+
       //store the array of hashes associated with the queryHash
       output[queryHash] = arrOfHashes;
     } else {
@@ -103,7 +101,6 @@ function createRootQuery(queryObjArr, resultObj) {
 //returns a hash value pair of each response obj passed in
 function createHash(obj, output = {}) {
   const hash = labelId(obj);
-
   //if output doesnt have a key of hash create a new obj with that hash key
   if (!output[hash]) output[hash] = {};
   // iterate thru the fields in the current obj and check whether the current field

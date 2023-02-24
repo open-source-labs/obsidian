@@ -115,7 +115,6 @@ const MovieApp = () => {
       onClick={() => {
         query(queryStr)
         .then(resp => setMovies(resp.data))
-        .then(resp => setCache(new BrowserCache(cache.storage)))
       }}
     >Get Movies</button>
   );
@@ -147,11 +146,18 @@ const MovieApp = () => {
       onClick={() => {
         mutate(queryStr)
         .then(resp => setMovies(resp.data))
-        .then(resp => setCache(new BrowserCache(cache.storage)))
       }}
     >Get Movies</button>
   );
 }
+```
+
+## Selecting LFU/LRU and capacity; default (if not provided) LFU, 2000
+
+```javascript
+<ObsidianWrapper algo='LRU' capacity='5000'>
+  <Home />
+</ObsidianWrapper>
 ```
 
 ## Documentation
@@ -181,6 +187,10 @@ Working demo to install locally in docker:
 
 ## Authors
 
+[Alex Lopez](https://github.com/AlexLopez7)
+[Kevin Huang](https://github.com/kevin-06-huang)
+[Matthew Weisker](https://github.com/mweisker)
+[Ryan Ranjbaran](https://github.com/ranjrover)
 [Derek Okuno](https://github.com/okunod)  
 [Liam Johnson](https://github.com/liamdimitri)  
 [Josh Reed](https://github.com/joshreed104)  
