@@ -2,8 +2,8 @@ import {
   isHashableObject,
   containsHashableObject,
   hashMaker,
-} from './normalize';
-import { GenericObject } from './normalize';
+} from './normalize.ts';
+import { GenericObject } from './normalize.ts';
 import { Cache } from './quickCache.js';
 const cache = new Cache();
 
