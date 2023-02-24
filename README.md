@@ -115,7 +115,6 @@ const MovieApp = () => {
       onClick={() => {
         query(queryStr)
         .then(resp => setMovies(resp.data))
-        .then(resp => setCache(new BrowserCache(cache.storage)))
       }}
     >Get Movies</button>
   );
@@ -147,7 +146,6 @@ const MovieApp = () => {
       onClick={() => {
         mutate(queryStr)
         .then(resp => setMovies(resp.data))
-        .then(resp => setCache(new BrowserCache(cache.storage)))
       }}
     >Get Movies</button>
   );
