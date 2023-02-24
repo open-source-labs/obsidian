@@ -181,6 +181,10 @@ Working demo to install locally in docker:
 
 ## Authors
 
+[Alex Lopez](https://github.com/AlexLopez7)
+[Kevin Huang](https://github.com/kevin-06-huang)
+[Matthew Weisker](https://github.com/mweisker)
+[Ryan Ranjbaran](https://github.com/ranjrover)
 [Derek Okuno](https://github.com/okunod)  
 [Liam Johnson](https://github.com/liamdimitri)  
 [Josh Reed](https://github.com/joshreed104)  
