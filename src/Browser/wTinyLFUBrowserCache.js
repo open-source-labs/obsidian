@@ -12,6 +12,15 @@ class Node {
     this.next = this.prev = null;
   }
 }
+
+/*****
+* Overall w-TinyLFU Cache
+*****/
+export default function WTinyLFUCache (capacity) {
+  this.WLRU = new WLRUCache(capacity * .01);
+  this.SLRU = new SLRUCache(capacity * .99);
+}
+
 /*****
 * Window LRU
 *****/
@@ -57,7 +66,8 @@ SLRUCache.prototype.get = function (key) {
 
   // If the item only exists in the probationary segment, promote to protected and return item
   this.probationaryLRU.delete(key);
-  this.protectedLRU.put(key, probationaryItem);
+  // if adding an item to the protectedLRU results in ejection, demote ejected node
+  this.putAndDemote(key, probationaryItem);
   return probationaryItem;
 }
 
@@ -75,7 +85,8 @@ SLRUCache.prototype.get = function (key) {
 
   // if found in probationary, promote and return item
   this.probationaryLRU.delete(key);
-  this.protectedLRU.put(key, probationaryItem);
+  // if adding an item to the protectedLRU results in ejection, demote ejected node
+  this.putAndDemote(key, probationaryItem);
   return probationaryItem
 }
 
@@ -94,12 +105,12 @@ SLRUCache.prototype.peek = function (key) {
 // if exists in protected segment, update and make most recent
 SLRUCache.prototype.put = function (key, node) {
   // if the item is in the protected segment, update it
-  if (this.protectedLRU.nodeHash.get(key)) this.protectedLRU.put(key, node);
-  // if the item is in the probationary segment, 
-  // promote and update it
+  if (this.protectedLRU.nodeHash.get(key)) this.putAndDemote(key, node);
   else if (this.probationaryLRU.nodeHash(key)) {
+    // if the item is in the probationary segment, 
+    // promote and update it
     this.probationaryLRU.delete(key);
-    this.protectedLRU.put(key, node);
+    this.putAndDemote(key, node);
   }
   // if in neither, add item to the probationary segment
   else this.probationaryLRU.put(key, node)
@@ -111,5 +122,17 @@ SLRUCache.prototype.delete = function (key) {
   this.probationaryLRU.delete(key);
 }
 
-// TODO - add logic to ensure that items deleted from protected cache enter the probationary cache
-// perhaps through .options? Needs research
+// Check to see if the item exists in the cache without updating access
+SLRUCache.prototype.has = function (key) {
+  return this.protectedLRU.nodeHash.get(key) || this.probationaryLRU.nodeHash.get(key);
+}
+
+// TODO - maybe - add method for completely wiping both caches? Iterating over them? Returning array of keys or nodes? returning length?
+
+// Adds a node to the protectedLRU 
+// if that results in an ejection, add the ejected node to the probationary LRU
+SLRUCache.prototype.putAndDemote = function (key, node) {
+  // if adding an item to the protectedLRU results in ejection, demote ejected node
+  const demoted = this.protectedLRU.put(key, node);
+  if (demoted) this.probationaryLRU.put(demoted.key, demoted);
+}

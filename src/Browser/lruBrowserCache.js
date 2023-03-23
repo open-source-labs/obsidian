@@ -91,7 +91,9 @@ LRUCache.prototype.put = function (key, value) {
   if (this.nodeHash.get(key).size > this.capacity){
     const tempHead = this.head.next;
     this.removeNode(tempHead);
-    this.nodeHash.delete(tempTail.key);
+    this.nodeHash.delete(tempHead.key);
+    // return tempHead for use in SLRU
+    return tempHead;
   }
 }
 

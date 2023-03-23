@@ -1,6 +1,7 @@
 import * as React from "https://esm.sh/react@18";
 import LFUCache from '../src/Browser/lfuBrowserCache.js';
 import LRUCache from '../src/Browser/lruBrowserCache.js';
+import { WLRUCache, SLRUCache } from "../src/Browser/wTinyLFUBrowserCache";
 import { insertTypenames } from '../src/Browser/insertTypenames.js';
 
 const cacheContext = React.createContext();
