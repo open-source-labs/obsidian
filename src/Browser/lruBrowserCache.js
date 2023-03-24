@@ -76,6 +76,14 @@ LRUCache.prototype.get = function(key) {
   return node.value;
 }
 
+// used by wTinyLFU to get SLRU eviction candidates for TinyLFU decision
+LRUCache.prototype.getCandidate = function () {
+  const tempHead = this.head.next;
+  this.removeNode(tempHead);
+  this.nodeHash.delete(tempHead.key);
+  return tempHead;
+}
+
 LRUCache.prototype.put = function (key, value) {
   // remove node from old position
   const node = this.nodeHash.get(key);
@@ -92,7 +100,7 @@ LRUCache.prototype.put = function (key, value) {
     const tempHead = this.head.next;
     this.removeNode(tempHead);
     this.nodeHash.delete(tempHead.key);
-    // return tempHead for use in SLRU
+    // return tempHead for use in w-TinyLFU's SLRU cache
     return tempHead;
   }
 }

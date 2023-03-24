@@ -18,10 +18,21 @@ const hashCode = (input) => {
   return hash;
 }
 
+
+/** bitcounting for 32-bit integers (reference: https://graphics.stanford.edu/~seander/bithacks.html) */
+
+const bitCount = n => {
+  n = n - ((n >> 1) & 0x55555555);
+  n = (n & 0x33333333) + ((n >> 2) & 0x33333333);
+  const count = ((n + (n >> 4) & 0xF0F0F0F) * 0x1010101) >> 24;
+  return count;
+}
+
+
 const FrequencySketch = () => {
 
-  const RESET_MASK = 0x7777777777777777;
-  const ONE_MASK = 0x1111111111111111;
+  const RESET_MASK = 0x77777777; // 011101110111... 0001 0000 0000 0001 0000 
+  const ONE_MASK = 0x11111111;   //  0001 0001 0001
 
   let sampleSize, blockMask, size;
   const table = [];
@@ -37,7 +48,7 @@ const FrequencySketch = () => {
     const max = Math.floor(maxSize);  //to ensure it's an integer
     if(table.length >= max) return;
 
-    table = new Array(Math.max(nearestPowerOfTwo(max), 8));
+    table = Array(Math.max(nearestPowerOfTwo(max), 8)).fill().map(()=>Array(2));
     sampleSize = (maxSize === 0) ? 10 : (10*max);
     blockMask = (table.length >>> 3) - 1;
 
@@ -61,7 +72,7 @@ const FrequencySketch = () => {
   const frequency = el => {
     if(isNotInitialized()) return 0;
     
-    const count = new Array(4);
+    const count = Array(4);
 
     const blockHash = supphash(hashCode(el));
     const counterHash = rehash(blockHash);
@@ -70,8 +81,9 @@ const FrequencySketch = () => {
     for (let i = 0; i < 4; i++) {
       const h = counterHash >>> (i << 3);
       const index = (h >>> 1) & 15;
+      const row = index % 2;
       const offset = h & 1;
-      count[i] = ((table[block+offset+(i<<1)] >>> (index << 2)) & 15);
+      count[i] = ((table[block+offset+(i<<1)][row] >>> ((index >> 1) << 2)) & 15);
     }
     return Math.min(...count);
   }
@@ -83,7 +95,7 @@ const FrequencySketch = () => {
   const increment = el => {
     if (isNotInitialized()) return;
 
-    const index = new Array[8];
+    const index = Array[8];
 
     const blockHash = supphash(hashCode(el));
     const counterHash = rehash(blockHash);
@@ -96,7 +108,7 @@ const FrequencySketch = () => {
       index[i + 4] = block + offset + (i << 1);
     }
     const incremented =
-          incrementAt(index[4], index[0])
+          incrementAt(index[4], index[0]) 
         | incrementAt(index[5], index[1])
         | incrementAt(index[6], index[2])
         | incrementAt(index[7], index[3]);
@@ -131,21 +143,23 @@ const FrequencySketch = () => {
    * @return if incremented
    */
   const incrementAt = (i,j) => {
-    const offset = j << 2;
+    const row = j % 2; 
+    const offset = (j >> 1) << 2;
     const mask = (15 << offset);
-    if ((table[i] & mask) != mask) {
-      table[i] += (1 << offset);
+    if ((table[i][row] & mask) != mask) { //if curr counter is not at maximum(15)
+      table[i][row] += (1 << offset);
       return true;
     }
     return false;
   }
-
+   
   /** Reduces every counter by half of its original value. */
   const reset = () => {
     let count = 0;
     for (let i = 0; i < table.length; i++) {
-      count += bitCount(table[i] & ONE_MASK);
-      table[i] = (table[i] >>> 1) & RESET_MASK;
+      count += bitCount(table[i][0] & ONE_MASK) + bitCount(table[i][1] & ONE_MASK);
+      table[i][0] = (table[i][0] >>> 1) & RESET_MASK;
+      table[i][1] = (table[i][1] >>> 1) & RESET_MASK;
     }
     size = (size - (count >>> 2)) >>> 1;
   }

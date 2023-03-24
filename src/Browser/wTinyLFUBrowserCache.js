@@ -1,8 +1,11 @@
-import { plural } from "https://deno.land/x/deno_plural/mod.ts";
+import { plural } from "https://deno.land/x/deno_plural@2.0.0/mod.ts";
 
 import normalizeResult from "./normalize.js";
 import destructureQueries from "./destructure.js";
-import LRUCache from './lruBrowserCache.js';
+import SLRUCache from "./wTinyLFU%20Sub-Caches/slruSub-cache.js"
+import LRUCache from "./lruBrowserCache.js";
+import WLRUCache from "./wTinyLFU%20Sub-Caches/wlruSub-cache.js"
+import FrequencySketch from './FrequencySketch.js';
 
 // Basic list node structure
 class Node {
@@ -13,126 +16,187 @@ class Node {
   }
 }
 
+// BIG TODO: Refactor hashes to be for entire w-tinyLFU, 
+// such that keys are all checked through overall hashmap, 
+// but nodes are stored in separate queues
+
 /*****
 * Overall w-TinyLFU Cache
 *****/
 export default function WTinyLFUCache (capacity) {
-  this.WLRU = new WLRUCache(capacity * .01);
-  this.SLRU = new SLRUCache(capacity * .99);
-}
-
-/*****
-* Window LRU
-*****/
-export function WLRUCache(capacity) {
   this.capacity = capacity;
   this.currentSize = 0;
   this.ROOT_QUERY = {};
   this.ROOT_MUTATION = {};
   this.nodeHash = new Map();
 
-  this.head = new Node('head', null);
-  this.tail = new Node('tail', null);
-  this.head.next = this.tail;
-  this.tail.prev = this.head;
+  this.WLRU = new LRUCache(capacity * .01);
+  this.SLRU = new SLRUCache(capacity * .99);
 }
-// Methods copied from lru browser cache
-WLRUCache.prototype = Object.create(LRUCache.prototype, {constructor: {value: WLRUCache}});
+
+WTinyLFUCache.prototpe.putAndPromote = function (key, node) {
+  const WLRUCandidate = this.WLRU.put(key, node);
+  // if adding to the WLRU cache results in an eviction...
+  if (WLRUCandidate) {
+    // TODO: Double check that this pulls current size of cache correctly
+    // if the probationary cache is at capacity...
+    if (this.SLRU.probationaryLRU.nodeHash.size >= this.SLRU.probationaryLRU.capacity) {
+      // send the last accessed item in the probationary cache to the TinyLFU
+      const SLRUCandidate = this.SLRU.probationaryLRU.getCandidate();
+      // determine which item will imrpove the hit-ratio most
+      const winner = this.TinyLFU(WLRUCandidate, SLRUCandidate);
+      // add the winner to the probationary SLRU
+      this.SLRU.probationaryLRU.put(winner.key, winner);
+    } else { // if not over capcity, add to the probationary SLRU
+      this.SLRU.probationaryLRU.put(WLRUCandidate.key, WLRUCandidate);
+    }
+  }
+}
+
+WTinyLFUCache.prototype.populateAllHashes = function (
+  allHashesFromQuery,
+  fields
+) {
+  if (!allHashesFromQuery.length) return [];
+  const hyphenIdx = allHashesFromQuery[0].indexOf("~");
+  const typeName = allHashesFromQuery[0].slice(0, hyphenIdx);
+  const reduction =  allHashesFromQuery.reduce(async (acc, hash) => {
+    // for each hash from the input query, build the response object
+    // first, check the SLRU cache
+    const readVal = await this.SLRU.get(hash);
+    // if the hash is not in the SLRU, check the WLRU
+    if (!readVal) readVal = await this.WLRU.get(hash);
+    if (readVal === "DELETED") return acc;
+    if (!readVal) return undefined;
+    const dataObj = {};
+    for (const field in fields) {
+      if (readVal[field] === "DELETED") continue;
+      // for each field in the fields input query, add the corresponding value from the cache if the field is not another array of hashs
+      if (readVal[field] === undefined && field !== "__typename") {
+        return undefined;
+      }
+      if (typeof fields[field] !== "object") {
+        // add the typename for the type
+        if (field === "__typename") {
+          dataObj[field] = typeName;
+        } else dataObj[field] = readVal[field];
+      } else {
+        // case where the field from the input query is an array of hashes, recursively invoke populateAllHashes
+        dataObj[field] = await this.populateAllHashes(
+          readVal[field],
+          fields[field]
+        );
+        if (dataObj[field] === undefined) return undefined;
+      }
+    }
+    // acc is an array of response object for each hash
+    const resolvedProm = await Promise.resolve(acc);
+    resolvedProm.push(dataObj);
+    return resolvedProm;
+  }, []);
+  return reduction;
+};
+
+
+WTinyLFUCache.prototype.read = async function (queryStr) {
+  if (typeof queryStr !== "string") throw TypeError("input should be a string");
+  // destructure the query string into an object
+  const queries = destructureQueries(queryStr).queries;
+  // breaks out of function if queryStr is a mutation
+  if (!queries) return undefined;
+  const responseObject = {};
+  // iterate through each query in the input queries object
+  for (const query in queries) {
+    // get the entire str query from the name input query and arguments
+    const queryHash = queries[query].name.concat(queries[query].arguments);
+    const rootQuery = this.ROOT_QUERY;
+    // match in ROOT_QUERY
+    if (rootQuery[queryHash]) {
+      // get the hashes to populate from the existent query in the cache
+      const arrayHashes = rootQuery[queryHash];
+      // Determines responseObject property labels - use alias if applicable, otherwise use name
+      const respObjProp = queries[query].alias ?? queries[query].name;
+      // invoke populateAllHashes and add data objects to the response object for each input query
+      responseObject[respObjProp] = await this.populateAllHashes(
+        arrayHashes,
+        queries[query].fields
+      );
+
+
+      if (!responseObject[respObjProp]) return undefined;
+
+      // no match with ROOT_QUERY return null or ...
+    } else {
+      return null;
+    }
+  }
+  return { data: responseObject };
+};
+
+// TODO: Update for segmented hash and write priority
+WTinyLFUCache.prototype.write = async function (queryStr, respObj, deleteFlag) {
+  let nullFlag = false;
+  let deleteMutation = "";
+  let wasFoundIn = null;
+  for(const query in respObj.data) {
+    if(respObj.data[query] === null) nullFlag = true
+    else if(query.toLowerCase().includes('delete')) deleteMutation = labelId(respObj.data[query]);
+  }
+  if(!nullFlag) {
+    const queryObj = destructureQueries(queryStr);
+    const resFromNormalize = normalizeResult(queryObj, respObj, deleteFlag);
+    // update the original cache with same reference
+    for (const hash in resFromNormalize) {
+      // first check SLRU
+      const resp = await this.SLRU.get(hash);
+      // next, check the window LRU
+      if (resp) wasFoundIn = 'SLRU' 
+      else resp = await this.WLRU.get(hash);
+      if (resp && !wasFoundIn) wasFoundIn = 'WLRU';
+      if (hash === "ROOT_QUERY" || hash === "ROOT_MUTATION") {
+        if(deleteMutation === "") {
+          this[hash] = Object.assign(this[hash], resFromNormalize[hash]);
+        } else {
+          const typeName = deleteMutation.slice(0, deleteMutation.indexOf('~'));
+          for(const key in this.ROOT_QUERY) {
+            if(key.includes(typeName + 's') || key.includes(plural(typeName))) {
+              for(let i = 0; i < this.ROOT_QUERY[key].length; i++) {
+                if(this.ROOT_QUERY[key][i] === deleteMutation) {
+                  this.ROOT_QUERY[key].splice(i, 1);
+                  i--;
+                }
+              }
+            }
+        }
+        }
+      } else if (resFromNormalize[hash] === "DELETED") {
+        // Should we delete directly or do we still need to flag as DELETED
+        if (wasFoundIn === 'SLRU') await this.SLRU.put(hash, "DELETED");
+        else if (wasFoundIn === 'WLRU') await this.WLRU.put(hash, "DELETED");
+      } else if (resp) {
+        const newObj = Object.assign(resp, resFromNormalize[hash]);
+        if (wasFoundIn === 'SLRU') await this.SLRU.put(hash, newObj);
+        else if (wasFoundIn === 'WLRU') await this.WLRU.put(hash, newObj);
+      } else {
+        const typeName = hash.slice(0, hash.indexOf('~'));
+        if (wasFoundIn === 'SLRU') await this.SLRU.put(hash, resFromNormalize[hash]);
+        else if (wasFoundIn === 'WLRU') await this.WLRU.put(hash, resFromNormalize[hash]);
+        for(const key in this.ROOT_QUERY) {
+          if(key.includes(typeName + 's') || key.includes(plural(typeName))) {
+            this.ROOT_QUERY[key].push(hash);
+          }
+        }
+      }
+    }
+  }
+};
 
 /*****
-* Main SLRU Cache
+* TinyLFU Admission Policy
 *****/
-export function SLRUCache(capacity) {
-  // TODO: Figure out initial capacities for each segment
-  // Probationary LRU Cache using existing LRU structure in lruBrowserCache.js
-  this.probationaryLRU = new LRUCache;
-  // Protected LRU Cache
-  this.protectedLRU = new LRUCache;
-}
-
-// Get item from cache, 
-// updates last access and promotes items to protected
-SLRUCache.prototype.get = function (key) {
-  // get the item from the protectedLRU
-  const protectedItem = this.protectedLRU.get(key);
-  // check to see if the item is in the probationaryLRU
-  const probationaryItem = this.probationaryLRU.peek(key);
-
-  // If the item is in neither segment, return undefined
-  if (protectedItem === undefined && probationaryItem === undefined) return;
-
-  // If the item only exists in the protected segment, return that item
-  if (protectedItem !== undefined) return protectedItem;
-
-  // If the item only exists in the probationary segment, promote to protected and return item
-  this.probationaryLRU.delete(key);
-  // if adding an item to the protectedLRU results in ejection, demote ejected node
-  this.putAndDemote(key, probationaryItem);
-  return probationaryItem;
-}
-
-// Get item from cache, update last access,
-// and promotes existing items to protected
-SLRUCache.prototype.get = function (key) {
-  const protectedItem = this.protectedLRU.get(key);
-  const probationaryItem = this.probationaryLRU.peek(key);
-
-  // if the key is found in neither segment, return undefined
-  if (protectedItem === undefined && probationaryItem === undefined) return;
-
-  // if found in protected, return the item
-  if (protectedItem !== undefined) return protectedItem;
-
-  // if found in probationary, promote and return item
-  this.probationaryLRU.delete(key);
-  // if adding an item to the protectedLRU results in ejection, demote ejected node
-  this.putAndDemote(key, probationaryItem);
-  return probationaryItem
-}
-
-// Get an item from a key without updating access or promoting
-SLRUCache.prototype.peek = function (key) {
-  const protectedItem = this.protectedLRU.peek(key);
-  const probationaryItem = this.probationaryLRU.peek(key);
-
-  // return the protectedItem unless it is undefined, then return probationaryItem instead
-  return protectedItem === undefined ? probationaryItem : protectedItem;
-}
-
-// add or update item in cache
-// if item does not exist, added to probational segment
-// if item exists in probational segment, update value and promote to protected
-// if exists in protected segment, update and make most recent
-SLRUCache.prototype.put = function (key, node) {
-  // if the item is in the protected segment, update it
-  if (this.protectedLRU.nodeHash.get(key)) this.putAndDemote(key, node);
-  else if (this.probationaryLRU.nodeHash(key)) {
-    // if the item is in the probationary segment, 
-    // promote and update it
-    this.probationaryLRU.delete(key);
-    this.putAndDemote(key, node);
-  }
-  // if in neither, add item to the probationary segment
-  else this.probationaryLRU.put(key, node)
-}
-
-// deletes an item from BOTH segments of the cache
-SLRUCache.prototype.delete = function (key) {
-  this.protectedLRU.delete(key);
-  this.probationaryLRU.delete(key);
-}
-
-// Check to see if the item exists in the cache without updating access
-SLRUCache.prototype.has = function (key) {
-  return this.protectedLRU.nodeHash.get(key) || this.probationaryLRU.nodeHash.get(key);
-}
-
-// TODO - maybe - add method for completely wiping both caches? Iterating over them? Returning array of keys or nodes? returning length?
-
-// Adds a node to the protectedLRU 
-// if that results in an ejection, add the ejected node to the probationary LRU
-SLRUCache.prototype.putAndDemote = function (key, node) {
-  // if adding an item to the protectedLRU results in ejection, demote ejected node
-  const demoted = this.protectedLRU.put(key, node);
-  if (demoted) this.probationaryLRU.put(demoted.key, demoted);
+WTinyLFU.prototype.TinyLFU = function (WLRUCandidate, SLRUCandidate) {
+  // TODO: Test that this integration of the frequency sketch is accurate and functional
+  const WLRUFreq = FrequencySketch.frequency(WLRUCandidate);
+  const SLRUFreq = FrequencySketch.frequency(SLRUCandidate);
+  return WLRUFreq > SLRUFreq ? WLRUCandidate : SLRUCandidate;
 }
