@@ -31,6 +31,7 @@ LRUCache.prototype.removeNode = function (node) {
   next.prev = prev;
 };
 
+
 LRUCache.prototype.addNode = function (node) {
   const tempTail = this.tail.prev;
   tempTail.next = node;
@@ -39,6 +40,30 @@ LRUCache.prototype.addNode = function (node) {
   node.next = this.tail;
   node.prev = tempTail;
 }
+
+// Like get, but doesn't update anything
+LRUCache.prototype.peek = function(key) {
+  const node = this.nodeHash.get(key);
+  if (!node) return null;
+  return node.value;
+}
+
+// Like removeNode, but takes key
+LRUCache.prototype.delete = function (key) {
+  const node = this.nodeHash.get(key);
+  const prev = node.prev;
+  const next = node.next; 
+  prev.next = next; 
+  next.prev = prev;
+}
+
+// updates a node or adds a node
+// LRUCache.prototype.set = function (key, node) {
+//   const foundNode = this.nodeHash.get(key);
+//   if (foundNode) this.removeNode(foundNode);
+//   this.addNode(node);
+//   return node.value;
+// }
 
 LRUCache.prototype.get = function(key) {
   const node = this.nodeHash.get(key);
@@ -66,7 +91,9 @@ LRUCache.prototype.put = function (key, value) {
   if (this.nodeHash.get(key).size > this.capacity){
     const tempHead = this.head.next;
     this.removeNode(tempHead);
-    this.nodeHash.delete(tempTail.key);
+    this.nodeHash.delete(tempHead.key);
+    // return tempHead for use in SLRU
+    return tempHead;
   }
 }
 

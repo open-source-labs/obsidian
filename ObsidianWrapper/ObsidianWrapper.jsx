@@ -1,6 +1,7 @@
 import * as React from "https://esm.sh/react@18";
 import LFUCache from '../src/Browser/lfuBrowserCache.js';
 import LRUCache from '../src/Browser/lruBrowserCache.js';
+import { WLRUCache, SLRUCache } from "../src/Browser/wTinyLFUBrowserCache";
 import { insertTypenames } from '../src/Browser/insertTypenames.js';
 
 const cacheContext = React.createContext();
@@ -9,6 +10,9 @@ function ObsidianWrapper(props) {
   const { algo, capacity } = props
   const [cache, setCache] = React.useState(new LFUCache(Number(capacity || 2000)));
   if(algo === 'LRU') setCache(new LRUCache(Number(capacity || 2000)));  // You have to put your Google Chrome Obsidian developer tool extension id to connect Obsidian Wrapper with dev tool
+  if(algo === 'W-TinyLFU') {
+    // TODO add logic to create w-tiny lfu caches using setCache
+  } 
   const chromeExtensionId = 'apcpdmmbhhephobnmnllbklplpaoiemo';
   // initialice cache in local storage
   //window.localStorage.setItem('cache', JSON.stringify(cache));
