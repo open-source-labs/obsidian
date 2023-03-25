@@ -1,41 +1,10 @@
-// CONVERT TO TYPESCRIPT FOR TYPE ENFORCING (MOSTLY TO INTEGERS)
-
-const nearestPowerOfTwo = num => {
-  const exp = Math.floor(Math.log2(num));
-  if (Math.pow(2, exp) === num) return num;
-
-  return Math.pow(2, exp+1);
-}
-
-const hashCode = (input) => {
-  let hash, code;
-  hash = 0;
-  for (let i = 0; i < input.length; i++) {
-    code = input.charCodeAt(i);
-    hash = ((hash<<5)-hash)+code;
-    hash = hash & hash;
-  }
-  return hash;
-}
-
-
-/** bitcounting for 32-bit integers (reference: https://graphics.stanford.edu/~seander/bithacks.html) */
-
-const bitCount = n => {
-  n = n - ((n >> 1) & 0x55555555);
-  n = (n & 0x33333333) + ((n >> 2) & 0x33333333);
-  const count = ((n + (n >> 4) & 0xF0F0F0F) * 0x1010101) >> 24;
-  return count;
-}
-
-
-const FrequencySketch = () => {
+export function FrequencySketch() {
 
   const RESET_MASK = 0x77777777; // 011101110111... 0001 0000 0000 0001 0000 
   const ONE_MASK = 0x11111111;   //  0001 0001 0001
 
   let sampleSize, blockMask, size;
-  const table = [];
+  let table = [];
 
   /**
    * Initializes and increases the capacity of this FrequencySketch instance
@@ -44,7 +13,7 @@ const FrequencySketch = () => {
    * 
    * @param maxSize cache capacity
    */
-  const updateCapacity = maxSize => {
+  this.updateCapacity = function(maxSize) {
     const max = Math.floor(maxSize);  //to ensure it's an integer
     if(table.length >= max) return;
 
@@ -69,7 +38,7 @@ const FrequencySketch = () => {
    * @return the estimated frequency - required to be nonnegative
    */
 
-  const frequency = el => {
+  this.frequency = function(el) {
     if(isNotInitialized()) return 0;
     
     const count = Array(4);
@@ -92,7 +61,7 @@ const FrequencySketch = () => {
    * Increment the frequency of the element if it does not exceed the maximum(15)
    * @param el element to add
    */
-  const increment = el => {
+  this.increment = function(el) {
     if (isNotInitialized()) return;
 
     const index = Array[8];
@@ -101,7 +70,7 @@ const FrequencySketch = () => {
     const counterHash = rehash(blockHash);
     const block = (blockHash & blockMask) << 3;
 
-    for (const i = 0; i < 4; i++) {
+    for (let i = 0; i < 4; i++) {
       const h = counterHash >>> (i << 3);
       index[i] = (h >>> 1) & 15;
       const offset = h & 1;
@@ -117,24 +86,7 @@ const FrequencySketch = () => {
       reset();
     }
   }
-
-  /** Applies a supplemental hash functions for less collisions. */
-  const supphash = x => {
-    x ^= x >> 17;
-    x *= 0xed5ad4bb;
-    x ^= x >> 11;
-    x *= 0xac4c1b51;
-    x ^= x >> 15;
-    return x;
-}
-
-  /** Applies another round of hashing to acheive three round hashing. */
-  const rehash = x => {
-    x *= 0x31848bab;
-    x ^= x >> 14;
-    return x;
-  }
-
+  
   /**
    * Increments the specified counter by 1 if it is not already at the maximum value (15).
    *
@@ -162,6 +114,50 @@ const FrequencySketch = () => {
       table[i][1] = (table[i][1] >>> 1) & RESET_MASK;
     }
     size = (size - (count >>> 2)) >>> 1;
+  }
+  /** Applies a supplemental hash functions for less collisions. */
+  const supphash = x => {
+    x ^= x >> 17;
+    x *= 0xed5ad4bb;
+    x ^= x >> 11;
+    x *= 0xac4c1b51;
+    x ^= x >> 15;
+    return x;
+}
+
+  /** Applies another round of hashing to acheive three round hashing. */
+  const rehash = x => {
+    x *= 0x31848bab;
+    x ^= x >> 14;
+    return x;
+  }
+
+  const nearestPowerOfTwo = num => {
+    const exp = Math.floor(Math.log2(num));
+    if (Math.pow(2, exp) === num) return num;
+
+    return Math.pow(2, exp+1);
+  }
+
+  const hashCode = (input) => {
+    let hash, code;
+    hash = 0;
+    for (let i = 0; i < input.length; i++) {
+      code = input.charCodeAt(i);
+      hash = ((hash<<5)-hash)+code;
+      hash = hash & hash;
+    }
+    return hash;
+  }
+
+
+  /** bitcounting for 32-bit integers (reference: https://graphics.stanford.edu/~seander/bithacks.html) */
+
+  const bitCount = n => {
+    n = n - ((n >> 1) & 0x55555555);
+    n = (n & 0x33333333) + ((n >> 2) & 0x33333333);
+    const count = ((n + (n >> 4) & 0xF0F0F0F) * 0x1010101) >> 24;
+    return count;
   }
 }
 

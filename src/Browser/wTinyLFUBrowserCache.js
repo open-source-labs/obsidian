@@ -3,9 +3,8 @@ import { plural } from "https://deno.land/x/deno_plural@2.0.0/mod.ts";
 import normalizeResult from "./normalize.js";
 import destructureQueries from "./destructure.js";
 import SLRUCache from "./wTinyLFU%20Sub-Caches/slruSub-cache.js"
-import LRUCache from "./lruBrowserCache.js";
-import WLRUCache from "./wTinyLFU%20Sub-Caches/wlruSub-cache.js"
-import FrequencySketch from './FrequencySketch.js';
+import LRUCache from "./wTinyLFU%20Sub-Caches/lruSub-cache.js";
+import { FrequencySketch } from './FrequencySketch.js';
 
 // Basic list node structure
 class Node {
@@ -16,10 +15,6 @@ class Node {
   }
 }
 
-// BIG TODO: Refactor hashes to be for entire w-tinyLFU, 
-// such that keys are all checked through overall hashmap, 
-// but nodes are stored in separate queues
-
 /*****
 * Overall w-TinyLFU Cache
 *****/
@@ -28,28 +23,29 @@ export default function WTinyLFUCache (capacity) {
   this.currentSize = 0;
   this.ROOT_QUERY = {};
   this.ROOT_MUTATION = {};
-  this.nodeHash = new Map();
+  this.sketch = new FrequencySketch;
 
   this.WLRU = new LRUCache(capacity * .01);
+  this.WLRU.sketch = this.sketch;
   this.SLRU = new SLRUCache(capacity * .99);
+  this.SLRU.sketch = this.sketch;
 }
 
-WTinyLFUCache.prototpe.putAndPromote = function (key, node) {
+WTinyLFUCache.prototype.putAndPromote = function (key, node) {
   const WLRUCandidate = this.WLRU.put(key, node);
   // if adding to the WLRU cache results in an eviction...
   if (WLRUCandidate) {
     // TODO: Double check that this pulls current size of cache correctly
     // if the probationary cache is at capacity...
+    let winner = WLRUCandidate;
     if (this.SLRU.probationaryLRU.nodeHash.size >= this.SLRU.probationaryLRU.capacity) {
       // send the last accessed item in the probationary cache to the TinyLFU
       const SLRUCandidate = this.SLRU.probationaryLRU.getCandidate();
       // determine which item will imrpove the hit-ratio most
       const winner = this.TinyLFU(WLRUCandidate, SLRUCandidate);
-      // add the winner to the probationary SLRU
-      this.SLRU.probationaryLRU.put(winner.key, winner);
-    } else { // if not over capcity, add to the probationary SLRU
-      this.SLRU.probationaryLRU.put(WLRUCandidate.key, WLRUCandidate);
     }
+    // add the winner to the probationary SLRU 
+      this.SLRU.probationaryLRU.put(winner.key, winner);
   }
 }
 
@@ -63,7 +59,7 @@ WTinyLFUCache.prototype.populateAllHashes = function (
   const reduction =  allHashesFromQuery.reduce(async (acc, hash) => {
     // for each hash from the input query, build the response object
     // first, check the SLRU cache
-    const readVal = await this.SLRU.get(hash);
+    let readVal = await this.SLRU.get(hash);
     // if the hash is not in the SLRU, check the WLRU
     if (!readVal) readVal = await this.WLRU.get(hash);
     if (readVal === "DELETED") return acc;
@@ -133,7 +129,6 @@ WTinyLFUCache.prototype.read = async function (queryStr) {
   return { data: responseObject };
 };
 
-// TODO: Update for segmented hash and write priority
 WTinyLFUCache.prototype.write = async function (queryStr, respObj, deleteFlag) {
   let nullFlag = false;
   let deleteMutation = "";
@@ -148,7 +143,7 @@ WTinyLFUCache.prototype.write = async function (queryStr, respObj, deleteFlag) {
     // update the original cache with same reference
     for (const hash in resFromNormalize) {
       // first check SLRU
-      const resp = await this.SLRU.get(hash);
+      let resp = await this.SLRU.get(hash);
       // next, check the window LRU
       if (resp) wasFoundIn = 'SLRU' 
       else resp = await this.WLRU.get(hash);
@@ -179,8 +174,7 @@ WTinyLFUCache.prototype.write = async function (queryStr, respObj, deleteFlag) {
         else if (wasFoundIn === 'WLRU') await this.WLRU.put(hash, newObj);
       } else {
         const typeName = hash.slice(0, hash.indexOf('~'));
-        if (wasFoundIn === 'SLRU') await this.SLRU.put(hash, resFromNormalize[hash]);
-        else if (wasFoundIn === 'WLRU') await this.WLRU.put(hash, resFromNormalize[hash]);
+        await this.WLRU.put(hash, resFromNormalize[hash]);
         for(const key in this.ROOT_QUERY) {
           if(key.includes(typeName + 's') || key.includes(plural(typeName))) {
             this.ROOT_QUERY[key].push(hash);
@@ -194,9 +188,9 @@ WTinyLFUCache.prototype.write = async function (queryStr, respObj, deleteFlag) {
 /*****
 * TinyLFU Admission Policy
 *****/
-WTinyLFU.prototype.TinyLFU = function (WLRUCandidate, SLRUCandidate) {
+WTinyLFUCache.prototype.TinyLFU = async function (WLRUCandidate, SLRUCandidate) {
   // TODO: Test that this integration of the frequency sketch is accurate and functional
-  const WLRUFreq = FrequencySketch.frequency(WLRUCandidate);
-  const SLRUFreq = FrequencySketch.frequency(SLRUCandidate);
+  const WLRUFreq = await this.sketch.frequency(JSON.stringify(WLRUCandidate.value));
+  const SLRUFreq = await this.sketch.frequency(JSON.stringify(SLRUCandidate.value));
   return WLRUFreq > SLRUFreq ? WLRUCandidate : SLRUCandidate;
 }

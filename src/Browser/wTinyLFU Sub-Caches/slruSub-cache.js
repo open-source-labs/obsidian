@@ -2,17 +2,18 @@ import { plural } from "https://deno.land/x/deno_plural@2.0.0/mod.ts";
 
 import normalizeResult from "../normalize.js";
 import destructureQueries from "../destructure.js";
-import LRUCache from '../lruBrowserCache.js';
+import LRUCache from './lruSub-cache.js';
 
 /*****
 * Main SLRU Cache
 *****/
 export default function SLRUCache(capacity) {
-  // TODO: Figure out initial capacities for each segment
   // Probationary LRU Cache using existing LRU structure in lruBrowserCache.js
   this.probationaryLRU = new LRUCache(capacity * .20);
+  this.probationaryLRU.sketch = this.sketch;
   // Protected LRU Cache
   this.protectedLRU = new LRUCache(capacity * .80);
+  this.protectedLRU.sketch = this.sketch;
 }
 
 // Get item from cache, 
@@ -91,8 +92,6 @@ SLRUCache.prototype.delete = function (key) {
 SLRUCache.prototype.has = function (key) {
   return this.protectedLRU.nodeHash.get(key) || this.probationaryLRU.nodeHash.get(key);
 }
-
-// TODO - maybe - add method for completely wiping both caches? Iterating over them? Returning array of keys or nodes? returning length?
 
 // Adds a node to the protectedLRU 
 // if that results in an ejection, add the ejected node to the probationary LRU
