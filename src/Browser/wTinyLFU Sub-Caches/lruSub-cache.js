@@ -1,7 +1,8 @@
-import { plural } from "https://deno.land/x/deno_plural/mod.ts";
+import { plural } from "https://deno.land/x/deno_plural@2.0.0/mod.ts";
 
-import normalizeResult from "./normalize.js";
-import destructureQueries from "./destructure.js";
+import normalizeResult from "../normalize.js";
+import destructureQueries from "../destructure.js";
+import { FrequencySketch } from "../FrequencySketch.js";
 
 class Node {
   constructor (key, value) {
@@ -32,13 +33,14 @@ LRUCache.prototype.removeNode = function (node) {
 };
 
 
-LRUCache.prototype.addNode = function (node) {
+LRUCache.prototype.addNode = async function (node) {
   const tempTail = this.tail.prev;
   tempTail.next = node;
   
   this.tail.prev = node;
   node.next = this.tail;
   node.prev = tempTail;
+  await this.sketch.increment(JSON.stringify(node.value));
 }
 
 // Like get, but doesn't update anything
@@ -85,12 +87,15 @@ LRUCache.prototype.getCandidate = function () {
 }
 
 LRUCache.prototype.put = function (key, value) {
-  // remove node from old position
+  // create a new node
+  const newNode = new Node(key, value);
+
+  // remove node from old position and preserve sketch
   const node = this.nodeHash.get(key);
   if (node) this.removeNode(node);
 
-  // create new node and add to tail
-  const newNode = new Node(key, value);
+  // add new node  to tail
+  // update or add a frequency sketch to the new node
   this.addNode(newNode);
   this.nodeHash.set(key, newNode);
 

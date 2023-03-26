@@ -1,5 +1,5 @@
 /** @format */
-import { plural } from "https://deno.land/x/deno_plural/mod.ts";
+import { plural } from "https://deno.land/x/deno_plural@2.0.0/mod.ts";
 
 import normalizeResult from "./normalize.js";
 import destructureQueries from "./destructure.js";
