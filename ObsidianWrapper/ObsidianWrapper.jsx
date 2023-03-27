@@ -8,12 +8,29 @@ const cacheContext = React.createContext();
 
 function ObsidianWrapper(props) {
   const { algo, capacity } = props
-  const [cache, setCache] = React.useState(new LFUCache(Number(capacity || 2000)));
-  if(algo === 'LRU') setCache(new LRUCache(Number(capacity || 2000)));  // You have to put your Google Chrome Obsidian developer tool extension id to connect Obsidian Wrapper with dev tool
-  if(algo === 'W-TinyLFU') setCache(new WTinyLFUCache(Number(capacity || 2000))); 
+
+  const setAlgoCap = (algo, capacity) => {
+    let cache;
+    if(algo === 'LRU'){
+      cache = new LRUCache(Number(capacity || 2000))
+    } else if (algo === 'W-TinyLFU'){
+      cache = new WTinyLFUCache(Number(capacity || 2000))
+    } else {
+      cache = new LFUCache(Number(capacity || 2000))
+    }
+    return cache;
+  }
+
+  const [cache, setCache] = React.useState(setAlgoCap(algo, capacity));
+  
+  // if(!algo) setCache(new LFUCache(Number(capacity || 2000)))
+  // if(algo === 'LRU') setCache(new LRUCache(Number(capacity || 2000)));  // You have to put your Google Chrome Obsidian developer tool extension id to connect Obsidian Wrapper with dev tool
+  // if(algo === 'W-TinyLFU') setCache(new WTinyLFUCache(Number(capacity || 2000))); 
   const chromeExtensionId = 'apcpdmmbhhephobnmnllbklplpaoiemo';
   // initialice cache in local storage
   //window.localStorage.setItem('cache', JSON.stringify(cache));
+
+  let firstMessage = true;
 
   async function query(query, options = {}) {
     // dev tool messages
@@ -24,6 +41,14 @@ function ObsidianWrapper(props) {
         cache: window.localStorage.getItem('cache'),
       });
     */
+
+    if(firstMessage){
+      window.postMessage({
+        algo: algo ? algo : 'LFU',
+        capacity: capacity ? capacity : 2000
+      });
+      firstMessage = false;
+    };
 
     // set the options object default properties if not provided
     const {
@@ -68,6 +93,12 @@ function ObsidianWrapper(props) {
           "From cacheRead: Here's the response time on the front end: ",
           cacheHitResponseTime
         );
+        window.postMessage({
+          type: 'query',
+          time: cacheHitResponseTime,
+          name: startTime,
+          hit: true
+        });
         /*chrome.runtime.sendMessage(chromeExtensionId, {
           cacheHitResponseTime: cacheHitResponseTime,
         });*/
@@ -111,6 +142,12 @@ function ObsidianWrapper(props) {
           "After the hunt: Here's the response time on the front end: ",
           cacheMissResponseTime
         );
+        window.postMessage({
+          type: 'query', 
+          time: cacheMissResponseTime,
+          name: startTime,
+          hit: false
+        });
         return resObj;
       } catch (e) {
         console.log(e);
