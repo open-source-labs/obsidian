@@ -174,7 +174,7 @@ WTinyLFUCache.prototype.write = async function (queryStr, respObj, deleteFlag) {
         else if (wasFoundIn === 'WLRU') await this.WLRU.put(hash, newObj);
       } else {
         const typeName = hash.slice(0, hash.indexOf('~'));
-        await this.WLRU.put(hash, resFromNormalize[hash]);
+        await this.putAndPromote(hash, resFromNormalize[hash]);
         for(const key in this.ROOT_QUERY) {
           if(key.includes(typeName + 's') || key.includes(plural(typeName))) {
             this.ROOT_QUERY[key].push(hash);

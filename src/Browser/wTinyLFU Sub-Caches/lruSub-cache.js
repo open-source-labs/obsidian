@@ -101,7 +101,7 @@ LRUCache.prototype.put = function (key, value) {
 
   // check capacity - if over capacity, remove and reassign head node
   // if (Object.nodeHash[this.nodeHash].length > capacity) 
-  if (this.nodeHash.get(key).size > this.capacity){
+  if (this.nodeHash.size > this.capacity){
     const tempHead = this.head.next;
     this.removeNode(tempHead);
     this.nodeHash.delete(tempHead.key);
