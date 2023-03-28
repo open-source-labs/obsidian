@@ -23,29 +23,31 @@ export default function WTinyLFUCache (capacity) {
   this.currentSize = 0;
   this.ROOT_QUERY = {};
   this.ROOT_MUTATION = {};
-  this.sketch = new FrequencySketch;
+  this.sketch = new FrequencySketch();
+  this.sketch.updateCapacity(capacity);
 
   this.WLRU = new LRUCache(capacity * .01);
   this.WLRU.sketch = this.sketch;
   this.SLRU = new SLRUCache(capacity * .99);
-  this.SLRU.sketch = this.sketch;
+  this.SLRU.probationaryLRU.sketch = this.sketch;
+  this.SLRU.protectedLRU.sketch = this.sketch;
 }
 
-WTinyLFUCache.prototype.putAndPromote = function (key, node) {
-  const WLRUCandidate = this.WLRU.put(key, node);
+WTinyLFUCache.prototype.putAndPromote = async function (key, value) {
+  const WLRUCandidate = this.WLRU.put(key, value);
   // if adding to the WLRU cache results in an eviction...
-  if (WLRUCandidate) {
+  if (WLRUCandidate.key) {
     // TODO: Double check that this pulls current size of cache correctly
     // if the probationary cache is at capacity...
     let winner = WLRUCandidate;
-    if (this.SLRU.probationaryLRU.nodeHash.size >= this.SLRU.probationaryLRU.capacity) {
+    if (this.SLRU.probationaryLRU.nodeHash.size >= Math.floor(this.SLRU.probationaryLRU.capacity)) {
       // send the last accessed item in the probationary cache to the TinyLFU
       const SLRUCandidate = this.SLRU.probationaryLRU.getCandidate();
       // determine which item will imrpove the hit-ratio most
-      const winner = this.TinyLFU(WLRUCandidate, SLRUCandidate);
+      winner = await this.TinyLFU(WLRUCandidate, SLRUCandidate);
     }
     // add the winner to the probationary SLRU 
-      this.SLRU.probationaryLRU.put(winner.key, winner);
+      this.SLRU.probationaryLRU.put(winner.key, winner.value);
   }
 }
 
@@ -63,6 +65,7 @@ WTinyLFUCache.prototype.populateAllHashes = function (
     // if the hash is not in the SLRU, check the WLRU
     if (!readVal) readVal = await this.WLRU.get(hash);
     if (readVal === "DELETED") return acc;
+    if (readVal) this.sketch.increment(JSON.stringify(readVal));
     if (!readVal) return undefined;
     const dataObj = {};
     for (const field in fields) {
@@ -148,6 +151,7 @@ WTinyLFUCache.prototype.write = async function (queryStr, respObj, deleteFlag) {
       if (resp) wasFoundIn = 'SLRU' 
       else resp = await this.WLRU.get(hash);
       if (resp && !wasFoundIn) wasFoundIn = 'WLRU';
+      if (resp) this.sketch.increment(JSON.stringify(resp));
       if (hash === "ROOT_QUERY" || hash === "ROOT_MUTATION") {
         if(deleteMutation === "") {
           this[hash] = Object.assign(this[hash], resFromNormalize[hash]);
@@ -174,7 +178,8 @@ WTinyLFUCache.prototype.write = async function (queryStr, respObj, deleteFlag) {
         else if (wasFoundIn === 'WLRU') await this.WLRU.put(hash, newObj);
       } else {
         const typeName = hash.slice(0, hash.indexOf('~'));
-        await this.WLRU.put(hash, resFromNormalize[hash]);
+        //TODO: check other caches first
+        await this.putAndPromote(hash, resFromNormalize[hash]);
         for(const key in this.ROOT_QUERY) {
           if(key.includes(typeName + 's') || key.includes(plural(typeName))) {
             this.ROOT_QUERY[key].push(hash);

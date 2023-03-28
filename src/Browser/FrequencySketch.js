@@ -17,7 +17,7 @@ export function FrequencySketch() {
     const max = Math.floor(maxSize);  //to ensure it's an integer
     if(table.length >= max) return;
 
-    table = Array(Math.max(nearestPowerOfTwo(max), 8)).fill().map(()=>Array(2));
+    table = Array(Math.max(nearestPowerOfTwo(max), 8)).fill().map(()=>Array(2).fill(0));
     sampleSize = (maxSize === 0) ? 10 : (10*max);
     blockMask = (table.length >>> 3) - 1;
 
@@ -40,7 +40,6 @@ export function FrequencySketch() {
 
   this.frequency = function(el) {
     if(isNotInitialized()) return 0;
-    
     const count = Array(4);
 
     const blockHash = supphash(hashCode(el));
@@ -64,11 +63,11 @@ export function FrequencySketch() {
   this.increment = function(el) {
     if (isNotInitialized()) return;
 
-    const index = Array[8];
-
+    const index = Array(8);
     const blockHash = supphash(hashCode(el));
     const counterHash = rehash(blockHash);
     const block = (blockHash & blockMask) << 3;
+    //in case we get that [Object object] bs
 
     for (let i = 0; i < 4; i++) {
       const h = counterHash >>> (i << 3);
@@ -81,10 +80,10 @@ export function FrequencySketch() {
         | incrementAt(index[5], index[1])
         | incrementAt(index[6], index[2])
         | incrementAt(index[7], index[3]);
-
     if (incremented && (++size == sampleSize)) {
       reset();
     }
+
   }
   
   /**

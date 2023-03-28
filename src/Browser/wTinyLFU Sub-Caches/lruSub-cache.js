@@ -2,7 +2,6 @@ import { plural } from "https://deno.land/x/deno_plural@2.0.0/mod.ts";
 
 import normalizeResult from "../normalize.js";
 import destructureQueries from "../destructure.js";
-import { FrequencySketch } from "../FrequencySketch.js";
 
 class Node {
   constructor (key, value) {
@@ -33,14 +32,13 @@ LRUCache.prototype.removeNode = function (node) {
 };
 
 
-LRUCache.prototype.addNode = async function (node) {
+LRUCache.prototype.addNode = function (node) {
   const tempTail = this.tail.prev;
   tempTail.next = node;
   
   this.tail.prev = node;
   node.next = this.tail;
   node.prev = tempTail;
-  await this.sketch.increment(JSON.stringify(node.value));
 }
 
 // Like get, but doesn't update anything
@@ -50,13 +48,14 @@ LRUCache.prototype.peek = function(key) {
   return node.value;
 }
 
-// Like removeNode, but takes key
+// Like removeNode, but takes key and deletes from hash
 LRUCache.prototype.delete = function (key) {
   const node = this.nodeHash.get(key);
   const prev = node.prev;
   const next = node.next; 
   prev.next = next; 
   next.prev = prev;
+  this.nodeHash.delete(key);
 }
 
 // updates a node or adds a node
@@ -83,7 +82,7 @@ LRUCache.prototype.getCandidate = function () {
   const tempHead = this.head.next;
   this.removeNode(tempHead);
   this.nodeHash.delete(tempHead.key);
-  return tempHead;
+  return {key: tempHead.key, value: tempHead.value};
 }
 
 LRUCache.prototype.put = function (key, value) {
@@ -101,12 +100,12 @@ LRUCache.prototype.put = function (key, value) {
 
   // check capacity - if over capacity, remove and reassign head node
   // if (Object.nodeHash[this.nodeHash].length > capacity) 
-  if (this.nodeHash.get(key).size > this.capacity){
+  if (this.nodeHash.size > this.capacity){
     const tempHead = this.head.next;
     this.removeNode(tempHead);
     this.nodeHash.delete(tempHead.key);
     // return tempHead for use in w-TinyLFU's SLRU cache
-    return tempHead;
+    return {key: tempHead.key, value: tempHead.value};
   }
 }
 
