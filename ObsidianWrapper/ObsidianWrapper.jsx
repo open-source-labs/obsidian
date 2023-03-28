@@ -26,6 +26,16 @@ function ObsidianWrapper(props) {
   // if(!algo) setCache(new LFUCache(Number(capacity || 2000)))
   // if(algo === 'LRU') setCache(new LRUCache(Number(capacity || 2000)));  // You have to put your Google Chrome Obsidian developer tool extension id to connect Obsidian Wrapper with dev tool
   // if(algo === 'W-TinyLFU') setCache(new WTinyLFUCache(Number(capacity || 2000))); 
+
+  window.addEventListener('message', msg => {
+    if(msg.data.type === 'algocap'){
+      window.postMessage({
+        algo: algo ? algo : 'LFU',
+        capacity: capacity ? capacity : 2000
+      })
+    }
+  });
+
   const chromeExtensionId = 'apcpdmmbhhephobnmnllbklplpaoiemo';
   // initialice cache in local storage
   //window.localStorage.setItem('cache', JSON.stringify(cache));
