@@ -26,12 +26,12 @@ SLRUCache.prototype.get = function (key) {
   if (protectedItem === null && probationaryItem === null) return;
 
   // If the item only exists in the protected segment, return that item
-  if (protectedItem !== null) return protectedItem.value;
+  if (protectedItem !== null) return protectedItem;
 
   // If the item only exists in the probationary segment, promote to protected and return item
   // if adding an item to the protectedLRU results in ejection, demote ejected node
-  this.putAndDemote(key, probationaryItem);
   this.probationaryLRU.delete(key);
+  this.putAndDemote(key, probationaryItem);
   return probationaryItem;
 }
 
@@ -54,8 +54,8 @@ SLRUCache.prototype.put = function (key, node) {
   else if (this.probationaryLRU.nodeHash(key)) {
     // if the item is in the probationary segment, 
     // promote and update it
-    this.putAndDemote(key, node);
     this.probationaryLRU.delete(key);
+    this.putAndDemote(key, node);
   }
   // if in neither, add item to the probationary segment
   else this.probationaryLRU.put(key, node)
