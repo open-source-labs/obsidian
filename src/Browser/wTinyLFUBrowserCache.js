@@ -36,7 +36,7 @@ export default function WTinyLFUCache (capacity) {
 WTinyLFUCache.prototype.putAndPromote = async function (key, value) {
   const WLRUCandidate = this.WLRU.put(key, value);
   // if adding to the WLRU cache results in an eviction...
-  if (WLRUCandidate.key) {
+  if (WLRUCandidate) {
     // TODO: Double check that this pulls current size of cache correctly
     // if the probationary cache is at capacity...
     let winner = WLRUCandidate;
@@ -47,7 +47,7 @@ WTinyLFUCache.prototype.putAndPromote = async function (key, value) {
       winner = await this.TinyLFU(WLRUCandidate, SLRUCandidate);
     }
     // add the winner to the probationary SLRU 
-      this.SLRU.probationaryLRU.put(winner.key, winner.value);
+    this.SLRU.probationaryLRU.put(winner.key, winner.value);
   }
 }
 
@@ -149,7 +149,7 @@ WTinyLFUCache.prototype.write = async function (queryStr, respObj, deleteFlag) {
       let resp = await this.SLRU.get(hash);
       // next, check the window LRU
       if (resp) wasFoundIn = 'SLRU' 
-      else resp = await this.WLRU.get(hash);
+      if (!resp) resp = await this.WLRU.get(hash);
       if (resp && !wasFoundIn) wasFoundIn = 'WLRU';
       if (resp) this.sketch.increment(JSON.stringify(resp));
       if (hash === "ROOT_QUERY" || hash === "ROOT_MUTATION") {
@@ -188,6 +188,23 @@ WTinyLFUCache.prototype.write = async function (queryStr, respObj, deleteFlag) {
       }
     }
   }
+};
+
+WTinyLFUCache.prototype.writeWholeQuery = function (queryStr, respObj) {
+  const hash = queryStr.replace(/\s/g, "");
+  console.log('hash in writeWholeQuery: ', hash)
+  console.log('value the root_query will be set to at hash key: ', respObj);
+  console.log('the value of the hash in the root query is: ', this.ROOT_QUERY[hash]);
+  this.put(this.ROOT_QUERY[hash], respObj);
+  return respObj;
+};
+
+WTinyLFUCache.prototype.readWholeQuery = function (queryStr) {
+  const hash = queryStr.replace(/\s/g, "");
+  console.log('hash in readWholeQuery: ', hash);
+  console.log('checking root query in readWholeQuery: ', this.ROOT_QUERY[hash]);
+  if (this.ROOT_QUERY[hash]) return this.get(this.ROOT_QUERY[hash]);
+  return undefined;
 };
 
 /*****
