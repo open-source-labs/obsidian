@@ -132,7 +132,7 @@ WTinyLFUCache.prototype.read = async function (queryStr) {
   return { data: responseObject };
 };
 
-WTinyLFUCache.prototype.write = async function (queryStr, respObj, deleteFlag) {
+WTinyLFUCache.prototype.write = async function (queryStr, respObj, searchTerms, deleteFlag) {
   let nullFlag = false;
   let deleteMutation = "";
   let wasFoundIn = null;
@@ -184,6 +184,16 @@ WTinyLFUCache.prototype.write = async function (queryStr, respObj, deleteFlag) {
           if(key.includes(typeName + 's') || key.includes(plural(typeName))) {
             this.ROOT_QUERY[key].push(hash);
           }
+        }
+        if (searchTerms && queryStr.slice(8, 11) === 'all'){
+          searchTerms.forEach(el => {
+            console.log('element is: ', el);
+            const elVal = resFromNormalize[hash][el].replaceAll(' ', '');
+            const hashKey = `one${typeName}(${el}:"${elVal}")`;
+            console.log('hashKey is', hashKey);
+            if (!this.ROOT_QUERY[hashKey]) this.ROOT_QUERY[hashKey] = [];
+            this.ROOT_QUERY[hashKey].push(hash);
+          });
         }
       }
     }

@@ -7,7 +7,7 @@ import { insertTypenames } from '../src/Browser/insertTypenames.js';
 const cacheContext = React.createContext();
 
 function ObsidianWrapper(props) {
-  const { algo, capacity } = props
+  const { algo, capacity, searchTerms } = props
 
   const setAlgoCap = (algo, capacity) => {
     let cache;
@@ -141,7 +141,7 @@ function ObsidianWrapper(props) {
         if (cacheWrite && resObj.data[Object.keys(resObj.data)[0]] !== null) {
           if (!wholeQuery) cache.writeWholeQuery(query, deepResObj);
           else if(resObj.data[Object.keys(resObj.data)[0]].length > cache.capacity) console.log('Please increase cache capacity');
-          else cache.write(query, deepResObj);
+          else cache.write(query, deepResObj, searchTerms);
         }
         const cacheMissResponseTime = Date.now() - startTime;
         /*chrome.runtime.sendMessage(chromeExtensionId, {
@@ -237,7 +237,7 @@ function ObsidianWrapper(props) {
         if (!cacheWrite) return responseObj;
         // first behaviour when delete cache is set to true
         if (toDelete) {
-          cache.write(mutation, responseObj, true);
+          cache.write(mutation, responseObj, searchTerms, true);
           return responseObj;
         }
         // second behaviour if update function provided
@@ -245,7 +245,7 @@ function ObsidianWrapper(props) {
           update(cache, responseObj);
         }
 
-        if(!responseObj.errors) cache.write(mutation, responseObj);
+        if(!responseObj.errors) cache.write(mutation, responseObj, searchTerms);
         // third behaviour just for normal update (no-delete, no update function)
         console.log('WriteThrough - true ', responseObj);
         return responseObj;
