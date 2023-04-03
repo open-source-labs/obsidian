@@ -22,9 +22,12 @@
 
 ## Features
 
-- (New!) Server-side cache invalidation only on affected entries
-- (New!) Flexible cache responds with only data requested from selected fields
-- (New!) Developer tool for Obsidian is now updated to Manifest version 3 and invalid Bootstrap module imports were also fixed along with CodeMirror dependencies
+- (New!) Support for W-TinyLFU client-side cache that brings great hit-ratio performance with minimal memory overhead
+- (New!) Option to provide Obsidian with the search types your application uses, allowing data cached from complete dataset pulls to be accessible later on in searches for individual items
+- (New!) Rebuilt developer tool for Obsidian 8.0 for testing and analytics related to the new client caching options
+- (New!) Option for persistant queries, allowing only a smaller hash to be sent to the server on client-side cache misses, minimizing the cost of queries. Note that while this will increase the performance for frequent, repeat queries, you may see a performance drop for new queries that haven't yet been persisted
+- Server-side cache invalidation only on affected entries
+- Flexible cache responds with only data requested from selected fields
 - GraphQL query abstraction and caching improving the performance of your app
 - SSR React wrapper, allowing you to cache in browser
 - Configurable caching options, giving you complete control over your cache
@@ -66,8 +69,7 @@ const GraphQLRouter =
     redisPort: 6379, //Desired redis port
     useCache: true, //Boolean to toggle all cache functionality
     usePlayground: true, //Boolean to allow for graphQL playground
-    useQueryCache: true, //Boolean to toogle full query cache
-    useRebuildCache: true, //Boolean to toggle rebuilding from normalized data
+    persistQueries: true, //Boolean to toggle the use of persistant queries
     customIdentifier: ['id', '__typename'],
     mutationTableMap = {}, //Object where keys are add mutation types and value is an array of affected tables (e.g. {addPlants: ['plants'], addMovie: ['movies']})
   };
@@ -88,6 +90,14 @@ const App = () => {
     </ObsidianWrapper>
   );
 };
+```
+
+## Selecting LFU/LRU/WTinyLFU, capacity, and searchTerms (if any); default (if not provided) LFU, 2000
+
+```javascript
+<ObsidianWrapper algo='LRU' capacity='5000' searchTerms={[title, author, ISBN]}>
+  <MovieApp />
+</ObsidianWrapper>
 ```
 
 ## Making a Query
@@ -152,25 +162,17 @@ const MovieApp = () => {
 }
 ```
 
-## Selecting LFU/LRU and capacity; default (if not provided) LFU, 2000
-
-```javascript
-<ObsidianWrapper algo='LRU' capacity='5000'>
-  <Home />
-</ObsidianWrapper>
-```
-
 ## Documentation
 
-[obsidian.land](http://obsidian.land)
+[getobsidian.io](http://getobsidian.io/)
 
 ## Developer Tool
 
 Information and instructions on how to use our developer tool can be found here <br/>
-works with Obsidian 5.0 <br/>
-[oslabs-beta/obsidian-developer-tool](https://github.com/oslabs-beta/obsidian-developer-tool)
+works with Obsidian 8.0 <br/>
+[oslabs-beta/obsidian-developer-tool](https://github.com/oslabs-beta/obsidian-8.0-devtool)
 
-## Obsidian 5.0 Demo
+## Obsidian 8.0 Demo
 
 Github for a demo with some example code to play with: <br/>
 [oslabs-beta/obsidian-demo-5.0](https://github.com/oslabs-beta/obsidian-demo-5.0)
@@ -182,11 +184,15 @@ Working demo to install locally in docker:
 
 ## Features In Progress
 
-- Ability to query the database for only those fields missing from the cache
-- Developer Tool Settings component, fully functioning Playground component
+- Ability to store/read only the whole query 
+- Hill Climber optimization for W-TinyLFU cache size allocation
+- Developer Tool View Cache component, and Playground component
 
 ## Authors
-
+[David Kim](https://github.com/davidtoyoukim)
+[David Norman](https://github.com/DavidMNorman)
+[Eileen Cho](https://github.com/exlxxn)
+[Joan Manto](https://github.com/JoanManto)
 [Alex Lopez](https://github.com/AlexLopez7)
 [Kevin Huang](https://github.com/kevin-06-huang)
 [Matthew Weisker](https://github.com/mweisker)

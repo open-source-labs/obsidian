@@ -195,12 +195,16 @@ LFUCache.prototype.write = async function (queryStr, respObj, searchTerms, delet
             this.ROOT_QUERY[key].push(hash);
           }
         }
+        /****
+        * if search terms were provided in the wrapper and the query is an 
+        * "all"-type query, build out queries in ROOT_QUERY that match the 
+        * search terms for each item retrieved from the "all"-type query so 
+        * that future single queries can be looked up directly from the cache
+        ****/
         if (searchTerms && queryStr.slice(8, 11) === 'all'){
           searchTerms.forEach(el => {
-            console.log('element is: ', el);
             const elVal = resFromNormalize[hash][el].replaceAll(' ', '');
             const hashKey = `one${typeName}(${el}:"${elVal}")`;
-            console.log('hashKey is', hashKey);
             if (!this.ROOT_QUERY[hashKey]) this.ROOT_QUERY[hashKey] = [];
             this.ROOT_QUERY[hashKey].push(hash);
           });

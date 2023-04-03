@@ -6,15 +6,6 @@ import SLRUCache from "./wTinyLFU%20Sub-Caches/slruSub-cache.js"
 import LRUCache from "./wTinyLFU%20Sub-Caches/lruSub-cache.js";
 import { FrequencySketch } from './FrequencySketch.js';
 
-// Basic list node structure
-class Node {
-  constructor (key, value) {
-    this.key = key;
-    this.value = value;
-    this.next = this.prev = null;
-  }
-}
-
 /*****
 * Overall w-TinyLFU Cache
 *****/
@@ -37,13 +28,12 @@ WTinyLFUCache.prototype.putAndPromote = async function (key, value) {
   const WLRUCandidate = this.WLRU.put(key, value);
   // if adding to the WLRU cache results in an eviction...
   if (WLRUCandidate) {
-    // TODO: Double check that this pulls current size of cache correctly
     // if the probationary cache is at capacity...
     let winner = WLRUCandidate;
     if (this.SLRU.probationaryLRU.nodeHash.size >= Math.floor(this.SLRU.probationaryLRU.capacity)) {
       // send the last accessed item in the probationary cache to the TinyLFU
       const SLRUCandidate = this.SLRU.probationaryLRU.getCandidate();
-      // determine which item will imrpove the hit-ratio most
+      // determine which item will improve the hit-ratio most
       winner = await this.TinyLFU(WLRUCandidate, SLRUCandidate);
     }
     // add the winner to the probationary SLRU 
@@ -96,7 +86,6 @@ WTinyLFUCache.prototype.populateAllHashes = function (
   return reduction;
 };
 
-
 WTinyLFUCache.prototype.read = async function (queryStr) {
   if (typeof queryStr !== "string") throw TypeError("input should be a string");
   // destructure the query string into an object
@@ -120,7 +109,6 @@ WTinyLFUCache.prototype.read = async function (queryStr) {
         arrayHashes,
         queries[query].fields
       );
-
 
       if (!responseObject[respObjProp]) return undefined;
 
@@ -178,19 +166,22 @@ WTinyLFUCache.prototype.write = async function (queryStr, respObj, searchTerms, 
         else if (wasFoundIn === 'WLRU') await this.WLRU.put(hash, newObj);
       } else {
         const typeName = hash.slice(0, hash.indexOf('~'));
-        //TODO: check other caches first
         await this.putAndPromote(hash, resFromNormalize[hash]);
         for(const key in this.ROOT_QUERY) {
           if(key.includes(typeName + 's') || key.includes(plural(typeName))) {
             this.ROOT_QUERY[key].push(hash);
           }
         }
+        /****
+        * if search terms were provided in the wrapper and the query is an 
+        * "all"-type query, build out queries in ROOT_QUERY that match the 
+        * search terms for each item retrieved from the "all"-type query so 
+        * that future single queries can be looked up directly from the cache
+        ****/
         if (searchTerms && queryStr.slice(8, 11) === 'all'){
           searchTerms.forEach(el => {
-            console.log('element is: ', el);
             const elVal = resFromNormalize[hash][el].replaceAll(' ', '');
             const hashKey = `one${typeName}(${el}:"${elVal}")`;
-            console.log('hashKey is', hashKey);
             if (!this.ROOT_QUERY[hashKey]) this.ROOT_QUERY[hashKey] = [];
             this.ROOT_QUERY[hashKey].push(hash);
           });
@@ -200,6 +191,7 @@ WTinyLFUCache.prototype.write = async function (queryStr, respObj, searchTerms, 
   }
 };
 
+// Note: WholeQuery is not a currently-functioning option in Obsidian Wrapper
 WTinyLFUCache.prototype.writeWholeQuery = function (queryStr, respObj) {
   const hash = queryStr.replace(/\s/g, "");
   console.log('hash in writeWholeQuery: ', hash)
@@ -209,6 +201,7 @@ WTinyLFUCache.prototype.writeWholeQuery = function (queryStr, respObj) {
   return respObj;
 };
 
+// Note: WholeQuery is not a currently-functioning option in Obsidian Wrapper
 WTinyLFUCache.prototype.readWholeQuery = function (queryStr) {
   const hash = queryStr.replace(/\s/g, "");
   console.log('hash in readWholeQuery: ', hash);
