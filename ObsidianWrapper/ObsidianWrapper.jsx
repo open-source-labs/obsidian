@@ -8,16 +8,20 @@ const cacheContext = React.createContext();
 
 function ObsidianWrapper(props) {
   // props to be inputted by user when using the Obsdian Wrapper
-  const { algo, capacity, searchTerms } = props
+  const { algo, capacity, searchTerms, useCache } = props
+  // if useCache hasn't been set, default caching to true
+  let caching = true;
+  // if it has been set to false, turn client-side caching off
+  if (useCache === false) caching = false;
 
   // algo defaults to LFU, capacity defaults to 2000
   const setAlgoCap = (algo, capacity) => {
     let cache;
-    if(algo === 'LRU'){
+    if(caching && algo === 'LRU'){
       cache = new LRUCache(Number(capacity || 2000))
-    } else if (algo === 'W-TinyLFU'){
+    } else if (caching && algo === 'W-TinyLFU'){
       cache = new WTinyLFUCache(Number(capacity || 2000))
-    } else {
+    } else if (caching) {
       cache = new LFUCache(Number(capacity || 2000))
     }
     return cache;
@@ -47,8 +51,8 @@ function ObsidianWrapper(props) {
     // set the options object default properties if not provided
     const {
       endpoint = '/graphql',
-      cacheRead = true,
-      cacheWrite = true,
+      cacheRead = !caching ? false : true,
+      cacheWrite = !caching ? false : true,
       pollInterval = null,
       wholeQuery = true, //Note: logic for false is currently nonfunctional
     } = options;
