@@ -71,7 +71,7 @@ function ObsidianWrapper(props) {
     }
 
     // when cacheRead set to true
-    if (cacheRead) {
+    if (cacheRead && caching) {
       let resObj;
       // when the developer decides to only utilize whole query for cache
       if (!wholeQuery) resObj = await cache.readWholeQuery(query);
@@ -103,7 +103,7 @@ function ObsidianWrapper(props) {
       return new Promise((resolve, reject) => resolve(hunt(query)));
       // when cacheRead set to false
     }
-    if (!cacheRead) {
+    if (!cacheRead || !caching) {
       return new Promise((resolve, reject) => resolve(hunt(query)));
     }
 
@@ -123,7 +123,7 @@ function ObsidianWrapper(props) {
         const resObj = await resJSON.json();
         const deepResObj = { ...resObj };
         // update result in cache if cacheWrite is set to true
-        if (cacheWrite && resObj.data[Object.keys(resObj.data)[0]] !== null) {
+        if (cacheWrite && caching && resObj.data[Object.keys(resObj.data)[0]] !== null) {
           if (!wholeQuery) cache.writeWholeQuery(query, deepResObj);
           else if(resObj.data[Object.keys(resObj.data)[0]].length > cache.capacity) console.log('Please increase cache capacity');
           else cache.write(query, deepResObj, searchTerms);
@@ -167,7 +167,7 @@ function ObsidianWrapper(props) {
     mutation = insertTypenames(mutation);
     const {
       endpoint = '/graphql',
-      cacheWrite = true,
+      cacheWrite = !caching ? false : true,
       toDelete = false,
       update = null,
       writeThrough = true, // not true
@@ -221,7 +221,7 @@ function ObsidianWrapper(props) {
           },
           body: JSON.stringify({ query: mutation }),
         }).then((resp) => resp.json());
-        if (!cacheWrite) return responseObj;
+        if (!cacheWrite || !caching) return responseObj;
         // first behaviour when delete cache is set to true
         if (toDelete) {
           cache.write(mutation, responseObj, searchTerms, true);

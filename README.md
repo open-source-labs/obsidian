@@ -92,10 +92,10 @@ const App = () => {
 };
 ```
 
-## Selecting LFU/LRU/WTinyLFU, capacity, and searchTerms (if any); default (if not provided) LFU, 2000
+## Selecting useCache, LFU/LRU/WTinyLFU, capacity, and searchTerms (if any); default (if not provided) true, LFU, 2000
 
 ```javascript
-<ObsidianWrapper algo='LRU' capacity='5000' searchTerms={[title, author, ISBN]}>
+<ObsidianWrapper useCache={true} algo='LRU' capacity='5000' searchTerms={[title, author, ISBN]}>
   <MovieApp />
 </ObsidianWrapper>
 ```
