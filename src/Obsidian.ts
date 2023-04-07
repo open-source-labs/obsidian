@@ -111,7 +111,13 @@ export async function ObsidianRouter<T>({
         console.log('hashTable.table is ', hashTable.table);
         queryStr = hashTable.get(hash);
         console.log('queryStr is ',queryStr);
-        // this may set query str to undefined need to figure it out
+        console.log('type of queryStr is', typeof queryStr);
+        // if not found in hash table, respond so we can send full query.
+        if (!queryStr) {
+          response.status = 204;
+          console.log('about to return');
+          return;
+        }
       } else if (persistQueries && body.hash && body.query) {
         console.log('persistQueries && body.hash && body.query');
         const { hash, query } = body;
@@ -138,7 +144,7 @@ export async function ObsidianRouter<T>({
       console.log('there?');
       if (maxQueryDepth) queryDepthLimiter(queryStr, maxQueryDepth); // If a securty limit is set for maxQueryDepth, invoke queryDepthLimiter, which throws error if query depth exceeds maximum
       console.log('anywhere?');
-      let restructuredBody = { query: restructure(body) }; // Restructure gets rid of variables and fragments from the query
+      let restructuredBody = { query: restructure({query: queryStr}) }; // Restructure gets rid of variables and fragments from the query
       console.log('up?');
       console.log('down?');
       // Is query in cache?
@@ -151,7 +157,7 @@ export async function ObsidianRouter<T>({
           console.log('missed the redis cacheeee');
           const gqlResponse = await (graphql as any)(
             schema,
-            body.query,
+            queryStr,
             resolvers,
             contextResult,
             body.variables || undefined,
@@ -170,10 +176,9 @@ export async function ObsidianRouter<T>({
 
           if (isMutation(restructuredBody)) { // If operation is mutation, invalidate relevant responses in cache
             console.log('restructuredBody is a mutation');
-            const queryString = body; 
             invalidateCache(
               normalizedGQLResponse,
-              queryString.query,
+              queryStr,
               mutationTableMap
             );
           }
@@ -186,7 +191,7 @@ export async function ObsidianRouter<T>({
 
             console.log('transformedGQLResponse is ', transformedGQLResponse);
 
-            await cache.write(body.query, transformedGQLResponse, false);
+            await cache.write(queryStr, transformedGQLResponse, false);
             for (const key in normalizedGQLResponse) {
               await cache.cacheWriteObject(key, normalizedGQLResponse[key]);
             }
@@ -229,7 +234,7 @@ export async function ObsidianRouter<T>({
         // if not using a cache, go directly to the database
         const gqlResponse = await (graphql as any)(
           schema,
-          body.query,
+          queryStr,
           resolvers,
           contextResult,
           body.variables || undefined,
