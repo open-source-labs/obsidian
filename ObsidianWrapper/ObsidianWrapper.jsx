@@ -7,26 +7,32 @@ import { insertTypenames } from '../src/Browser/insertTypenames.js';
 const cacheContext = React.createContext();
 
 function ObsidianWrapper(props) {
-  const { algo, capacity, searchTerms } = props
+  // props to be inputted by user when using the Obsdian Wrapper
+  const { algo, capacity, searchTerms, useCache } = props
+  // if useCache hasn't been set, default caching to true
+  let caching = true;
+  // if it has been set to false, turn client-side caching off
+  if (useCache === false) caching = false;
 
+  // algo defaults to LFU, capacity defaults to 2000
   const setAlgoCap = (algo, capacity) => {
     let cache;
-    if(algo === 'LRU'){
+    if(caching && algo === 'LRU'){
       cache = new LRUCache(Number(capacity || 2000))
-    } else if (algo === 'W-TinyLFU'){
+    } else if (caching && algo === 'W-TinyLFU'){
       cache = new WTinyLFUCache(Number(capacity || 2000))
-    } else {
+    } else if (caching) {
       cache = new LFUCache(Number(capacity || 2000))
     }
     return cache;
   }
 
+  // once cache is initialized, cannot setCache
+  // when tested, setCache breaks the whole app if trying to switch while in use
+  // to successfully change between algo types, kill the server, change the algo type in wrapper, then restart server
   const [cache, setCache] = React.useState(setAlgoCap(algo, capacity));
-  
-  // if(!algo) setCache(new LFUCache(Number(capacity || 2000)))
-  // if(algo === 'LRU') setCache(new LRUCache(Number(capacity || 2000)));  // You have to put your Google Chrome Obsidian developer tool extension id to connect Obsidian Wrapper with dev tool
-  // if(algo === 'W-TinyLFU') setCache(new WTinyLFUCache(Number(capacity || 2000))); 
 
+  // FOR DEVTOOL - listening for message from content.js to be able to send algo type and capacity to devtool
   window.addEventListener('message', msg => {
     if(msg.data.type === 'algocap'){
       window.postMessage({
@@ -36,37 +42,19 @@ function ObsidianWrapper(props) {
     }
   });
 
-  const chromeExtensionId = 'apcpdmmbhhephobnmnllbklplpaoiemo';
-  // initialice cache in local storage
-  //window.localStorage.setItem('cache', JSON.stringify(cache));
-
-  let firstMessage = true;
-
   async function query(query, options = {}) {
-    // dev tool messages
+    // FOR DEVTOOL - startTime is used to calculate the performance of the cache
+    // startDate is to find out when query was made, this data is passed to devtools
     const startTime = Date.now();
-    /*
-      chrome.runtime.sendMessage(chromeExtensionId, { query: query });
-      chrome.runtime.sendMessage(chromeExtensionId, {
-        cache: window.localStorage.getItem('cache'),
-      });
-    */
-
-    if(firstMessage){
-      window.postMessage({
-        algo: algo ? algo : 'LFU',
-        capacity: capacity ? capacity : 2000
-      });
-      firstMessage = false;
-    };
+    const startDate = new Date(Date.now());
 
     // set the options object default properties if not provided
     const {
       endpoint = '/graphql',
-      cacheRead = true,
-      cacheWrite = true,
+      cacheRead = !caching ? false : true,
+      cacheWrite = !caching ? false : true,
       pollInterval = null,
-      wholeQuery = true,
+      wholeQuery = true, //Note: logic for false is currently nonfunctional
     } = options;
 
     // when pollInterval is not null the query will be sent to the server every inputted number of milliseconds
@@ -83,7 +71,7 @@ function ObsidianWrapper(props) {
     }
 
     // when cacheRead set to true
-    if (cacheRead) {
+    if (cacheRead && caching) {
       let resObj;
       // when the developer decides to only utilize whole query for cache
       if (!wholeQuery) resObj = await cache.readWholeQuery(query);
@@ -93,32 +81,29 @@ function ObsidianWrapper(props) {
         // returning cached response as a promise
         const cacheHitResponseTime = Date.now() - startTime;
 
-        // Allow for access of the response time
-        // const cacheCopy = {...cache};
-        // cacheCopy.callTime = cacheHitResponseTime;
-        // setCache(cacheCopy);
-        resObj['time'] = cacheHitResponseTime
+        // resObj['time'] = cacheHitResponseTime;
 
         console.log(
           "From cacheRead: Here's the response time on the front end: ",
           cacheHitResponseTime
         );
+
+        // FOR DEVTOOL - sends message to content.js with query metrics when query is a hit
         window.postMessage({
           type: 'query',
           time: cacheHitResponseTime,
-          name: startTime,
+          date: startDate.toDateString().slice(0, 24),
+          query: query,
           hit: true
         });
-        /*chrome.runtime.sendMessage(chromeExtensionId, {
-          cacheHitResponseTime: cacheHitResponseTime,
-        });*/
+
         return new Promise((resolve, reject) => resolve(resObj));
       }
       // execute graphql fetch request if cache miss
       return new Promise((resolve, reject) => resolve(hunt(query)));
       // when cacheRead set to false
     }
-    if (!cacheRead) {
+    if (!cacheRead || !caching) {
       return new Promise((resolve, reject) => resolve(hunt(query)));
     }
 
@@ -138,26 +123,29 @@ function ObsidianWrapper(props) {
         const resObj = await resJSON.json();
         const deepResObj = { ...resObj };
         // update result in cache if cacheWrite is set to true
-        if (cacheWrite && resObj.data[Object.keys(resObj.data)[0]] !== null) {
+        if (cacheWrite && caching && resObj.data[Object.keys(resObj.data)[0]] !== null) {
           if (!wholeQuery) cache.writeWholeQuery(query, deepResObj);
           else if(resObj.data[Object.keys(resObj.data)[0]].length > cache.capacity) console.log('Please increase cache capacity');
           else cache.write(query, deepResObj, searchTerms);
         }
         const cacheMissResponseTime = Date.now() - startTime;
-        /*chrome.runtime.sendMessage(chromeExtensionId, {
-          cacheMissResponseTime: cacheMissResponseTime,
-        });*/
-        resObj['time'] = cacheMissResponseTime
+        
+        // resObj['time'] = cacheMissResponseTime;
+
         console.log(
           "After the hunt: Here's the response time on the front end: ",
           cacheMissResponseTime
         );
+
+        // FOR DEVTOOL - sends message to content.js when query is a miss
         window.postMessage({
           type: 'query', 
           time: cacheMissResponseTime,
-          name: startTime,
+          date: startDate.toDateString().slice(0, 24),
+          query: query,
           hit: false
         });
+
         return resObj;
       } catch (e) {
         console.log(e);
@@ -170,17 +158,16 @@ function ObsidianWrapper(props) {
     cache.cacheClear();
   }
 
+  // NOTE - FOR DEVTOOL - no messages are currently being passed for mutations
+  // so some logic in content.js and background.js may be missing to handle mutations
+
   // breaking out writethrough logic vs. non-writethrough logic
   async function mutate(mutation, options = {}) {
-    // dev tool messages
-    // chrome.runtime.sendMessage(chromeExtensionId, {
-    //   mutation: mutation,
-    // });
     const startTime = Date.now();
     mutation = insertTypenames(mutation);
     const {
       endpoint = '/graphql',
-      cacheWrite = true,
+      cacheWrite = !caching ? false : true,
       toDelete = false,
       update = null,
       writeThrough = true, // not true
@@ -196,9 +183,9 @@ function ObsidianWrapper(props) {
             endpoint
           );
           const deleteMutationResponseTime = Date.now() - startTime;
-          chrome.runtime.sendMessage(chromeExtensionId, {
-            deleteMutationResponseTime: deleteMutationResponseTime,
-          });
+          // NOTE -  from OLD DEVTOOLS - chrome.runtime.sendMessage(chromeExtensionId, {
+          //   deleteMutationResponseTime: deleteMutationResponseTime,
+          // });
           return responseObj;
         } else {
           // for add mutation
@@ -217,9 +204,9 @@ function ObsidianWrapper(props) {
           // GQL call to make changes and synchronize database
           console.log('WriteThrough - false ', responseObj);
           const addOrUpdateMutationResponseTime = Date.now() - startTime;
-          chrome.runtime.sendMessage(chromeExtensionId, {
-            addOrUpdateMutationResponseTime: addOrUpdateMutationResponseTime,
-          });
+          // NOTE - from OLD DEVTOOLS - chrome.runtime.sendMessage(chromeExtensionId, {
+          //   addOrUpdateMutationResponseTime: addOrUpdateMutationResponseTime,
+          // });
           return responseObj;
         }
       } else {
@@ -234,7 +221,7 @@ function ObsidianWrapper(props) {
           },
           body: JSON.stringify({ query: mutation }),
         }).then((resp) => resp.json());
-        if (!cacheWrite) return responseObj;
+        if (!cacheWrite || !caching) return responseObj;
         // first behaviour when delete cache is set to true
         if (toDelete) {
           cache.write(mutation, responseObj, searchTerms, true);
