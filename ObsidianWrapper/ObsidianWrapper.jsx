@@ -3,11 +3,12 @@ import LFUCache from '../src/Browser/lfuBrowserCache.js';
 import LRUCache from '../src/Browser/lruBrowserCache.js';
 import WTinyLFUCache from "../src/Browser/wTinyLFUBrowserCache.js";
 import { insertTypenames } from '../src/Browser/insertTypenames.js';
+import { sha256 } from 'https://denopkg.com/chiefbiiko/sha256@v1.0.0/mod.ts';
 
 const cacheContext = React.createContext();
 
 function ObsidianWrapper(props) {
-  const { algo, capacity, searchTerms } = props
+  const { algo, capacity, searchTerms, persistQueries } = props;
 
   const setAlgoCap = (algo, capacity) => {
     let cache;
@@ -122,20 +123,60 @@ function ObsidianWrapper(props) {
       return new Promise((resolve, reject) => resolve(hunt(query)));
     }
 
-    // when cache miss or on intervals
+    // when cache miss or on intervals or not looking in the cache
     async function hunt(query) {
       if (wholeQuery) query = insertTypenames(query);
       try {
-        // send fetch request with query
-        const resJSON = await fetch(endpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-          },
-          body: JSON.stringify({ query }),
-        });
+        console.log('hello from hunt try');
+        let resJSON;
+        if (persistQueries) {
+          console.log('we are persisting queries');
+          // IF WE ARE USING PERSIST QUERIES
+          // SEND THE HASH
+          const hash = sha256(query, 'utf8', 'hex');
+          resJSON = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Accept: 'application/json',
+            },
+            body: JSON.stringify({ hash }),
+          });
+          console.log('resJSON is ', resJSON);
+
+          // IF HASH WAS NOT FOUND IN HASH TABLE
+          if (resJSON.status === 204) {
+            console.log('hash was not found in the table');
+            // SEND NEW REQUEST WITH HASH AND QUERY
+            resJSON = await fetch(endpoint, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+              },
+              body: JSON.stringify({ hash, query }),
+            });
+            console.log('resJSON is ', resJSON);
+
+          }
+
+        } else {
+          console.log('we are not persisting queries');
+          // IF WE ARE NOT USING PERSIST QUERIES
+          // JUST SEND THE QUERY ONLY
+          resJSON = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Accept: 'application/json',
+            },
+            body: JSON.stringify({ query }),
+          });
+        }
+
+        console.log('finished persisting queries, resJSON is ', resJSON);
         const resObj = await resJSON.json();
+        console.log('resObj is ', resObj);
         const deepResObj = { ...resObj };
         // update result in cache if cacheWrite is set to true
         if (cacheWrite && resObj.data[Object.keys(resObj.data)[0]] !== null) {
