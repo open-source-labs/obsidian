@@ -195,7 +195,7 @@ export async function ObsidianRouter<T>({
 
             // await cache.write(queryStr, transformedGQLResponse, false);
             // for (const key in normalizedGQLResponse) {
-              await cache.cacheWriteObject(queryStr, normalizedGQLResponse, searchTerms);
+              await cache.write(queryStr, normalizedGQLResponse, searchTerms);
             // }
           }
           response.status = 200;
