@@ -303,7 +303,7 @@ export class Cache {
     // if (this.context === 'client') {
     //   this.storage = { ROOT_QUERY: {}, ROOT_MUTATION: {} };
     // } else {
-    await redis.flushdb((err, successful) => {
+    await this.redis.flushdb((err, successful) => {
       if (err) console.log('redis error', err);
       console.log(successful, 'clear');
     });
