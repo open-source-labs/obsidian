@@ -1,10 +1,11 @@
 /** @format */
 import { gql } from 'https://deno.land/x/oak_graphql/mod.ts';
 import { visit } from 'https://deno.land/x/graphql_deno/mod.ts';
-import { redisdb, Cache } from './quickCache.js';
+import { scope } from './Obsidian.ts';
+import { Cache } from './quickCache.js';
 import { deepEqual } from './utils.js';
 
-const cache = new Cache();
+// const cache = new Cache();
 
 /**
  * @param {any} gqlQuery - Object containing the query string
@@ -57,14 +58,14 @@ export async function invalidateCache(
   // That's why the for loop is needed
   for (const redisKey in normalizedMutation) {
     normalizedData = normalizedMutation[redisKey];
-    cachedVal = await cache.cacheReadObject(redisKey);
+    cachedVal = await scope.cache.cacheReadObject(redisKey);
 
     // if response objects from mutation and cache are deeply equal then we delete it from cache because it infers that it's a delete mutation
     if (
       (cachedVal !== undefined && deepEqual(normalizedData, cachedVal)) ||
       isDelete(queryString)
     ) {
-      await cache.cacheDelete(redisKey);
+      await scope.cache.cacheDelete(redisKey);
     } 
     else {
       // Otherwise it's an update or add mutation because response objects from mutation and cache don't match. 
@@ -77,19 +78,19 @@ export async function invalidateCache(
 
         const staleRefs: Array<string> = mutationTableMap[mutationType]; // Grabs array of affected data tables from dev specified mutationTableMap
 
-        const rootQueryContents = await redisdb.hgetall('ROOT_QUERY'); // Creates array of all query keys and values in ROOT_QUERY from Redis
+        const rootQueryContents = await scope.cache.redis.hgetall('ROOT_QUERY'); // Creates array of all query keys and values in ROOT_QUERY from Redis
 
         for (let j = 0; j < staleRefs.length; j++) {                // Checks for all query keys that refer to the affected tables and deletes them from Redis
           for (let i = 0; i < rootQueryContents.length; i += 2) {
             if (
               staleRefs[j] === rootQueryContents[i].slice(0, staleRefs[j].length)
             ) {
-              redisdb.hdel('ROOT_QUERY', rootQueryContents[i]);
+              scope.cache.redis.hdel('ROOT_QUERY', rootQueryContents[i]);
             }
           }
         }
       }
-      await cache.cacheWriteObject(redisKey, normalizedData); // Adds or updates reference in redis cache
+      await scope.cache.cacheWriteObject(redisKey, normalizedData); // Adds or updates reference in redis cache
     }
   }
 }

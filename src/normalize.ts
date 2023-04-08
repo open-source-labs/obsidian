@@ -61,12 +61,13 @@ export const hashMaker = (
   hashableObject: FlatObject,
   hashableKeys: Array<string>
 ): string => {
+  // console.log('hello from hashmaker');
+  // console.log('hashableObject is ', hashableObject);
+  // console.log('hashableKeys is ', hashableKeys);
   let hash = '';
-  let value = '';
-  for (const hashableKey of hashableKeys) {
-    value = '~';
-    value += hashableObject[hashableKey];
-    hash += value;
+  for (let i = 0; i < hashableKeys.length; i++) {
+    hash += hashableObject[hashableKeys[i]];
+    if (i < hashableKeys.length - 1) hash += '~'
   }
   return hash;
 };
