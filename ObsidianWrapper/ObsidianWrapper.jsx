@@ -112,10 +112,8 @@ function ObsidianWrapper(props) {
     async function hunt(query) {
       if (wholeQuery) query = insertTypenames(query);
       try {
-        console.log('hello from hunt try');
         let resJSON;
         if (persistQueries) {
-          console.log('we are persisting queries');
           // IF WE ARE USING PERSIST QUERIES
           // SEND THE HASH
           const hash = sha256(query, 'utf8', 'hex');
@@ -127,11 +125,9 @@ function ObsidianWrapper(props) {
             },
             body: JSON.stringify({ hash }),
           });
-          console.log('resJSON is ', resJSON);
 
           // IF HASH WAS NOT FOUND IN HASH TABLE
           if (resJSON.status === 204) {
-            console.log('hash was not found in the table');
             // SEND NEW REQUEST WITH HASH AND QUERY
             resJSON = await fetch(endpoint, {
               method: 'POST',
@@ -141,12 +137,10 @@ function ObsidianWrapper(props) {
               },
               body: JSON.stringify({ hash, query }),
             });
-            console.log('resJSON is ', resJSON);
 
           }
 
         } else {
-          console.log('we are not persisting queries');
           // IF WE ARE NOT USING PERSIST QUERIES
           // JUST SEND THE QUERY ONLY
           resJSON = await fetch(endpoint, {
@@ -159,9 +153,7 @@ function ObsidianWrapper(props) {
           });
         }
 
-        console.log('finished persisting queries, resJSON is ', resJSON);
         const resObj = await resJSON.json();
-        console.log('resObj is ', resObj);
         const deepResObj = { ...resObj };
         // update result in cache if cacheWrite is set to true
         if (cacheWrite && caching && resObj.data[Object.keys(resObj.data)[0]] !== null) {
