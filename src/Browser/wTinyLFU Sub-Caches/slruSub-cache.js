@@ -1,7 +1,3 @@
-import { plural } from "https://deno.land/x/deno_plural@2.0.0/mod.ts";
-
-import normalizeResult from "../normalize.js";
-import destructureQueries from "../destructure.js";
 import LRUCache from './lruSub-cache.js';
 
 /*****
@@ -35,19 +31,7 @@ SLRUCache.prototype.get = function (key) {
   return probationaryItem;
 }
 
-// Get an item from a key without updating access or promoting
-SLRUCache.prototype.peek = function (key) {
-  const protectedItem = this.protectedLRU.peek(key);
-  const probationaryItem = this.probationaryLRU.peek(key);
-
-  // return the protectedItem unless it is undefined, then return probationaryItem instead
-  return protectedItem === null ? probationaryItem : protectedItem;
-}
-
 // add or update item in cache
-// if item does not exist, added to probational segment
-// if item exists in probational segment, update value and promote to protected
-// if exists in protected segment, update and make most recent
 SLRUCache.prototype.put = function (key, node) {
   // if the item is in the protected segment, update it
   if (this.protectedLRU.nodeHash.get(key)) this.putAndDemote(key, node);
@@ -61,19 +45,12 @@ SLRUCache.prototype.put = function (key, node) {
   else this.probationaryLRU.put(key, node)
 }
 
-// deletes an item from BOTH segments of the cache
-SLRUCache.prototype.delete = function (key) {
-  this.protectedLRU.delete(key);
-  this.probationaryLRU.delete(key);
-}
-
 // Check to see if the item exists in the cache without updating access
 SLRUCache.prototype.has = function (key) {
   return this.protectedLRU.nodeHash.get(key) || this.probationaryLRU.nodeHash.get(key);
 }
 
 // Adds a node to the protectedLRU 
-// if that results in an ejection, add the ejected node to the probationary LRU
 SLRUCache.prototype.putAndDemote = function (key, value) {
   // if adding an item to the protectedLRU results in ejection, demote ejected node
   const demoted = this.protectedLRU.put(key, value);

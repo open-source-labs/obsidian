@@ -1,9 +1,9 @@
 /** @format */
 
-import 'https://deno.land/x/dotenv/load.ts';
-import { connect } from 'https://deno.land/x/redis/mod.ts';
-import { gql } from 'https://deno.land/x/oak_graphql/mod.ts';
-import { print, visit } from 'https://deno.land/x/graphql_deno/mod.ts';
+import "https://deno.land/x/dotenv@v3.2.2/load.ts";
+import { connect } from "https://deno.land/x/redis@v0.29.2/mod.ts";
+import { gql } from "https://deno.land/x/oak_graphql@0.6.4/mod.ts";
+import { print, visit } from "https://deno.land/x/graphql_deno@v15.0.0/mod.ts";
 import { destructureQueries } from './Browser/destructure.js';
 
 
@@ -30,7 +30,7 @@ export class Cache {
     this.redis.configSet('maxmemory', maxmemory);
   }
 
-
+  // METHOD TO READ FROM REDIS CACHE & RESTRUCTURE THE DATA
   async read(queryStr) {
     // destructure the query string into an object
     const queries = destructureQueries(queryStr).queries;
@@ -52,7 +52,7 @@ export class Cache {
     return { data: responseObject };
   }
 
-  async populateAllHashes(allHashes, fields){
+  populateAllHashes(allHashes, fields){
     if (!allHashes.length) return [];
     const tildeInd = allHashes[0].indexOf('~');
     const typeName = allHashes[0].slice(0, tildeInd);
@@ -83,14 +83,20 @@ export class Cache {
     return reduction;
   };
 
+  // METHOD TO WRITE TO REDIS CACHE 
   async write(queryStr, respObj, searchTerms, deleteFlag) {
     const hash = this.createQueryKey(queryStr);
     const array = Object.keys(respObj);
+    // isolate type of of query - 'person,' 'book,' etc.
     const tildeInd = array[0].indexOf('~');
     const typeName = array[0].slice(0, tildeInd);
+    // store the array of keys to ROOT_QUERY
     this.ROOT_QUERY[hash] = array;
+    // write each item in the array to the cache
     for (let i = 0; i < array.length; i++) {
       await this.redis.set(array[i], JSON.stringify(respObj[array[i]]));
+      // if using searchTerms, iterate throuogh those and also store each item
+      // according to those terms in ROOT_QUERY
       if (searchTerms.length && queryStr.slice(8 , 11) === 'all') {
         searchTerms.forEach(el => {
           const elVal = respObj[array[i]][el].replaceAll(' ', '');
@@ -103,25 +109,7 @@ export class Cache {
   }
 
 
-  //will overwrite a list at the given hash by default
-  //if you pass a false value to overwrite, it will append the list items to the end
-
-  //Probably be used in normalize
-  cacheWriteList = async (hash, array, overwrite = true) => {
-    if (overwrite) {
-      await this.redis.del(hash);
-    }
-    array = array.map((element) => JSON.stringify(element));
-    await this.redis.rpush(hash, ...array);
-  };
-
-  cacheReadList = async (hash) => {
-    let cachedArray = await this.redis.lrange(hash, 0, -1);
-    cachedArray = cachedArray.map((element) => JSON.parse(element));
-
-    return cachedArray;
-  };
-
+  // CURRENTLY BEING UTILIZED BY invalidateCacheCheck.ts, WHICH IS A FILE THAT SHOULD BE REFACTORED IN FUTURE ITERATION
   cacheWriteObject = async (hash, obj) => {
     let entries = Object.entries(obj).flat();
     entries = entries.map((entry) => JSON.stringify(entry));
@@ -129,6 +117,7 @@ export class Cache {
     await this.redis.hset(hash, ...entries);
   };
 
+  // CURRENTLY BEING UTILIZED BY invalidateCacheCheck.ts, WHICH IS A FILE THAT SHOULD BE REFACTORED IN FUTURE ITERATION
   cacheReadObject = async (hash, fields = []) => {
     // Checks for the fields requested, then queries cache for those specific keys in the hashes
     if (fields.length !== 0) {
@@ -155,40 +144,8 @@ export class Cache {
     }
   };
 
-  createBigHash(inputfromQuery) {
-    let ast = gql(inputfromQuery);
-
-    let returned = visit(ast, { enter: print(ast) });
-    let finalReturn = print(returned);
-    return JSON.stringify(finalReturn);
-  }
-
-  async cacheRead(queryStr) {
-    if (queryStr === 'ROOT_QUERY' || queryStr === 'ROOT_MUTATION') {
-      const hasRootQuery = await this.redis.get('ROOT_QUERY');
-
-      if (!hasRootQuery) {
-        await this.redis.set('ROOT_QUERY', JSON.stringify({}));
-      }
-      const hasRootMutation = await this.redis.get('ROOT_MUTATION');
-
-      if (!hasRootMutation) {
-        await this.redis.set('ROOT_MUTATION', JSON.stringify({}));
-      }
-    }
-    // use cacheQueryKey to create a key with object name and inputs to save in cache
-    const queryKey = this.createQueryKey(queryStr);
-    const cacheResponse = await this.redis.hget('ROOT_QUERY', queryKey);
-
-    if (!cacheResponse === undefined) return;
-    return JSON.parse(cacheResponse);
-    // }
-  }
-
   /*
   Creates a string to search the cache or add as a key in the cache.
-  If GraphQL query string is query{plants(input:{maintenance:"Low"}) name id ...}
-  returned queryKey will be plants:maintenance:Low
   */
   createQueryKey(queryStr) {
     // traverses AST and gets object name, and any filter keys in the query
@@ -208,27 +165,12 @@ export class Cache {
       });
 
       let parens = '' // name:"Yoda"
-      for (let key in resultsObj) {
+      for (const key in resultsObj) {
         parens += `${key}:"${resultsObj[key]}"`;
       }
       queryKey = queryKey + '(' +  parens + ')';
     }
     return queryKey;
-  }
-
-
-  async cacheWrite(hash, value) {
-    value = JSON.stringify(value);
-    await redis.hset('ROOT_QUERY', hash, value);
-  }
-
-  async cacheWriteList(hash, array) {
-    await redis.rpush(hash, ...array);
-  }
-
-  async cacheReadList(hash) {
-    let cachedArray = await redis.lrange(hash, 0, -1);
-    return cachedArray;
   }
 
   async cacheDelete(hash) {

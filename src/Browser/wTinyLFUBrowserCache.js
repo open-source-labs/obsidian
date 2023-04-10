@@ -11,14 +11,14 @@ import { FrequencySketch } from './FrequencySketch.js';
 *****/
 export default function WTinyLFUCache (capacity) {
   this.capacity = capacity;
-  this.currentSize = 0;
   this.ROOT_QUERY = {};
   this.ROOT_MUTATION = {};
   this.sketch = new FrequencySketch();
-  this.sketch.updateCapacity(capacity);
 
+  // initialize window cache with access to frequency sketch
   this.WLRU = new LRUCache(capacity * .01);
   this.WLRU.sketch = this.sketch;
+  // initialize segmented main cache with access to frequency sketch
   this.SLRU = new SLRUCache(capacity * .99);
   this.SLRU.probationaryLRU.sketch = this.sketch;
   this.SLRU.protectedLRU.sketch = this.sketch;
@@ -41,11 +41,13 @@ WTinyLFUCache.prototype.putAndPromote = async function (key, value) {
   }
 }
 
+// fills in placeholder data in response object with values found in cache
 WTinyLFUCache.prototype.populateAllHashes = function (
   allHashesFromQuery,
   fields
 ) {
   if (!allHashesFromQuery.length) return [];
+  // isolate the type of search from the rest of the hash name
   const hyphenIdx = allHashesFromQuery[0].indexOf("~");
   const typeName = allHashesFromQuery[0].slice(0, hyphenIdx);
   const reduction =  allHashesFromQuery.reduce(async (acc, hash) => {
@@ -60,7 +62,8 @@ WTinyLFUCache.prototype.populateAllHashes = function (
     const dataObj = {};
     for (const field in fields) {
       if (readVal[field] === "DELETED") continue;
-      // for each field in the fields input query, add the corresponding value from the cache if the field is not another array of hashs
+      // for each field in the fields input query, add the corresponding value from the cache
+      // if the field is not another array of hashes
       if (readVal[field] === undefined && field !== "__typename") {
         return undefined;
       }
@@ -68,7 +71,7 @@ WTinyLFUCache.prototype.populateAllHashes = function (
         // add the typename for the type
         if (field === "__typename") {
           dataObj[field] = typeName;
-        } else dataObj[field] = readVal[field];
+        } else dataObj[field] = readVal[field]; // assign the value from the cache to the key in the response
       } else {
         // case where the field from the input query is an array of hashes, recursively invoke populateAllHashes
         dataObj[field] = await this.populateAllHashes(
@@ -86,6 +89,7 @@ WTinyLFUCache.prototype.populateAllHashes = function (
   return reduction;
 };
 
+// read from the cache and generate a response object to be populated with values from cache
 WTinyLFUCache.prototype.read = async function (queryStr) {
   if (typeof queryStr !== "string") throw TypeError("input should be a string");
   // destructure the query string into an object
@@ -162,6 +166,7 @@ WTinyLFUCache.prototype.write = async function (queryStr, respObj, searchTerms, 
         else if (wasFoundIn === 'WLRU') await this.WLRU.put(hash, "DELETED");
       } else if (resp) {
         const newObj = Object.assign(resp, resFromNormalize[hash]);
+        // write to the appropriate cache
         if (wasFoundIn === 'SLRU') await this.SLRU.put(hash, newObj);
         else if (wasFoundIn === 'WLRU') await this.WLRU.put(hash, newObj);
       } else {
@@ -194,9 +199,6 @@ WTinyLFUCache.prototype.write = async function (queryStr, respObj, searchTerms, 
 // Note: WholeQuery is not a currently-functioning option in Obsidian Wrapper
 WTinyLFUCache.prototype.writeWholeQuery = function (queryStr, respObj) {
   const hash = queryStr.replace(/\s/g, "");
-  console.log('hash in writeWholeQuery: ', hash)
-  console.log('value the root_query will be set to at hash key: ', respObj);
-  console.log('the value of the hash in the root query is: ', this.ROOT_QUERY[hash]);
   this.put(this.ROOT_QUERY[hash], respObj);
   return respObj;
 };
@@ -204,8 +206,6 @@ WTinyLFUCache.prototype.writeWholeQuery = function (queryStr, respObj) {
 // Note: WholeQuery is not a currently-functioning option in Obsidian Wrapper
 WTinyLFUCache.prototype.readWholeQuery = function (queryStr) {
   const hash = queryStr.replace(/\s/g, "");
-  console.log('hash in readWholeQuery: ', hash);
-  console.log('checking root query in readWholeQuery: ', this.ROOT_QUERY[hash]);
   if (this.ROOT_QUERY[hash]) return this.get(this.ROOT_QUERY[hash]);
   return undefined;
 };
@@ -214,8 +214,9 @@ WTinyLFUCache.prototype.readWholeQuery = function (queryStr) {
 * TinyLFU Admission Policy
 *****/
 WTinyLFUCache.prototype.TinyLFU = async function (WLRUCandidate, SLRUCandidate) {
-  // TODO: Test that this integration of the frequency sketch is accurate and functional
+  // get the frequency values of both items
   const WLRUFreq = await this.sketch.frequency(JSON.stringify(WLRUCandidate.value));
   const SLRUFreq = await this.sketch.frequency(JSON.stringify(SLRUCandidate.value));
-  return WLRUFreq > SLRUFreq ? WLRUCandidate : SLRUCandidate;
+  // return the object with the higher frequency, prioritizing items in the window cache,
+  return WLRUFreq >= SLRUFreq ? WLRUCandidate : SLRUCandidate;
 }

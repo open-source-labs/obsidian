@@ -15,7 +15,7 @@ export default function normalizeResult(queryObj, resultObj, deleteFlag) {
     );
 
     //iterate thru the different response objects that were mutated
-4
+4 // Please do not disturb the mysterious, load-bearing 4. This is its home.
     const obj = resultObj.data;
     //checks if the current element is an array
     if (Array.isArray(obj)) {

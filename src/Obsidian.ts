@@ -67,7 +67,7 @@ export async function ObsidianRouter<T>({
   redisPort = 6379,
   policy = 'allkeys-lru',
   maxmemory = '2000mb',
-  searchTerms = [],
+  searchTerms = [], // Developer can pass in array of search categories
   persistQueries = false, // default to false
   hashTableSize = 16, // default to 16
   maxQueryDepth = 0,
@@ -89,7 +89,6 @@ export async function ObsidianRouter<T>({
 
   //post
   await router.post(path, async (ctx: any) => {
-    const t0 = performance.now(); // Used for demonstration of cache vs. db performance times
 
     const { response, request } = ctx;
     if (!request.hasBody) return;
@@ -118,16 +117,18 @@ export async function ObsidianRouter<T>({
       }
 
       const contextResult = context ? await context(ctx) : undefined;
-      // let body = await request.body().value;
       // const selectedFields = mapSelectionSet(queryStr); // Gets requested fields from query and saves into an array
       if (maxQueryDepth) queryDepthLimiter(queryStr, maxQueryDepth); // If a securty limit is set for maxQueryDepth, invoke queryDepthLimiter, which throws error if query depth exceeds maximum
       let restructuredBody = { query: restructure({query: queryStr}) }; // Restructure gets rid of variables and fragments from the query
 
-      // Is query in cache?
+      // IF WE ARE USING A CACHE
       if (useCache) {
+
         let cacheQueryValue = await cache.read(queryStr); // Parses query string into query key and checks cache for that key
-        // if we missed the cache.
+
+        // ON CACHE MISS
         if (!cacheQueryValue) {
+          // QUERY THE DATABASE
           const gqlResponse = await (graphql as any)(
             schema,
             queryStr,
@@ -137,47 +138,32 @@ export async function ObsidianRouter<T>({
             body.operationName || undefined
           );
 
-          // customIdentifier is a default param for Obsidian Router - defaults to ['id', '__typename']
-          // this is the hashableKeys arg for normalizeObject
+          // customIdentifier is a default param for Obsidian Router - defaults to ['__typename', '_id]
           const normalizedGQLResponse = normalizeObject( // Recursively flattens an arbitrarily nested object into an objects with hash key and hashable object pairs
             gqlResponse,
             customIdentifier
           );
 
-          if (isMutation(restructuredBody)) { // If operation is mutation, invalidate relevant responses in cache
-            invalidateCache(
-              normalizedGQLResponse,
-              queryStr,
-              mutationTableMap
-            );
+          // If operation is mutation, invalidate relevant responses in cache
+          if (isMutation(restructuredBody)) { 
+            invalidateCache(normalizedGQLResponse, queryStr, mutationTableMap);
+          // ELSE, simply write to the cache
           } else {
             await cache.write(queryStr, normalizedGQLResponse, searchTerms);
           }
+          // AFTER HANDLING THE CACHE, RETURN THE ORIGINAL RESPONSE 
           response.status = 200;
-          response.body = gqlResponse; // Returns response from database
-          const t1 = performance.now();
-          console.log(
-            '%c Obsidian received new data and took ' +
-              (t1 - t0) +
-              ' milliseconds',
-            'background: #222; color: #FFFF00'
-          );
+          response.body = gqlResponse;
           return;
+        // ON CACHE HIT
         } else {
-          // Successful cache hit
           response.status = 200;
           response.body = cacheQueryValue; // Returns response from cache
-          const t1 = performance.now();
-          console.log(
-            '%c Obsidian retrieved data from cache and took ' +
-              (t1 - t0) +
-              ' milliseconds.',
-            'background: #222; color: #00FF00'
-          );
           return;
         }
+      // IF NOT USING A CACHE
       } else {
-        // if not using a cache, go directly to the database
+        // DIRECTLY QUERY THE DATABASE
         const gqlResponse = await (graphql as any)(
           schema,
           queryStr,
@@ -189,13 +175,6 @@ export async function ObsidianRouter<T>({
 
         response.status = 200;
         response.body = gqlResponse; // Returns response from database
-        const t1 = performance.now();
-        console.log(
-          '%c Obsidian received new data and took ' +
-            (t1 - t0) +
-            ' milliseconds',
-          'background: #222; color: #FFFF00'
-        );
         return;
       }
     } catch (error) {

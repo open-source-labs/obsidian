@@ -16,8 +16,10 @@ export default function LRUCache(capacity) {
   this.currentSize = 0;
   this.ROOT_QUERY = {};
   this.ROOT_MUTATION = {};
+  // node hash for cache lookup and storage
   this.nodeHash = new Map();
 
+  // doubly-linked list to keep track of recency and handle eviction
   this.head = new Node('head', null);
   this.tail = new Node('tail', null);
   this.head.next = this.tail;
@@ -41,30 +43,6 @@ LRUCache.prototype.addNode = function (node) {
   node.prev = tempTail;
 }
 
-// Like get, but doesn't update anything
-LRUCache.prototype.peek = function(key) {
-  const node = this.nodeHash.get(key);
-  if (!node) return null;
-  return node.value;
-}
-
-// Like removeNode, but takes key
-LRUCache.prototype.delete = function (key) {
-  const node = this.nodeHash.get(key);
-  const prev = node.prev;
-  const next = node.next; 
-  prev.next = next; 
-  next.prev = prev;
-}
-
-// updates a node or adds a node
-// LRUCache.prototype.set = function (key, node) {
-//   const foundNode = this.nodeHash.get(key);
-//   if (foundNode) this.removeNode(foundNode);
-//   this.addNode(node);
-//   return node.value;
-// }
-
 LRUCache.prototype.get = function(key) {
   const node = this.nodeHash.get(key);
  
@@ -74,14 +52,6 @@ LRUCache.prototype.get = function(key) {
   this.removeNode(node);
   this.addNode(node);
   return node.value;
-}
-
-// used by wTinyLFU to get SLRU eviction candidates for TinyLFU decision
-LRUCache.prototype.getCandidate = function () {
-  const tempHead = this.head.next;
-  this.removeNode(tempHead);
-  this.nodeHash.delete(tempHead.key);
-  return tempHead;
 }
 
 LRUCache.prototype.put = function (key, value) {
@@ -94,17 +64,15 @@ LRUCache.prototype.put = function (key, value) {
   this.addNode(newNode);
   this.nodeHash.set(key, newNode);
 
-  // check capacity - if over capacity, remove and reassign head node
-  // if (Object.nodeHash[this.nodeHash].length > capacity) 
+  // check capacity - if over capacity, remove and reassign head node 
   if (this.nodeHash.get(key).size > this.capacity){
     const tempHead = this.head.next;
     this.removeNode(tempHead);
     this.nodeHash.delete(tempHead.key);
-    // return tempHead for use in w-TinyLFU's SLRU cache
-    return tempHead;
   }
 }
 
+// read from the cache and generate a response object to be populated with values from cache
 LRUCache.prototype.read = async function (queryStr) {
   if (typeof queryStr !== "string") throw TypeError("input should be a string");
   // destructure the query string into an object
@@ -207,6 +175,7 @@ function labelId(obj) {
   return obj.__typename + "~" + id;
 }
 
+// fills in placeholder data in response object with values found in cache
 LRUCache.prototype.populateAllHashes = function (
   allHashesFromQuery,
   fields

@@ -29,8 +29,8 @@ function ObsidianWrapper(props) {
   }
 
   // once cache is initialized, cannot setCache
-  // when tested, setCache breaks the whole app if trying to switch while in use
-  // to successfully change between algo types, kill the server, change the algo type in wrapper, then restart server
+  // state for cache is initialized based on developer settings in wrapper
+  // to successfully change between algo types for testing, kill the server, change the algo type in wrapper, then restart server
   const [cache, setCache] = React.useState(setAlgoCap(algo, capacity));
 
   // FOR DEVTOOL - listening for message from content.js to be able to send algo type and capacity to devtool
@@ -55,7 +55,7 @@ function ObsidianWrapper(props) {
       cacheRead = !caching ? false : true,
       cacheWrite = !caching ? false : true,
       pollInterval = null,
-      wholeQuery = true, //Note: logic for false is currently nonfunctional
+      wholeQuery = false, //Note: logic for true is currently nonfunctional
     } = options;
 
     // when pollInterval is not null the query will be sent to the server every inputted number of milliseconds
@@ -71,23 +71,17 @@ function ObsidianWrapper(props) {
       return interval;
     }
 
-    // when cacheRead set to true
+    // when cacheRead set to true & we are utilizing client side caching
     if (cacheRead && caching) {
       let resObj;
       // when the developer decides to only utilize whole query for cache
-      if (!wholeQuery) resObj = await cache.readWholeQuery(query);
+      if (wholeQuery) resObj = await cache.readWholeQuery(query);
+      // attempt to read from the cache
       else resObj = await cache.read(query);
       // check if query is stored in cache
       if (resObj) {
         // returning cached response as a promise
         const cacheHitResponseTime = Date.now() - startTime;
-
-        // resObj['time'] = cacheHitResponseTime;
-
-        console.log(
-          "From cacheRead: Here's the response time on the front end: ",
-          cacheHitResponseTime
-        );
 
         // FOR DEVTOOL - sends message to content.js with query metrics when query is a hit
         window.postMessage({
@@ -102,19 +96,19 @@ function ObsidianWrapper(props) {
       }
       // execute graphql fetch request if cache miss
       return new Promise((resolve, reject) => resolve(hunt(query)));
-      // when cacheRead set to false
     }
+    // when cacheRead set to false & not using client-side cache
     if (!cacheRead || !caching) {
       return new Promise((resolve, reject) => resolve(hunt(query)));
     }
 
-    // when cache miss or on intervals or not looking in the cache
+    // function to be called on cache miss or on intervals or not looking in the cache
     async function hunt(query) {
-      if (wholeQuery) query = insertTypenames(query);
+      if (!wholeQuery) query = insertTypenames(query);
       try {
         let resJSON;
+        // IF WE ARE USING PERSIST QUERIES
         if (persistQueries) {
-          // IF WE ARE USING PERSIST QUERIES
           // SEND THE HASH
           const hash = sha256(query, 'utf8', 'hex');
           resJSON = await fetch(endpoint, {
@@ -140,8 +134,8 @@ function ObsidianWrapper(props) {
 
           }
 
+        // IF WE ARE NOT USING PERSIST QUERIES
         } else {
-          // IF WE ARE NOT USING PERSIST QUERIES
           // JUST SEND THE QUERY ONLY
           resJSON = await fetch(endpoint, {
             method: 'POST',
@@ -157,18 +151,11 @@ function ObsidianWrapper(props) {
         const deepResObj = { ...resObj };
         // update result in cache if cacheWrite is set to true
         if (cacheWrite && caching && resObj.data[Object.keys(resObj.data)[0]] !== null) {
-          if (!wholeQuery) cache.writeWholeQuery(query, deepResObj);
+          if (wholeQuery) cache.writeWholeQuery(query, deepResObj);
           else if(resObj.data[Object.keys(resObj.data)[0]].length > cache.capacity) console.log('Please increase cache capacity');
           else cache.write(query, deepResObj, searchTerms);
         }
         const cacheMissResponseTime = Date.now() - startTime;
-        
-        // resObj['time'] = cacheMissResponseTime;
-
-        console.log(
-          "After the hunt: Here's the response time on the front end: ",
-          cacheMissResponseTime
-        );
 
         // FOR DEVTOOL - sends message to content.js when query is a miss
         window.postMessage({
@@ -203,7 +190,7 @@ function ObsidianWrapper(props) {
       cacheWrite = !caching ? false : true,
       toDelete = false,
       update = null,
-      writeThrough = true, // not true
+      writeThrough = true, // unsure if boolean is symantically backwards or not
     } = options;
     try {
       if (!writeThrough) {
@@ -216,9 +203,6 @@ function ObsidianWrapper(props) {
             endpoint
           );
           const deleteMutationResponseTime = Date.now() - startTime;
-          // NOTE -  from OLD DEVTOOLS - chrome.runtime.sendMessage(chromeExtensionId, {
-          //   deleteMutationResponseTime: deleteMutationResponseTime,
-          // });
           return responseObj;
         } else {
           // for add mutation
@@ -237,15 +221,9 @@ function ObsidianWrapper(props) {
           // GQL call to make changes and synchronize database
           console.log('WriteThrough - false ', responseObj);
           const addOrUpdateMutationResponseTime = Date.now() - startTime;
-          // NOTE - from OLD DEVTOOLS - chrome.runtime.sendMessage(chromeExtensionId, {
-          //   addOrUpdateMutationResponseTime: addOrUpdateMutationResponseTime,
-          // });
           return responseObj;
         }
       } else {
-        // copy-paste mutate logic from 4.
-
-        // use cache.write instead of cache.writeThrough
         const responseObj = await fetch(endpoint, {
           method: 'POST',
           headers: {
