@@ -7,7 +7,7 @@ class Node {
 }
 
 class LinkedList {
-  constructor(node) {
+  constructor() {
     this.head = null;
     this.tail = null;
   }
@@ -64,10 +64,6 @@ export class HashTable {
     return this.table[index].getNode(key);
   }
 
-  // a function that removes all removes all items from hash table
-  // unsure if we will need this so I have not made it yet
-  // clearAll (){
-  // }
 }
 
 // hashing function

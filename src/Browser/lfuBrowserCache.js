@@ -29,14 +29,14 @@ class DoublyLinkedList {
   }
 
   removeNode(node) {
-    let prev = node.prev;
-    let next = node.next;
+    const prev = node.prev;
+    const next = node.next;
     prev.next = next;
     next.prev = prev;
   }
 
   removeTail() {
-    let node = this.tail.prev;
+    const node = this.tail.prev;
     this.removeNode(node);
     return node.key;
   }
@@ -219,13 +219,13 @@ function labelId(obj) {
   return obj.__typename + "~" + id;
 }
 
-LFUCache.prototype.cacheDelete = async function (hash) {
-  let node = this.nodeHash.get(hash);
+LFUCache.prototype.cacheDelete = function (hash) {
+  const node = this.nodeHash.get(hash);
   this.freqHash.get(node.freq).removeNode(node);
   this.nodeHash.delete(hash);
 };
 
-LFUCache.prototype.cacheClear = async function () {
+LFUCache.prototype.cacheClear = function () {
   this.currentSize = 0;
   this.leastFreq = 0;
   this.ROOT_QUERY = {};

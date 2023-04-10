@@ -4,9 +4,9 @@ import { gql } from 'https://deno.land/x/oak_graphql/mod.ts';
 
 export function mapSelectionSet(query) {
   // Gets fields from query and stores all in an array - used to selectively query cache
-  let selectionKeysMap = {};
-  let ast = gql(query);
-  let selections = ast.definitions[0].selectionSet.selections;
+  const selectionKeysMap = {};
+  const ast = gql(query);
+  const selections = ast.definitions[0].selectionSet.selections;
   const tableName = selections[0].name.value;
 
   const recursiveMap = (recurseSelections) => {

@@ -1,4 +1,4 @@
-![Obsidian](./assets/logoSilver.jpg)
+![Obsidian](./assets/logo.jpg)
 
 <div align="center">GraphQL, built for Deno.</div>
 
@@ -24,9 +24,9 @@
 
 - (New!) Support for W-TinyLFU client-side cache that brings great hit-ratio performance with minimal memory overhead
 - (New!) Option to provide Obsidian with the search types your application uses, allowing data cached from complete dataset pulls to be accessible later on in searches for individual items
+- (New!) Refactored server-side caching with Redis
 - (New!) Rebuilt developer tool for Obsidian 8.0 for testing and analytics related to the new client caching options
 - (New!) Option for persistant queries, allowing only a smaller hash to be sent to the server on client-side cache misses, minimizing the cost of queries. Note that while this will increase the performance for frequent, repeat queries, you may see a performance drop for new queries that haven't yet been persisted
-- Server-side cache invalidation only on affected entries
 - Flexible cache responds with only data requested from selected fields
 - GraphQL query abstraction and caching improving the performance of your app
 - SSR React wrapper, allowing you to cache in browser
@@ -70,6 +70,7 @@ const GraphQLRouter =
     useCache: true, //Boolean to toggle all cache functionality
     usePlayground: true, //Boolean to allow for graphQL playground
     persistQueries: true, //Boolean to toggle the use of persistant queries
+    searchTerms: [] //Optional array to allow board queries to store according to search fields so individual searches are found in cache
     customIdentifier: ['id', '__typename'],
     mutationTableMap = {}, //Object where keys are add mutation types and value is an array of affected tables (e.g. {addPlants: ['plants'], addMovie: ['movies']})
   };
@@ -170,7 +171,7 @@ const MovieApp = () => {
 
 Information and instructions on how to use our developer tool can be found here <br/>
 works with Obsidian 8.0 <br/>
-[oslabs-beta/obsidian-developer-tool](https://github.com/oslabs-beta/obsidian-8.0-devtool)
+[oslabs-beta/obsidian-developer-tool](https://github.com/oslabs/obsidian-devtool)
 
 ## Obsidian 8.0 Demo
 
@@ -184,6 +185,7 @@ Working demo to install locally in docker:
 
 ## Features In Progress
 
+- 
 - Ability to store/read only the whole query 
 - Hill Climber optimization for W-TinyLFU cache size allocation
 - Developer Tool View Cache component, and Playground component

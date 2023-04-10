@@ -1,6 +1,6 @@
 /** @format */
-import { gql } from 'https://deno.land/x/oak_graphql/mod.ts';
-import { visit } from 'https://deno.land/x/graphql_deno/mod.ts';
+import { gql } from "https://deno.land/x/oak_graphql@0.6.4/mod.ts";
+import { visit } from "https://deno.land/x/graphql_deno@v15.0.0/mod.ts";
 import { scope } from './Obsidian.ts';
 import { Cache } from './quickCache.js';
 import { deepEqual } from './utils.js';
