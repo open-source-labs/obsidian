@@ -206,6 +206,7 @@ Working demo to install locally in docker:
 - searchTerms option optimization
 - Ability to store/read only the whole query 
 - Hill Climber optimization for W-TinyLFU cache size allocation
+- Developer Tool server-side cache integration
 - Developer Tool View Cache component, and Playground component
 
 ## Authors
