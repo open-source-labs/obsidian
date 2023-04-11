@@ -54,5 +54,5 @@ SLRUCache.prototype.has = function (key) {
 SLRUCache.prototype.putAndDemote = function (key, value) {
   // if adding an item to the protectedLRU results in ejection, demote ejected node
   const demoted = this.protectedLRU.put(key, value);
-  if (demoted) this.probationaryLRU.put(demoted.key, demoted);
+  if (demoted) this.probationaryLRU.put(demoted.key, demoted.value);
 }
