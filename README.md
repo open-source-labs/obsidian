@@ -1,4 +1,4 @@
-![Obsidian](./assets/logo.jpg)
+![Obsidian](./assets/bannerfull_gradient.png)
 
 <div align="center">GraphQL, built for Deno.</div>
 
@@ -171,12 +171,12 @@ const MovieApp = () => {
 
 Information and instructions on how to use our developer tool can be found here <br/>
 works with Obsidian 8.0 <br/>
-[oslabs-beta/obsidian-developer-tool](https://github.com/oslabs/obsidian-devtool)
+[open-source-labs/obsidian-developer-tool](https://github.com/open-source-labs/obsidian-developer-tool)
 
 ## Obsidian 8.0 Demo
 
 Github for a demo with some example code to play with: <br/>
-[oslabs-beta/obsidian-demo-5.0](https://github.com/oslabs-beta/obsidian-demo-5.0)
+[oslabs-beta/obsidian-demo-8.0](https://github.com/oslabs-beta/obsidian-8.0-demo)
 
 ## Dockerized Demo
 
@@ -185,7 +185,6 @@ Working demo to install locally in docker:
 
 ## Features In Progress
 
-- 
 - Ability to store/read only the whole query 
 - Hill Climber optimization for W-TinyLFU cache size allocation
 - Developer Tool View Cache component, and Playground component
