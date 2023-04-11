@@ -28,7 +28,6 @@ export interface ObsidianRouterOptions<T> {
   usePlayground?: boolean;
   useCache?: boolean;
   redisPort?: number;
-  redisURI?: string;
   policy?: string;
   maxmemory?: string;
   searchTerms?: string[];
