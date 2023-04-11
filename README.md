@@ -64,19 +64,35 @@ const GraphQLRouter =
   ObsRouter >
   {
     Router,
-    typeDefs: types,
-    resolvers: resolvers,
-    redisPort: 6379, //Desired redis port
-    useCache: true, //Boolean to toggle all cache functionality
-    usePlayground: true, //Boolean to allow for graphQL playground
-    persistQueries: true, //Boolean to toggle the use of persistant queries
-    searchTerms: [] //Optional array to allow board queries to store according to search fields so individual searches are found in cache
-    customIdentifier: ['id', '__typename'],
-    mutationTableMap = {}, //Object where keys are add mutation types and value is an array of affected tables (e.g. {addPlants: ['plants'], addMovie: ['movies']})
+    typeDefs: types, // graphQL typeDefs
+    resolvers: resolvers, // graphQL resolvers
   };
 
 // attach the graphql routers routes to our app
 app.use(GraphQLRouter.routes(), GraphQLRouter.allowedMethods());
+```
+## Selecting options for the Router
+```javascript
+const GraphQLRouter =
+  (await ObsidianRouter) <
+  ObsRouter >
+  {
+    Router, // Router that is initialized by server.
+    path = '/graphql', // endpoint for graphQL queries, default to '/graphql'
+    typeDefs: types, // graphQL typeDefs
+    resolvers: resolvers, // graphQL resolvers
+    usePlayground: true, // Boolean to allow for graphQL playground, default to false
+    useCache: true, // Boolean to toggle all cache functionality, default to true
+    redisPort: 6379, // Desired redis port, default to 6379
+    policy: 'allkeys-lru', // Option select your Redis policy, default to allkeys-lru
+    maxmemory = '2000mb', // Option to select Redis capacity, default to 2000mb
+    searchTerms: [] //Optional array to allow board queries to store according to search fields so individual searches are found in cache
+    persistQueries: true, //Boolean to toggle the use of persistant queries, default to false
+    hashTableSize = 16, // Size of hash table for persistent queries, default to 16
+    maxQueryDepth = 0, // Maximum depth of query, default to 0
+    customIdentifier: ['__typename', '_id'], // keys to be used to idedntify and normalize object
+    mutationTableMap = {}, //Object where keys are add mutation types and value is an array of affected tables (e.g. {addPlants: ['plants'], addMovie: ['movies']})
+  };
 ```
 
 ## Creating the Wrapper
@@ -93,10 +109,10 @@ const App = () => {
 };
 ```
 
-## Selecting useCache, LFU/LRU/WTinyLFU, capacity, and searchTerms (if any); default (if not provided) true, LFU, 2000
+## Selecting useCache, LFU/LRU/WTinyLFU, capacity, persistQueries, and searchTerms (if any); default (if not provided): true, LFU, 2000, false
 
 ```javascript
-<ObsidianWrapper useCache={true} algo='LRU' capacity='5000' searchTerms={[title, author, ISBN]}>
+<ObsidianWrapper useCache={true} algo='LRU' capacity='5000' persistQueries={true} searchTerms={['title', 'director', 'genre']}>
   <MovieApp />
 </ObsidianWrapper>
 ```
@@ -171,12 +187,12 @@ const MovieApp = () => {
 
 Information and instructions on how to use our developer tool can be found here <br/>
 works with Obsidian 8.0 <br/>
-[oslabs-beta/obsidian-developer-tool](https://github.com/oslabs/obsidian-devtool)
+[oslabs/obsidian-developer-tool](https://github.com/open-source-labs/obsidian-developer-tool)
 
 ## Obsidian 8.0 Demo
 
 Github for a demo with some example code to play with: <br/>
-[oslabs-beta/obsidian-demo-5.0](https://github.com/oslabs-beta/obsidian-demo-5.0)
+[oslabs-beta/obsidian-demo-8.0](https://github.com/oslabs-beta/obsidian-demo-5.0)
 
 ## Dockerized Demo
 
@@ -185,7 +201,9 @@ Working demo to install locally in docker:
 
 ## Features In Progress
 
-- 
+- Server-side caching improvements
+- More comprehensive mutation support
+- searchTerms option optimization
 - Ability to store/read only the whole query 
 - Hill Climber optimization for W-TinyLFU cache size allocation
 - Developer Tool View Cache component, and Playground component
