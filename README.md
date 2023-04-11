@@ -1,4 +1,4 @@
-![Obsidian](./assets/logo.jpg)
+![Obsidian](./assets/bannerfull_gradient.png)
 
 <div align="center">GraphQL, built for Deno.</div>
 
@@ -187,12 +187,12 @@ const MovieApp = () => {
 
 Information and instructions on how to use our developer tool can be found here <br/>
 works with Obsidian 8.0 <br/>
-[oslabs/obsidian-developer-tool](https://github.com/open-source-labs/obsidian-developer-tool)
+[open-source-labs/obsidian-developer-tool](https://github.com/open-source-labs/obsidian-developer-tool)
 
 ## Obsidian 8.0 Demo
 
 Github for a demo with some example code to play with: <br/>
-[oslabs-beta/obsidian-demo-8.0](https://github.com/oslabs-beta/obsidian-demo-5.0)
+[oslabs-beta/obsidian-demo-8.0](https://github.com/oslabs-beta/obsidian-8.0-demo)
 
 ## Dockerized Demo
 
