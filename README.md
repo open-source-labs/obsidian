@@ -209,11 +209,6 @@ works with Obsidian 8.0 <br/>
 Github for a demo with some example code to play with: <br/>
 [oslabs-beta/obsidian-demo-8.0](https://github.com/oslabs-beta/obsidian-8.0-demo)
 
-## Dockerized Demo
-
-Working demo to install locally in docker:  
-[oslabs-beta/obsidian-demo-docker](https://github.com/oslabs-beta/obsidian-demo-docker)
-
 ## Features In Progress
 
 - Server-side caching improvements
