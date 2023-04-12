@@ -62,11 +62,9 @@ export const hashMaker = (
   hashableKeys: Array<string>
 ): string => {
   let hash = '';
-  let value = '';
-  for (const hashableKey of hashableKeys) {
-    value = '~';
-    value += hashableObject[hashableKey];
-    hash += value;
+  for (let i = 0; i < hashableKeys.length; i++) {
+    hash += hashableObject[hashableKeys[i]];
+    if (i < hashableKeys.length - 1) hash += '~'
   }
   return hash;
 };

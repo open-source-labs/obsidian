@@ -16,8 +16,10 @@ export default function LRUCache(capacity) {
   this.currentSize = 0;
   this.ROOT_QUERY = {};
   this.ROOT_MUTATION = {};
+  // node hash for cache lookup and storage
   this.nodeHash = new Map();
 
+  // doubly-linked list to keep track of recency and handle eviction
   this.head = new Node('head', null);
   this.tail = new Node('tail', null);
   this.head.next = this.tail;
@@ -30,6 +32,7 @@ LRUCache.prototype.removeNode = function (node) {
   prev.next = next; 
   next.prev = prev;
 };
+
 
 LRUCache.prototype.addNode = function (node) {
   const tempTail = this.tail.prev;
@@ -61,15 +64,15 @@ LRUCache.prototype.put = function (key, value) {
   this.addNode(newNode);
   this.nodeHash.set(key, newNode);
 
-  // check capacity - if over capacity, remove and reassign head node
-  // if (Object.nodeHash[this.nodeHash].length > capacity) 
+  // check capacity - if over capacity, remove and reassign head node 
   if (this.nodeHash.get(key).size > this.capacity){
     const tempHead = this.head.next;
     this.removeNode(tempHead);
-    this.nodeHash.delete(tempTail.key);
+    this.nodeHash.delete(tempHead.key);
   }
 }
 
+// read from the cache and generate a response object to be populated with values from cache
 LRUCache.prototype.read = async function (queryStr) {
   if (typeof queryStr !== "string") throw TypeError("input should be a string");
   // destructure the query string into an object
@@ -105,7 +108,7 @@ LRUCache.prototype.read = async function (queryStr) {
   return { data: responseObject };
 };
 
-LRUCache.prototype.write = async function (queryStr, respObj, deleteFlag) {
+LRUCache.prototype.write = async function (queryStr, respObj, searchTerms, deleteFlag) {
   let nullFlag = false;
   let deleteMutation = "";
   for(const query in respObj.data) {
@@ -148,6 +151,20 @@ LRUCache.prototype.write = async function (queryStr, respObj, deleteFlag) {
             this.ROOT_QUERY[key].push(hash);
           }
         }
+        /****
+        * if search terms were provided in the wrapper and the query is an 
+        * "all"-type query, build out queries in ROOT_QUERY that match the 
+        * search terms for each item retrieved from the "all"-type query so 
+        * that future single queries can be looked up directly from the cache
+        ****/
+        if (searchTerms && queryStr.slice(8, 11) === 'all'){
+          searchTerms.forEach(el => {
+            const elVal = resFromNormalize[hash][el].replaceAll(' ', '');
+            const hashKey = `one${typeName}(${el}:"${elVal}")`;
+            if (!this.ROOT_QUERY[hashKey]) this.ROOT_QUERY[hashKey] = [];
+            this.ROOT_QUERY[hashKey].push(hash);
+          });
+        }
       }
     }
   }
@@ -158,6 +175,7 @@ function labelId(obj) {
   return obj.__typename + "~" + id;
 }
 
+// fills in placeholder data in response object with values found in cache
 LRUCache.prototype.populateAllHashes = function (
   allHashesFromQuery,
   fields

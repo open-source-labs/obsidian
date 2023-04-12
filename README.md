@@ -1,4 +1,4 @@
-![Obsidian](./assets/logoSilver.jpg)
+![Obsidian](./assets/bannerfull_gradient.png)
 
 <div align="center">GraphQL, built for Deno.</div>
 
@@ -8,8 +8,6 @@
 	<a>Obsidian</a>
 	<a href="https://twitter.com/intent/tweet?text=Meet%20Obsidian!%20Deno's%20first%20native%20GraphQL%20caching%20client%20and%20server%20module&url=http://obsidian.land/&via=obsidian_land&hashtags=deno,denoland,nodejs,graphql,javascript" rel="nofollow"><img src="https://camo.githubusercontent.com/83d4084f7b71558e33b08844da5c773a8657e271/68747470733a2f2f696d672e736869656c64732e696f2f747769747465722f75726c2f687474702f736869656c64732e696f2e7376673f7374796c653d736f6369616c" alt="Tweet" data-canonical-src="https://img.shields.io/twitter/url/http/shields.io.svg?style=social" style="max-width:100%;"></a>
 </h1>
-
-<p align="center">from <em align="center">Lascaux</em></p>
 
 </div>
 
@@ -22,9 +20,12 @@
 
 ## Features
 
-- (New!) Server-side cache invalidation only on affected entries
-- (New!) Flexible cache responds with only data requested from selected fields
-- (New!) Developer tool for Obsidian is now updated to Manifest version 3 and invalid Bootstrap module imports were also fixed along with CodeMirror dependencies
+- (New!) Support for W-TinyLFU client-side cache that brings great hit-ratio performance with minimal memory overhead
+- (New!) Option to provide Obsidian with the search types your application uses, allowing data cached from complete dataset pulls to be accessible later on in searches for individual items
+- (New!) Refactored server-side caching with Redis
+- (New!) Rebuilt developer tool for Obsidian 8.0 for testing and analytics related to the new client caching options
+- (New!) Option for persistent queries, allowing only a smaller hash to be sent to the server on client-side cache misses, minimizing the cost of queries. Note that while this will increase the overall performance for frequent, repeat queries.
+- Flexible cache responds only with data requested from selected fields
 - GraphQL query abstraction and caching improving the performance of your app
 - SSR React wrapper, allowing you to cache in browser
 - Configurable caching options, giving you complete control over your cache
@@ -60,20 +61,36 @@ const GraphQLRouter =
   (await ObsidianRouter) <
   ObsRouter >
   {
-    Router,
-    typeDefs: types,
-    resolvers: resolvers,
-    redisPort: 6379, //Desired redis port
-    useCache: true, //Boolean to toggle all cache functionality
-    usePlayground: true, //Boolean to allow for graphQL playground
-    useQueryCache: true, //Boolean to toogle full query cache
-    useRebuildCache: true, //Boolean to toggle rebuilding from normalized data
-    customIdentifier: ['id', '__typename'],
-    mutationTableMap = {}, //Object where keys are add mutation types and value is an array of affected tables (e.g. {addPlants: ['plants'], addMovie: ['movies']})
+    Router, // your router in deno
+    typeDefs: types, // graphQL typeDefs
+    resolvers: resolvers, // graphQL resolvers
   };
 
-// attach the graphql routers routes to our app
+// attach the graphql router's routes to your deno app
 app.use(GraphQLRouter.routes(), GraphQLRouter.allowedMethods());
+```
+## Selecting options for the Router
+```javascript
+const GraphQLRouter =
+  (await ObsidianRouter) <
+  ObsRouter >
+  {
+    Router, // Router that is initialized by server.
+    path: '/graphql', // endpoint for graphQL queries, default to '/graphql'
+    typeDefs: types, // graphQL typeDefs
+    resolvers: resolvers, // graphQL resolvers
+    usePlayground: true, // Boolean to allow for graphQL playground, default to false
+    useCache: true, // Boolean to toggle all cache functionality, default to true
+    redisPort: 6379, // Desired redis port, default to 6379
+    policy: 'allkeys-lru', // Option select your Redis policy, default to allkeys-lru
+    maxmemory: '2000mb', // Option to select Redis capacity, default to 2000mb
+    searchTerms: [] //Optional array to allow broad queries to store according to search fields so individual searches are found in cache
+    persistQueries: true, //Boolean to toggle the use of persistent queries, default to false - NOTE: if using, must also be enabled in client wrapper
+    hashTableSize: 16, // Size of hash table for persistent queries, default to 16
+    maxQueryDepth: 0, // Maximum depth of query, default to 0
+    customIdentifier: ['__typename', '_id'], // keys to be used to idedntify and normalize object
+    mutationTableMap: {}, //Object where keys are add mutation types and value is an array of affected tables (e.g. {addPlants: ['plants'], addMovie: ['movies']})
+  };
 ```
 
 ## Creating the Wrapper
@@ -88,6 +105,20 @@ const App = () => {
     </ObsidianWrapper>
   );
 };
+```
+
+## Selecting options for the Wrapper
+
+```javascript
+<ObsidianWrapper 
+  useCache={true} // Boolean indicating whether to use client-side cache, default to true
+  algo='LRU' // String indicating cache policy to use for client-side cache, default to LFU. OTHER OPTIONS: W-Tiny-LFU, LRU
+  capacity='5000' // String indicating numeric capacity of cache, default to 2000
+  persistQueries={true} // Boolean indicating wheter to use persistent queries, default to false
+  searchTerms={['title', 'director', 'genre']} // Optional parameter to set search terms of the data
+>
+  <MovieApp />
+</ObsidianWrapper>
 ```
 
 ## Making a Query
@@ -151,46 +182,52 @@ const MovieApp = () => {
   );
 }
 ```
+## Setting up Redis
 
-## Selecting LFU/LRU and capacity; default (if not provided) LFU, 2000
+In order to utilize server side caching, a Redis instance must be available and running. Redis installation and quick-start documentation can be found [here](https://redis.io/docs/getting-started/). Make sure to keep a redis instance running whenever the application is utilizing server side caching to avoid running into issues.
+
+To connect Obsidian to Redis, create a .env file in the root directory of the application with the following information:
 
 ```javascript
-<ObsidianWrapper algo='LRU' capacity='5000'>
-  <Home />
-</ObsidianWrapper>
+REDIS_HOST= //string of redis host name, typically defaulted to '127.0.0.1' by Redis
 ```
+Be sure to also specify the Redis TCP port by passing in the port number as an argument into Obsidian Router (see Selecting options for the Router above).
+
 
 ## Documentation
 
-[obsidian.land](http://obsidian.land)
+[getobsidian.io](http://getobsidian.io/)
 
 ## Developer Tool
 
 Information and instructions on how to use our developer tool can be found here <br/>
-works with Obsidian 5.0 <br/>
-[oslabs-beta/obsidian-developer-tool](https://github.com/oslabs-beta/obsidian-developer-tool)
+works with Obsidian 8.0 <br/>
+[open-source-labs/obsidian-developer-tool](https://github.com/open-source-labs/obsidian-developer-tool)
 
-## Obsidian 5.0 Demo
+## Obsidian 8.0 Demo
 
 Github for a demo with some example code to play with: <br/>
-[oslabs-beta/obsidian-demo-5.0](https://github.com/oslabs-beta/obsidian-demo-5.0)
-
-## Dockerized Demo
-
-Working demo to install locally in docker:  
-[oslabs-beta/obsidian-demo-docker](https://github.com/oslabs-beta/obsidian-demo-docker)
+[oslabs-beta/obsidian-demo-8.0](https://github.com/oslabs-beta/obsidian-8.0-demo)
 
 ## Features In Progress
 
-- Ability to query the database for only those fields missing from the cache
-- Developer Tool Settings component, fully functioning Playground component
+- Server-side caching improvements
+- More comprehensive mutation support
+- searchTerms option optimization
+- Ability to store/read only the whole query 
+- Hill Climber optimization for W-TinyLFU cache size allocation
+- Developer Tool server-side cache integration
+- Developer Tool View Cache component, and Playground component
 
 ## Authors
-
-[Alex Lopez](https://github.com/AlexLopez7)
-[Kevin Huang](https://github.com/kevin-06-huang)
-[Matthew Weisker](https://github.com/mweisker)
-[Ryan Ranjbaran](https://github.com/ranjrover)
+[David Kim](https://github.com/davidtoyoukim)   
+[David Norman](https://github.com/DavidMNorman)   
+[Eileen Cho](https://github.com/exlxxn)   
+[Joan Manto](https://github.com/JoanManto)    
+[Alex Lopez](https://github.com/AlexLopez7)   
+[Kevin Huang](https://github.com/kevin-06-huang)    
+[Matthew Weisker](https://github.com/mweisker)    
+[Ryan Ranjbaran](https://github.com/ranjrover)    
 [Derek Okuno](https://github.com/okunod)  
 [Liam Johnson](https://github.com/liamdimitri)  
 [Josh Reed](https://github.com/joshreed104)  

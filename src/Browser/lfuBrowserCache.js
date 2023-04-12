@@ -1,5 +1,5 @@
 /** @format */
-import { plural } from "https://deno.land/x/deno_plural/mod.ts";
+import { plural } from "https://deno.land/x/deno_plural@2.0.0/mod.ts";
 
 import normalizeResult from "./normalize.js";
 import destructureQueries from "./destructure.js";
@@ -29,14 +29,14 @@ class DoublyLinkedList {
   }
 
   removeNode(node) {
-    let prev = node.prev;
-    let next = node.next;
+    const prev = node.prev;
+    const next = node.next;
     prev.next = next;
     next.prev = prev;
   }
 
   removeTail() {
-    let node = this.tail.prev;
+    const node = this.tail.prev;
     this.removeNode(node);
     return node.key;
   }
@@ -152,7 +152,7 @@ LFUCache.prototype.read = async function (queryStr) {
   return { data: responseObject };
 };
 
-LFUCache.prototype.write = async function (queryStr, respObj, deleteFlag) {
+LFUCache.prototype.write = async function (queryStr, respObj, searchTerms, deleteFlag) {
   let nullFlag = false;
   let deleteMutation = "";
   for(const query in respObj.data) {
@@ -195,6 +195,20 @@ LFUCache.prototype.write = async function (queryStr, respObj, deleteFlag) {
             this.ROOT_QUERY[key].push(hash);
           }
         }
+        /****
+        * if search terms were provided in the wrapper and the query is an 
+        * "all"-type query, build out queries in ROOT_QUERY that match the 
+        * search terms for each item retrieved from the "all"-type query so 
+        * that future single queries can be looked up directly from the cache
+        ****/
+        if (searchTerms && queryStr.slice(8, 11) === 'all'){
+          searchTerms.forEach(el => {
+            const elVal = resFromNormalize[hash][el].replaceAll(' ', '');
+            const hashKey = `one${typeName}(${el}:"${elVal}")`;
+            if (!this.ROOT_QUERY[hashKey]) this.ROOT_QUERY[hashKey] = [];
+            this.ROOT_QUERY[hashKey].push(hash);
+          });
+        }
       }
     }
   }
@@ -205,13 +219,13 @@ function labelId(obj) {
   return obj.__typename + "~" + id;
 }
 
-LFUCache.prototype.cacheDelete = async function (hash) {
-  let node = this.nodeHash.get(hash);
+LFUCache.prototype.cacheDelete = function (hash) {
+  const node = this.nodeHash.get(hash);
   this.freqHash.get(node.freq).removeNode(node);
   this.nodeHash.delete(hash);
 };
 
-LFUCache.prototype.cacheClear = async function () {
+LFUCache.prototype.cacheClear = function () {
   this.currentSize = 0;
   this.leastFreq = 0;
   this.ROOT_QUERY = {};
