@@ -76,20 +76,20 @@ const GraphQLRouter =
   ObsRouter >
   {
     Router, // Router that is initialized by server.
-    path = '/graphql', // endpoint for graphQL queries, default to '/graphql'
+    path: '/graphql', // endpoint for graphQL queries, default to '/graphql'
     typeDefs: types, // graphQL typeDefs
     resolvers: resolvers, // graphQL resolvers
     usePlayground: true, // Boolean to allow for graphQL playground, default to false
     useCache: true, // Boolean to toggle all cache functionality, default to true
     redisPort: 6379, // Desired redis port, default to 6379
     policy: 'allkeys-lru', // Option select your Redis policy, default to allkeys-lru
-    maxmemory = '2000mb', // Option to select Redis capacity, default to 2000mb
+    maxmemory: '2000mb', // Option to select Redis capacity, default to 2000mb
     searchTerms: [] //Optional array to allow broad queries to store according to search fields so individual searches are found in cache
     persistQueries: true, //Boolean to toggle the use of persistent queries, default to false - NOTE: if using, must also be enabled in client wrapper
-    hashTableSize = 16, // Size of hash table for persistent queries, default to 16
-    maxQueryDepth = 0, // Maximum depth of query, default to 0
+    hashTableSize: 16, // Size of hash table for persistent queries, default to 16
+    maxQueryDepth: 0, // Maximum depth of query, default to 0
     customIdentifier: ['__typename', '_id'], // keys to be used to idedntify and normalize object
-    mutationTableMap = {}, //Object where keys are add mutation types and value is an array of affected tables (e.g. {addPlants: ['plants'], addMovie: ['movies']})
+    mutationTableMap: {}, //Object where keys are add mutation types and value is an array of affected tables (e.g. {addPlants: ['plants'], addMovie: ['movies']})
   };
 ```
 
