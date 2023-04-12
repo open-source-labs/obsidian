@@ -2,14 +2,12 @@ import { graphql } from 'https://cdn.pika.dev/graphql@15.0.0';
 import { renderPlaygroundPage } from 'https://deno.land/x/oak_graphql@0.6.2/graphql-playground-html/render-playground-html.ts';
 import { makeExecutableSchema } from 'https://deno.land/x/oak_graphql@0.6.2/graphql-tools/schema/makeExecutableSchema.ts';
 import { Cache } from './quickCache.js';
-import LFUCache from './Browser/lfuBrowserCache.js';
 import queryDepthLimiter from './DoSSecurity.ts';
 import { restructure } from './restructure.ts';
-import { rebuildFromQuery } from './rebuild.js';
 import { normalizeObject } from './normalize.ts';
-import { transformResponse, detransformResponse } from './transformResponse.ts';
 import { isMutation, invalidateCache } from './invalidateCacheCheck.ts';
 import { mapSelectionSet } from './mapSelections.js';
+import { HashTable } from './queryHash.js';
 
 interface Constructable<T> {
   new (...args: any): T & OakRouter;
@@ -28,14 +26,15 @@ export interface ObsidianRouterOptions<T> {
   resolvers: ResolversProps;
   context?: (ctx: any) => any;
   usePlayground?: boolean;
-  useCache?: boolean; // trivial parameter
+  useCache?: boolean;
   redisPort?: number;
   policy?: string;
   maxmemory?: string;
+  searchTerms?: string[];
+  persistQueries?: boolean;
+  hashTableSize?: number;
   maxQueryDepth?: number;
-  useQueryCache?: boolean; // trivial parameter
-  useRebuildCache?: boolean;
-  customIdentifier?: Array<string>;
+  customIdentifier?: string[];
   mutationTableMap?: Record<string, unknown>; // Deno recommended type name
 }
 
@@ -47,6 +46,9 @@ export interface ResolversProps {
 
 // Export developer chosen port for redis database connection //
 export let redisPortExport: number = 6379;
+
+// tentative fix to get invalidateCacheCheck.ts access to the cache;
+export const scope: Record<string, unknown> = {};
 
 /**
  *
@@ -60,112 +62,119 @@ export async function ObsidianRouter<T>({
   resolvers,
   context,
   usePlayground = false,
-  useCache = true,
+  useCache = true, // default to true
   redisPort = 6379,
   policy = 'allkeys-lru',
   maxmemory = '2000mb',
+  searchTerms = [], // Developer can pass in array of search categories
+  persistQueries = false, // default to false
+  hashTableSize = 16, // default to 16
   maxQueryDepth = 0,
-  useQueryCache = true,
-  useRebuildCache = true,
-  customIdentifier = ['id', '__typename'],
+  customIdentifier = ['__typename', '_id'],
   mutationTableMap = {}, // Developer passes in object where keys are add mutations and values are arrays of affected tables
 }: ObsidianRouterOptions<T>): Promise<T> {
-  redisPortExport = redisPort;
   const router = new Router();
   const schema = makeExecutableSchema({ typeDefs, resolvers });
-  // const cache = new LFUCache(50); // If using LFU Browser Caching, uncomment line
-  const cache = new Cache(); // If using Redis caching, uncomment line
-  cache.cacheClear();
-  if (policy || maxmemory) {
-    // set redis configurations
-    cache.configSet('maxmemory-policy', policy);
-    cache.configSet('maxmemory', maxmemory);
+
+  let cache, hashTable;
+  if (useCache) {
+    cache = new Cache();
+    scope.cache = cache;
+    cache.connect(redisPort, policy, maxmemory);
+  }
+  if (persistQueries) {
+    hashTable = new HashTable(hashTableSize);
   }
 
   //post
   await router.post(path, async (ctx: any) => {
-    
-    const t0 = performance.now(); // Used for demonstration of cache vs. db performance times
 
     const { response, request } = ctx;
     if (!request.hasBody) return;
+
     try {
-      const contextResult = context ? await context(ctx) : undefined;
+      let queryStr;
       let body = await request.body().value;
-
-      const selectedFields = mapSelectionSet(body.query); // Gets requested fields from query and saves into an array
-
-      if (maxQueryDepth) queryDepthLimiter(body.query, maxQueryDepth); // If a securty limit is set for maxQueryDepth, invoke queryDepthLimiter, which throws error if query depth exceeds maximum
-      let restructuredBody = { query: restructure(body) }; // Restructure gets rid of variables and fragments from the query
-
-      let cacheQueryValue = await cache.read(body.query); // Parses query string into query key and checks cache for that key
-
-      // Is query in cache?
-      if (useCache && useQueryCache && cacheQueryValue) {
-        let detransformedCacheQueryValue = await detransformResponse( // Returns a nested object representing the original graphQL response object for a given queryKey 
-          restructuredBody.query,
-          cacheQueryValue,
-          selectedFields
-        );
-        if (!detransformedCacheQueryValue) {
-          // cache was evicted if any partial cache is missing, which causes detransformResponse to return undefined
-          cacheQueryValue = undefined;
-
-        } else { // Successful cache hit
-          response.status = 200;
-          response.body = detransformedCacheQueryValue; // Returns response from cache
-          const t1 = performance.now();
-          console.log(
-            '%c Obsidian retrieved data from cache and took ' +
-              (t1 - t0) +
-              ' milliseconds.',
-            'background: #222; color: #00FF00'
-          );
+      if (persistQueries && body.hash && !body.query) {
+        const { hash } = body;
+        queryStr = hashTable.get(hash);
+        // if not found in hash table, respond so we can send full query.
+        if (!queryStr) {
+          response.status = 204;
+          return;
         }
-      } // If not in cache:
-      if (useCache && useQueryCache && !cacheQueryValue) {
+      } else if (persistQueries && body.hash && body.query) {
+        const { hash, query } = body;
+        hashTable.add(hash, query);
+        queryStr = query;
+      } else if (persistQueries && !body.hash) {
+        throw new Error('Unable to process request because hashed query was not provided');
+      } else if (!persistQueries) {
+        queryStr = body.query;
+      } else {
+        throw new Error('Unable to process request because query argument not provided');
+      }
+
+      const contextResult = context ? await context(ctx) : undefined;
+      // const selectedFields = mapSelectionSet(queryStr); // Gets requested fields from query and saves into an array
+      if (maxQueryDepth) queryDepthLimiter(queryStr, maxQueryDepth); // If a securty limit is set for maxQueryDepth, invoke queryDepthLimiter, which throws error if query depth exceeds maximum
+      let restructuredBody = { query: restructure({query: queryStr}) }; // Restructure gets rid of variables and fragments from the query
+
+      // IF WE ARE USING A CACHE
+      if (useCache) {
+
+        let cacheQueryValue = await cache.read(queryStr); // Parses query string into query key and checks cache for that key
+
+        // ON CACHE MISS
+        if (!cacheQueryValue) {
+          // QUERY THE DATABASE
+          const gqlResponse = await (graphql as any)(
+            schema,
+            queryStr,
+            resolvers,
+            contextResult,
+            body.variables || undefined,
+            body.operationName || undefined
+          );
+
+          // customIdentifier is a default param for Obsidian Router - defaults to ['__typename', '_id]
+          const normalizedGQLResponse = normalizeObject( // Recursively flattens an arbitrarily nested object into an objects with hash key and hashable object pairs
+            gqlResponse,
+            customIdentifier
+          );
+
+          // If operation is mutation, invalidate relevant responses in cache
+          if (isMutation(restructuredBody)) { 
+            invalidateCache(normalizedGQLResponse, queryStr, mutationTableMap);
+          // ELSE, simply write to the cache
+          } else {
+            await cache.write(queryStr, normalizedGQLResponse, searchTerms);
+          }
+          // AFTER HANDLING THE CACHE, RETURN THE ORIGINAL RESPONSE 
+          response.status = 200;
+          response.body = gqlResponse;
+          return;
+        // ON CACHE HIT
+        } else {
+          response.status = 200;
+          response.body = cacheQueryValue; // Returns response from cache
+          return;
+        }
+      // IF NOT USING A CACHE
+      } else {
+        // DIRECTLY QUERY THE DATABASE
         const gqlResponse = await (graphql as any)(
           schema,
-          body.query,
+          queryStr,
           resolvers,
           contextResult,
           body.variables || undefined,
           body.operationName || undefined
         );
 
-        const normalizedGQLResponse = normalizeObject( // Recursively flattens an arbitrarily nested object into an objects with hash key and hashable object pairs
-          gqlResponse,
-          customIdentifier
-        );
-
-        if (isMutation(restructuredBody)) { // If operation is mutation, invalidate relevant responses in cache
-          const queryString = body; 
-          invalidateCache(
-            normalizedGQLResponse,
-            queryString.query,
-            mutationTableMap
-          );
-        }
-        // If read query: run query, normalize GQL response, transform GQL response, write to cache, and write pieces of normalized GQL response objects
-        else {
-          const transformedGQLResponse = transformResponse(
-            gqlResponse,
-            customIdentifier
-          );
-          await cache.write(body.query, transformedGQLResponse, false);
-          for (const key in normalizedGQLResponse) {
-            await cache.cacheWriteObject(key, normalizedGQLResponse[key]);
-          }
-        }
         response.status = 200;
         response.body = gqlResponse; // Returns response from database
-        const t1 = performance.now();
-        console.log(
-          '%c Obsidian received new data and took ' +
-            (t1 - t0) +
-            ' milliseconds',
-          'background: #222; color: #FFFF00'
-        );
+        return;
       }
     } catch (error) {
       response.status = 400;
