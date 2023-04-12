@@ -107,10 +107,16 @@ const App = () => {
 };
 ```
 
-## Selecting useCache, LFU/LRU/WTinyLFU, capacity, persistQueries, and searchTerms (if any); default (if not provided): true, LFU, 2000, false
+## Selecting options for the Wrapper
 
 ```javascript
-<ObsidianWrapper useCache={true} algo='LRU' capacity='5000' persistQueries={true} searchTerms={['title', 'director', 'genre']}>
+<ObsidianWrapper 
+  useCache={true} // Boolean indicating whether to use client-side cache, default to true
+  algo='LRU' // String indicating cache policy to use for client-side cache, default to LFU. OTHER OPTIONS: W-Tiny-LFU, LRU
+  capacity='5000' // String indicating numeric capacity of cache, default to 2000
+  persistQueries={true} // Boolean indicating wheter to use persistent queries, default to false
+  searchTerms={['title', 'director', 'genre']} // Optional parameter to set search terms of the data
+>
   <MovieApp />
 </ObsidianWrapper>
 ```
@@ -176,6 +182,17 @@ const MovieApp = () => {
   );
 }
 ```
+## Setting up Redis
+
+In order to utilize server side caching, a Redis instance must be available and running. Redis installation and quick-start documentation can be found [here](https://redis.io/docs/getting-started/). Make sure to keep a redis instance running whenever the application is utilizing server side caching to avoid running into issues.
+
+To connect Obsidian to Redis, create a .env file in the root directory of the application with the following information:
+
+```javascript
+REDIS_HOST= //string of redis host name, typically defaulted to '127.0.0.1' by Redis
+```
+Be sure to also specify the Redis TCP port by passing in the port number as an argument into Obsidian Router (see Selecting options for the Router above).
+
 
 ## Documentation
 
